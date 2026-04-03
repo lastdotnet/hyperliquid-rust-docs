@@ -8,6 +8,10 @@ Generated from `knowledge/claims` by `tools/compile_knowledge_docs.py`.
   - Source file: `knowledge/claims/action-delayer-maturity-surface.md`
 - `claim.begin_block_ordering_surface` - Begin-block ordering is 9 named effects with BOLE at #3 and ActionDelayer at #8 (`confirmed`, `confirmed`, `testnet_impl`, `closed`)
   - Source file: `knowledge/claims/begin-block-ordering-surface.md`
+- `claim.corewriter_delayed_action_surface` - CoreWriter re-enters L1 through a delayed action lane with 15 known action types (`confirmed`, `confirmed`, `testnet_impl`, `active`)
+  - Source file: `knowledge/claims/corewriter-delayed-action-surface.md`
+- `claim.action_surface_testnet` - Current widened testnet action surface is 97 variants with 126 sub-types (`confirmed`, `confirmed`, `testnet_impl`, `active`)
+  - Source file: `knowledge/claims/action-surface-testnet.md`
 - `claim.begin_block_bole_ordering_conflict` - Stale BOLE begin-block ordering conflict is resolved (`confirmed`, `confirmed`, `testnet_impl`, `closed`)
   - Source file: `knowledge/claims/begin-block-bole-ordering-conflict.md`
 - `claim.block_lifecycle_phase_map` - The repo now uses one explicit block lifecycle phase map and hook surface (`confirmed`, `confirmed`, `local_impl`, `open`)

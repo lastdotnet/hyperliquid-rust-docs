@@ -11,6 +11,10 @@ Use it when the question is:
 
 ## 1. Current High-Value Findings
 
+Start with the compact fact ledger if you need the shortest current truth surface:
+
+- [Truth Register](./truth-register.md)
+
 ### 1.1 Exchange State and Serialization
 
 - `Exchange` is currently tracked here as a 57-field state surface.
@@ -27,14 +31,14 @@ Start with:
 ### 1.2 Block Ordering and Hook Surfaces
 
 - the repo has one explicit block-lifecycle map now
-- exact placement of some begin-block lanes is still open
-- BOLE and delayed-action placement are still active ordering-closure items
+- the 9 named begin-block effects are now tracked as a closed claim in-repo
+- the open work on this lane is now deeper per-effect semantics and ActionDelayer mode behavior, not BOLE/action-delayer slot placement
 
 Start with:
 
 - [Block Lifecycle](../block-lifecycle/index.html)
 - [ABCI State Machine](../obsidian/ABCI%20State%20Machine.md)
-- [begin-block ordering claim](../status/open-claims.md)
+- [Truth Register](./truth-register.md)
 
 ### 1.3 Liquidation, ADL, and BOLE
 
@@ -67,6 +71,7 @@ Start with:
 The normalized claim inventory is here:
 
 - [Claims Index](./claims-index.md)
+- [Truth Register](./truth-register.md)
 
 That is the best place to see which findings have already been promoted into durable repo truth.
 

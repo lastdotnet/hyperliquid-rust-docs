@@ -9,7 +9,15 @@ This repo is not an official Hyperliquid codebase. It is a reverse-engineered im
 - `how value and control move through the system`
 - `what invariants matter`
 
-For protocol-detail and field-order truth, use the [Yellow Paper](../yellowpaper/index.md). For the live HTML reference, use the [Hypurrliquid Paper](../paper/index.html). For the actual execution and topology flows, use the dedicated [Block Lifecycle](../block-lifecycle/index.html) and [Liquidation & ADL](../liquidation/index.html) pages.
+For protocol-detail and field-order truth, use the [Yellow Paper](../yellowpaper/index.md). For the fastest compact fact surface, use the [Truth Register](../findings/truth-register.md). For the live HTML reference, use the [Hypurrliquid Paper](../paper/index.html). For the actual execution and topology flows, use the dedicated [Block Lifecycle](../block-lifecycle/index.html) and [Liquidation & ADL](../liquidation/index.html) pages.
+
+## Fact Surfaces
+
+The narrative in this paper should be read together with the structured fact surfaces:
+
+- [Truth Register](../findings/truth-register.md) for the compact confirmed/active/hypothesis ledger
+- [Open Claims](../status/open-claims.md) for unresolved truth-maintenance work
+- [Protocol Scope Matrix](../yellowpaper/protocol-scope-matrix.md) for `protocol` vs `testnet_impl` vs `local_impl`
 
 ## 1. Abstract
 
@@ -210,7 +218,7 @@ The docs system mirrors that:
 The repo has made major progress, but some of the hardest parity surfaces are still open:
 
 - exact response hashing parity across mainnet and testnet paths
-- exact `begin_block` ordering in a few lanes
+- deeper `begin_block` per-effect semantics
 - some bridge and staking transition details
 - deeper outcome reconciliation logic
 - ADL and liquidation edge semantics

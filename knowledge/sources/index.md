@@ -4,6 +4,8 @@ Generated from `knowledge/sources` by `tools/compile_knowledge_docs.py`.
 
 - `source.exchange_struct_chain_run` - 2026-04-03 testnet struct-chain run (`generated_note`, `testnet_impl`)
   - Locator: `docs/generated/re/runs/2026-04-03-struct-chain.md`
+- `source.action_types_note` - Action Types note (`local_doc`, `testnet_impl`)
+  - Locator: `docs/obsidian/Action Types.md`
 - `source.app_hash_note` - App Hash reverse-engineering note (`local_doc`, `testnet_impl`)
   - Locator: `docs/obsidian/App Hash.md`
 - `source.block_lifecycle_note` - Block Lifecycle obsidian note (`local_doc`, `testnet_impl`)

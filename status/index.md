@@ -35,6 +35,7 @@ This is the main live work queue and handoff note surface.
 ### 2.2 Open Protocol / Implementation Questions
 
 - [Open Claims](./open-claims.md)
+- [Truth Register](../findings/truth-register.md)
 
 This is the best short list of unresolved truth surfaces.
 
@@ -56,9 +57,9 @@ This is the process that keeps RE claims, docs, and code from drifting apart.
 
 Still-open execution questions include:
 
-- exact begin-block placement for some lanes
-- delayed-action drain placement
-- BOLE ordering closure
+- deeper begin-block semantics inside the now-closed 9-effect ordering
+- ActionDelayer mode/control behavior
+- per-effect guard cadence and threshold closure
 
 ### 3.2 Hashing and Replay
 
@@ -119,12 +120,12 @@ For engineering status:
 For documentation status:
 
 1. [Docs Hub](../index.html)
-2. [White Paper](../whitepaper/index.md)
-3. [Yellow Paper](../yellowpaper/index.md)
+2. [White Paper](../whitepaper/index.html)
+3. [Yellow Paper](../yellowpaper/index.html)
 4. [Findings](../findings/index.md)
 
 For protocol implementation status:
 
 1. [Block Lifecycle](../block-lifecycle/index.html)
 2. [Liquidation & ADL](../liquidation/index.html)
-3. [Action Inventory](../yellowpaper/action-inventory.md)
+3. [Action Inventory](../yellowpaper/action-inventory.html)

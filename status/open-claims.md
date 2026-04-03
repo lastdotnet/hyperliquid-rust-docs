@@ -2,6 +2,8 @@
 
 Generated from `knowledge/claims` by `tools/compile_knowledge_docs.py`.
 
+- `claim.corewriter_delayed_action_surface` - CoreWriter re-enters L1 through a delayed action lane with 15 known action types (`execution`, `confirmed`, `confirmed`, `testnet_impl`)
+- `claim.action_surface_testnet` - Current widened testnet action surface is 97 variants with 126 sub-types (`execution`, `confirmed`, `confirmed`, `testnet_impl`)
 - `claim.block_lifecycle_phase_map` - The repo now uses one explicit block lifecycle phase map and hook surface (`execution`, `confirmed`, `confirmed`, `local_impl`)
 - `claim.resphash_backend_split` - RespHash backends are chain-scoped, but mainnet serialization is not fully wired (`hashing`, `confirmed`, `confirmed`, `local_impl`)
 - `claim.liquidation_scope_boundaries` - Liquidation family boundaries are now explicit across perps, PM, BOLE, spot, and outcomes (`liquidation`, `confirmed`, `confirmed`, `local_impl`)

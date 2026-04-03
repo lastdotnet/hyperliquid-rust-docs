@@ -4,9 +4,18 @@ The protocol-truth reference for the Hyperliquid L1 reimplementation. Every clai
 
 **Evidence levels**: `CONFIRMED` = verified from binary RE or official docs. `OBSERVED` = seen in runtime/snapshots. `IMPLEMENTED` = coded in hlx. `INFERRED` = deduced from behavior.
 
-Use the [White Paper](../whitepaper/index.md) for narrative architecture. Use the [Hypurrliquid Paper](../paper/index.html) for the full RE reference with Mermaid diagrams. Use the [Action Inventory](./action-inventory.md) for the current action-family and sub-variant tables.
+Use the [White Paper](../whitepaper/index.md) for narrative architecture. Use the [Hypurrliquid Paper](../paper/index.html) for the full RE reference with Mermaid diagrams. Use the [Action Inventory](./action-inventory.md) for the current action-family and sub-variant tables. Use the [Truth Register](../findings/truth-register.md) when you want the compact fact ledger instead of the full chapter narrative.
 
 ---
+
+## 0. Truth Surfaces
+
+This paper is the technical narrative, not the only truth surface. Read it together with:
+
+- [Truth Register](../findings/truth-register.md) for the compact confirmed/active fact ledger
+- [Open Claims](../status/open-claims.md) for unresolved work
+- [Protocol Scope Matrix](./protocol-scope-matrix.md) for `protocol` vs `testnet_impl` vs `local_impl`
+- [Action Inventory](./action-inventory.md) for action-family and sub-variant tables
 
 ## 1. Block Lifecycle (46 Hook Points)
 
