@@ -1,0 +1,18 @@
+digraph G {
+  rankdir="LR";
+  node [shape=box, fontsize=10];
+  label="follower_app_hash"; labelloc="t"; fontsize=18;
+  "crates/hl-devnet/src/follower.rs:process_block_file" [label="process_block_file\ncrates/hl-devnet/src/follower.rs:197"];
+  "crates/hl-evm/src/rocks_db.rs:open" [label="open\ncrates/hl-evm/src/rocks_db.rs:64"];
+  "crates/hl-devnet/src/follower.rs:process_block" [label="process_block\ncrates/hl-devnet/src/follower.rs:101"];
+  "crates/hl-devnet/src/follower.rs:check_hash" [label="check_hash\ncrates/hl-devnet/src/follower.rs:148"];
+  "crates/hl-evm/src/error.rs:msg" [label="msg\ncrates/hl-evm/src/error.rs:8"];
+  "crates/hl-engine/src/exchange.rs:compute_app_hash" [label="compute_app_hash\ncrates/hl-engine/src/exchange.rs:135"];
+  "crates/hl-devnet/src/follower.rs:to_json" [label="to_json\ncrates/hl-devnet/src/follower.rs:56"];
+  "crates/hl-devnet/src/follower.rs:check_hash" -> "crates/hl-devnet/src/follower.rs:to_json";
+  "crates/hl-devnet/src/follower.rs:check_hash" -> "crates/hl-engine/src/exchange.rs:compute_app_hash";
+  "crates/hl-devnet/src/follower.rs:process_block_file" -> "crates/hl-devnet/src/follower.rs:check_hash";
+  "crates/hl-devnet/src/follower.rs:process_block_file" -> "crates/hl-devnet/src/follower.rs:process_block";
+  "crates/hl-devnet/src/follower.rs:process_block_file" -> "crates/hl-evm/src/rocks_db.rs:open";
+  "crates/hl-evm/src/rocks_db.rs:open" -> "crates/hl-evm/src/error.rs:msg";
+}

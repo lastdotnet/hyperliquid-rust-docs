@@ -1,0 +1,18 @@
+digraph G {
+  rankdir="LR";
+  node [shape=box, fontsize=10];
+  label="node_gossip_capture"; labelloc="t"; fontsize=18;
+  "crates/hl-node/src/main.rs:capture_gossip_frames" [label="capture_gossip_frames\ncrates/hl-node/src/main.rs:281"];
+  "crates/hl-network/src/wire.rs:send_stream_greeting" [label="send_stream_greeting\ncrates/hl-network/src/wire.rs:122"];
+  "crates/hl-network/src/wire.rs:read_stream_greeting_response" [label="read_stream_greeting_response\ncrates/hl-network/src/wire.rs:133"];
+  "crates/hl-network/src/wire.rs:read_and_save_frame" [label="read_and_save_frame\ncrates/hl-network/src/wire.rs:386"];
+  "crates/hl-network/src/wire.rs:inspect_chunk" [label="inspect_chunk\ncrates/hl-network/src/wire.rs:285"];
+  "crates/hl-network/src/wire.rs:analyze_chunk" [label="analyze_chunk\ncrates/hl-network/src/wire.rs:571"];
+  "crates/hl-network/src/wire.rs:classify_frame_guess" [label="classify_frame_guess\ncrates/hl-network/src/wire.rs:527"];
+  "crates/hl-network/src/wire.rs:read_and_save_frame" -> "crates/hl-network/src/wire.rs:analyze_chunk";
+  "crates/hl-network/src/wire.rs:read_and_save_frame" -> "crates/hl-network/src/wire.rs:classify_frame_guess";
+  "crates/hl-network/src/wire.rs:read_and_save_frame" -> "crates/hl-network/src/wire.rs:inspect_chunk";
+  "crates/hl-node/src/main.rs:capture_gossip_frames" -> "crates/hl-network/src/wire.rs:read_and_save_frame";
+  "crates/hl-node/src/main.rs:capture_gossip_frames" -> "crates/hl-network/src/wire.rs:read_stream_greeting_response";
+  "crates/hl-node/src/main.rs:capture_gossip_frames" -> "crates/hl-network/src/wire.rs:send_stream_greeting";
+}

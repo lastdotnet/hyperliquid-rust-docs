@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypurrliquid Block Lifecycle</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #f7f2e8;
+  --panel: #fffaf2;
+  --panel-strong: #f3e7d4;
+  --ink: #1f1a16;
+  --muted: #6d655d;
+  --line: #d8ccbd;
+  --accent: #0d6b6b;
+  --accent-soft: rgba(13, 107, 107, 0.10);
+  --accent-2: #b14f2a;
+  --green: #1f7a52;
+  --yellow: #8b6a06;
+  --red: #9f2f2f;
+  --shadow: rgba(40, 25, 12, 0.08);
+  --mono: "SF Mono", "JetBrains Mono", "Menlo", monospace;
+  --sans: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--serif);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, #fff9ee 0%, transparent 32%),
+    linear-gradient(180deg, #eee4d5 0%, var(--bg) 50%, #efe4d8 100%);
+}
+a { color: var(--accent); }
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 24px 88px;
+}
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.topbar a {
+  text-decoration: none;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  box-shadow: 0 8px 18px var(--shadow);
+  font: 600 13px/1.2 var(--sans);
+}
+.hero {
+  padding: 18px 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+.eyebrow {
+  font: 600 12px/1.4 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+h1 {
+  margin: 10px 0 12px;
+  font: 700 54px/1.02 var(--sans);
+  letter-spacing: -0.03em;
+}
+.hero p {
+  max-width: 900px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.65;
+}
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+.hero-links a {
+  text-decoration: none;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  font: 600 14px/1.2 var(--sans);
+}
+.section {
+  margin-top: 44px;
+}
+.section h2 {
+  margin: 0 0 12px;
+  font: 700 34px/1.05 var(--sans);
+}
+.section p {
+  color: var(--muted);
+  line-height: 1.72;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.card, .panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 12px 30px var(--shadow);
+}
+.card {
+  padding: 18px;
+}
+.card h3 {
+  margin: 0 0 8px;
+  font: 700 22px/1.1 var(--sans);
+}
+.card p {
+  margin: 0;
+}
+.panel {
+  padding: 18px 20px;
+  margin-top: 18px;
+}
+.panel-strong {
+  background: var(--panel-strong);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  font-family: var(--sans);
+  font-size: 14px;
+}
+th, td {
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: var(--panel-strong);
+  font-size: 13px;
+}
+pre {
+  overflow-x: auto;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fbf5ec;
+  font: 13px/1.6 var(--mono);
+}
+code {
+  font-family: var(--mono);
+}
+.mermaid {
+  margin-top: 18px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fffdf9;
+}
+.timeline {
+  position: relative;
+  margin-top: 20px;
+  padding-left: 24px;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  opacity: 0.32;
+}
+.step {
+  position: relative;
+  margin: 0 0 18px;
+  padding: 14px 16px 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: 0 10px 24px var(--shadow);
+}
+.step::before {
+  content: "";
+  position: absolute;
+  left: -21px;
+  top: 20px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px rgba(13, 107, 107, 0.12);
+}
+.step h3 {
+  margin: 0 0 6px;
+  font: 700 21px/1.1 var(--sans);
+}
+.meta {
+  font: 600 12px/1.4 var(--mono);
+  color: var(--accent-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font: 700 11px/1 var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.confirmed { background: rgba(31, 122, 82, 0.12); color: var(--green); }
+.observed { background: rgba(13, 107, 107, 0.12); color: var(--accent); }
+.inferred { background: rgba(139, 106, 6, 0.14); color: var(--yellow); }
+.warning { background: rgba(159, 47, 47, 0.12); color: var(--red); }
+.scope {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 420ms ease, transform 420ms ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (max-width: 760px) {
+  main { padding: 22px 18px 64px; }
+  h1 { font-size: 40px; }
+  .section h2 { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="topbar">
+    <a href="../index.html">Docs Hub</a>
+    <a href="../paper/index.html#execution">Paper Chapter</a>
+    <a href="../paper/index.html#consensus">Consensus Chapter</a>
+    <a href="../call-graphs.html">Call Graphs</a>
+  </div>
+
+  <section class="hero reveal">
+    <div class="eyebrow">Execution Reference</div>
+    <h1>Block Lifecycle, Topology, and Leader Rotation</h1>
+    <p>
+      This page puts the full block path into one place: who injects actions, how
+      validators and sentries connect, how proposer rotation works, what runs in
+      <code>begin_block</code> and <code>end_block</code>, where delayed actions
+      re-enter, and where hashing and <code>VoteAppHash</code> sit relative to
+      execution. It is written to be both human-scannable and agent-friendly: short
+      tables, explicit hook points, and scope notes where the protocol baseline and
+      current local implementation have not fully converged.
+    </p>
+    <div class="hero-links">
+      <a href="../obsidian/HyperBFT%20Protocol%20Specification.md">HyperBFT RE Note</a>
+      <a href="../obsidian/Gossip%20Protocol.md">Gossip RE Note</a>
+      <code>crates/hl-engine/src/exchange.rs</code> <span>(private repo path)</span>
+      <a href="../generated/dot/exchange_block_pipeline.dot">Exchange Pipeline DOT</a>
+    </div>
+  </section>
+
+  <section class="section reveal" id="scope">
+    <h2>1. Scope Split</h2>
+    <div class="scope">
+      <div class="card">
+        <h3>Protocol / RE Baseline</h3>
+        <p>
+          <span class="badge confirmed">protocol</span>
+          The reconstructed lifecycle from binary strings, runtime traces, and RE notes:
+          <code>RecoverUsers -> BeginBlock -> DeliverSignedActions -> Commit -> RespHash -> Check</code>,
+          plus the consensus/gossip topology around it.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Current Local Main</h3>
+        <p>
+          <span class="badge observed">local impl</span>
+          The current engine on <code>main</code> already routes BOLE liquidation early
+          in <code>begin_block</code>. That is useful and deliberate, but it should still
+          be treated as a local implementation choice until the binary ordering is fully
+          re-closed.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reveal" id="topology">
+    <h2>2. Network Topology</h2>
+    <div class="panel panel-strong">
+      <p>
+        The execution pipeline only makes sense in the actual network layout. User
+        actions do not flow directly into every validator. Broadcasters, validators,
+        sentries, gossip peers, ABCI state transfer, and EVM KV snapshots all sit in
+        the path.
+      </p>
+      <div class="mermaid">
+flowchart LR
+    U["Users / bots"] --> B["Broadcasters<br/>signed action bundles"]
+    B --> V["Active validators"]
+    V --> S["Sentries / approved peers"]
+    V <-->|4001 / 4002| V2["Other validators"]
+    S <-->|4001 / 4002| V2
+    V --> G["Gossip stream<br/>ClientBlocks, heartbeats, concise messages"]
+    V --> A["ABCI state transfer"]
+    V --> E["EVM KV transfer"]
+    G --> F["Followers / replay nodes / observers"]
+      </div>
+      <table>
+        <tr>
+          <th>Edge</th>
+          <th>Purpose</th>
+          <th>Current evidence</th>
+        </tr>
+        <tr>
+          <td>User -> Broadcaster</td>
+          <td>Bundle signed actions behind whitelisted broadcaster addresses and per-broadcaster nonces.</td>
+          <td>Observed in action flow and mempool notes.</td>
+        </tr>
+        <tr>
+          <td>Peer -> 4001</td>
+          <td>ABCI stream, block streaming, concise message families, heartbeats.</td>
+          <td>Confirmed in gossip RE.</td>
+        </tr>
+        <tr>
+          <td>Peer -> 4002</td>
+          <td>Peer discovery / RPC verification / gossip status checks.</td>
+          <td>Confirmed in gossip RE.</td>
+        </tr>
+        <tr>
+          <td>Unknown peers</td>
+          <td>Rejected if not validator or sentry, over peer cap, duplicated, or no quorum yet.</td>
+          <td>Confirmed rejection strings.</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="section reveal" id="leader">
+    <h2>3. Leader Election and Round Flow</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Active Set</h3>
+        <p>Mainnet currently observes 24 active validators; testnet observes top 50 by stake.</p>
+      </div>
+      <div class="card">
+        <h3>Proposer Rule</h3>
+        <p><code>RoundRobinTtl</code> is the confirmed proposer-selection family, with future proposers precomputed.</p>
+      </div>
+      <div class="card">
+        <h3>Exclusions</h3>
+        <p>Jailed or disabled validators leave proposer rotation and active signing duty.</p>
+      </div>
+      <div class="card">
+        <h3>Advance Path</h3>
+        <p>Missed proposal -> timeouts -> TC -> round advance, without committing the missing block.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="mermaid">
+sequenceDiagram
+    participant P as Proposer
+    participant V as Validators
+    participant N as Next proposer
+    Note over P: Round R
+    P->>V: PROPOSE block
+    V->>V: verify proposer, QC, parent round
+    V->>P: VOTE
+    P->>V: QC for round R
+    Note over N: Round R+1
+    N->>V: PROPOSE with QC for R
+    Note over V: two-chain commit rule finalizes prior block
+      </div>
+      <pre><code>round advance sources:
+- normal QC progression
+- timeout certificate (TC)
+- active-set / signer gating
+- jail / disable state changes across epoch transitions</code></pre>
+    </div>
+  </section>
+
+  <section class="section reveal" id="lifecycle">
+    <h2>4. Block Lifecycle</h2>
+    <div class="panel panel-strong">
+      <div class="mermaid">
+flowchart LR
+    A["RecoverUsers"] --> B["BeginBlock"]
+    B --> C["Delayed-action drain"]
+    C --> D["DeliverSignedActions"]
+    D --> E["EndBlock"]
+    E --> F["EVM block / CoreWriter scan"]
+    F --> G["Commit"]
+    G --> H["RespHash / LtHash update"]
+    H --> I["Check / replay compare"]
+    I --> J["VoteAppHash cadence"]
+      </div>
+    </div>
+    <div class="timeline">
+      <div class="step reveal">
+        <div class="meta">Phase 1</div>
+        <h3>Recover Users / Pre-Execution Context</h3>
+        <p>Context, active-set state, and user surfaces are assembled before execution. In replay terms this is the stage before <code>Exchange::process_block</code> actually mutates state.</p>
+      </div>
+      <div class="step reveal">
+        <div class="meta">Phase 2</div>
+        <h3>BeginBlock</h3>
+        <p>Runs the pre-action effects pipeline. This is where funding, OI-cap cleanup, stale-mark handling, vote-tracker pruning, and BOLE begin-block logic hook in.</p>
+      </div>
+      <div class="step reveal">
+        <div class="meta">Phase 3</div>
+        <h3>Drain Matured Delayed Actions</h3>
+        <p><code>ActionDelayer</code> re-injects matured CoreWriter actions so they execute as ordinary L1 actions in a future block.</p>
+      </div>
+      <div class="step reveal">
+        <div class="meta">Phase 4</div>
+        <h3>Deliver Signed Actions</h3>
+        <p>Signed bundles are unpacked, actor resolution and broadcaster constraints are applied, and action handlers mutate exchange, clearinghouse, bridge, BOLE, vault, and outcome state.</p>
+      </div>
+      <div class="step reveal">
+        <div class="meta">Phase 5</div>
+        <h3>EndBlock</h3>
+        <p>Post-action execution hooks run here. In the current local engine this is the mark-price and book-derived cleanup layer rather than another large governance/matching phase.</p>
+      </div>
+      <div class="step reveal">
+        <div class="meta">Phase 6</div>
+        <h3>EVM / CoreWriter</h3>
+        <p>EVM blocks are built, CoreWriter intents are scanned, and delayed actions may be enqueued for future <code>begin_block</code> execution.</p>
+      </div>
+      <div class="step reveal">
+        <div class="meta">Phase 7</div>
+        <h3>Commit, RespHash, Check</h3>
+        <p>Execution responses feed RespHash and LtHash. Replay and parity tooling then compare local outputs against known app-hash or runtime checkpoints.</p>
+      </div>
+      <div class="step reveal">
+        <div class="meta">Phase 8</div>
+        <h3>VoteAppHash</h3>
+        <p>Validators periodically vote on app-hash checkpoints. The current observed cadence is every 2000 blocks, with quorum app-hash artifacts used for mismatch detection.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reveal" id="hooks">
+    <h2>5. Hook Points</h2>
+    <div class="panel">
+      <table>
+        <tr>
+          <th>Hook</th>
+          <th>What runs there</th>
+          <th>Why it matters</th>
+        </tr>
+        <tr>
+          <td><code>begin_block</code></td>
+          <td>Funding distribution, funding-rate update, OI-cap cancels, empty-book pruning, vote-tracker pruning, recent-OI reset, stale-mark refresh, stale-guard updates, BOLE begin-block logic.</td>
+          <td>This is the highest-leverage ordering surface for replay parity.</td>
+        </tr>
+        <tr>
+          <td><code>process_matured_delayed_actions</code></td>
+          <td>CoreWriter-delayed actions re-enter as normal L1 execution. Current local main drains them after the 9 standard begin-block effects; exact binary placement is still open.</td>
+          <td>This is where EVM-to-L1 delayed intents rejoin the main state machine, and one of the remaining ordering-closure items for replay parity.</td>
+        </tr>
+        <tr>
+          <td>Action dispatcher</td>
+          <td>Trading, transfers, vaults, bridge, BOLE, outcome actions, governance, validator actions.</td>
+          <td>This is the broadest mutation surface and the source of most response hashes.</td>
+        </tr>
+        <tr>
+          <td><code>end_block</code></td>
+          <td>Book-derived and mark-price cleanup hooks.</td>
+          <td>Needed so replay matches the same post-action mark state.</td>
+        </tr>
+        <tr>
+          <td>EVM scan</td>
+          <td>CoreWriter extraction and delayed-action enqueue.</td>
+          <td>Bridges L1 and EVM state transitions.</td>
+        </tr>
+        <tr>
+          <td>RespHash / LtHash</td>
+          <td>Hash execution responses into L1 and EVM accumulator lanes.</td>
+          <td>Direct app-hash parity boundary.</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="section reveal" id="begin-block">
+    <h2>6. BeginBlock Details</h2>
+    <div class="panel">
+      <p>The repo currently needs both views visible: the older RE/paper order and the current local-main execution order.</p>
+      <table>
+        <tr>
+          <th>Order</th>
+          <th>Protocol / older paper baseline</th>
+          <th>Current local main</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td><code>distribute_funding</code></td>
+          <td><code>distribute_funding</code></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><code>update_funding_rates</code></td>
+          <td><code>apply_bole_liquidations</code></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><code>cancel_aggressive_orders_at_oi_cap</code></td>
+          <td><code>update_funding_rates</code></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><code>prune_book_empty_user_states</code></td>
+          <td><code>cancel_aggressive_orders_at_oi_cap</code></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><code>validator_l1_vote_tracker_prune_expired</code></td>
+          <td><code>prune_book_empty_user_states</code></td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><code>reset_recent_ois</code></td>
+          <td><code>validator_l1_vote_tracker_prune_expired</code></td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><code>refresh_hip3_stale_mark_pxs</code></td>
+          <td><code>reset_recent_ois</code></td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><code>update_stale_mark_guards</code></td>
+          <td><code>refresh_hip3_stale_mark_pxs</code></td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><code>apply_bole_liquidations</code></td>
+          <td><code>update_stale_mark_guards</code></td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td>drain matured delayed actions</td>
+          <td>drain matured delayed actions after stale-guard / BOLE pass</td>
+        </tr>
+      </table>
+      <p>
+        <span class="badge warning">open conflict</span>
+        The local BOLE ordering has moved earlier on <code>main</code>. Keep using one
+        explicit begin-block hook; do not spread BOLE execution across multiple phases
+        while this remains open.
+      </p>
+    </div>
+  </section>
+
+  <section class="section reveal" id="vote-app-hash">
+    <h2>7. VoteAppHash and Runtime Checkpoints</h2>
+    <div class="panel panel-strong">
+      <div class="mermaid">
+flowchart TD
+    A["Commit responses"] --> B["RespHash / LtHash accumulators"]
+    B --> C["app_hash checkpoint"]
+    C --> D["VoteAppHash"]
+    D --> E["quorum_app_hashes"]
+    E --> F["runtime logs / replay mismatch localization"]
+      </div>
+      <table>
+        <tr>
+          <th>Surface</th>
+          <th>Role</th>
+        </tr>
+        <tr>
+          <td><code>RespHash</code></td>
+          <td>Hashes execution responses into the L1 accumulator family.</td>
+        </tr>
+        <tr>
+          <td><code>LtHash16</code></td>
+          <td>Incremental state-hash accumulator family for L1 and EVM categories.</td>
+        </tr>
+        <tr>
+          <td><code>VoteAppHash</code></td>
+          <td>Validator agreement signal on checkpointed app hash, observed every 2000 blocks.</td>
+        </tr>
+        <tr>
+          <td><code>quorum_app_hashes</code></td>
+          <td>Best runtime truth source for replay mismatch localization.</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="section reveal" id="gaps">
+    <h2>8. Open Gaps</h2>
+    <div class="panel">
+      <table>
+        <tr>
+          <th>Gap</th>
+          <th>Why it matters</th>
+        </tr>
+        <tr>
+          <td>Exact begin-block ordering closure</td>
+          <td>Needed so BOLE, funding, OI-cap, and stale-mark hooks land in the right phase for parity.</td>
+        </tr>
+        <tr>
+          <td>Full action inventory page</td>
+          <td>The paper still compresses too many action families into prose instead of explicit tables.</td>
+        </tr>
+        <tr>
+          <td>Topology visuals for sentry / peer roles</td>
+          <td>The high-level network map exists now, but the exact sentry role split can still be sharpened.</td>
+        </tr>
+        <tr>
+          <td>RespHash / VoteAppHash per-phase proof loop</td>
+          <td>Needed to tie lifecycle docs directly to replay diagnostics.</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+</main>
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: "neutral",
+  themeVariables: {
+    primaryColor: "#f3e7d4",
+    primaryBorderColor: "#0d6b6b",
+    primaryTextColor: "#1f1a16",
+    lineColor: "#0d6b6b",
+    secondaryColor: "#fffaf2",
+    tertiaryColor: "#e7d9c7",
+    fontFamily: "Avenir Next, Helvetica Neue, Segoe UI, sans-serif"
+  }
+});
+
+var revealObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { rootMargin: '0px 0px -8% 0px' });
+
+document.querySelectorAll('.reveal').forEach(function(el) {
+  revealObserver.observe(el);
+});
+</script>
+</body>
+</html>

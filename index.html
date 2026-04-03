@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypurrliquid Docs Hub</title>
+<style>
+:root {
+  --bg: #f4f0e8;
+  --panel: #fffaf2;
+  --ink: #1d1b18;
+  --muted: #6a6258;
+  --line: #d6cbb9;
+  --accent: #9f3d23;
+  --accent-soft: #f0d7cb;
+  --shadow: rgba(38, 24, 12, 0.08);
+  --mono: "SF Mono", "JetBrains Mono", "Menlo", monospace;
+  --sans: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--serif);
+  background:
+    radial-gradient(circle at top left, #fff8ef 0%, transparent 36%),
+    linear-gradient(180deg, #efe7da 0%, var(--bg) 45%, #efe7da 100%);
+  color: var(--ink);
+}
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+}
+.hero {
+  padding: 32px 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+.eyebrow {
+  font: 600 12px/1.4 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+h1 {
+  margin: 10px 0 12px;
+  font: 700 52px/1.02 var(--sans);
+  letter-spacing: -0.03em;
+}
+.hero p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.65;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+.card {
+  display: block;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: 0 12px 30px var(--shadow);
+  text-decoration: none;
+  color: inherit;
+}
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.card h2 {
+  margin: 0 0 8px;
+  font: 700 22px/1.15 var(--sans);
+}
+.card p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.card code {
+  font: 12px/1.4 var(--mono);
+  color: var(--accent);
+}
+.section {
+  margin-top: 42px;
+}
+.section h3 {
+  margin: 0 0 10px;
+  font: 700 28px/1.1 var(--sans);
+}
+.section p {
+  max-width: 820px;
+  color: var(--muted);
+}
+ul {
+  padding-left: 20px;
+}
+li {
+  margin: 6px 0;
+}
+a.inline {
+  color: var(--accent);
+}
+@media (max-width: 700px) {
+  h1 { font-size: 38px; }
+  .hero p { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div class="eyebrow">Docs Hub</div>
+    <h1>Hypurrliquid Research, Protocol, and Build Docs</h1>
+    <p>
+      This is the compiled entrypoint for the repo's knowledge system: public paper,
+      protocol notes, generated findings, and status tracking. The long-term model is
+      <code>sources -> claims -> docs -> code -> verification</code>.
+    </p>
+    <div class="grid">
+      <a class="card" href="./paper/index.html">
+        <h2>Paper</h2>
+        <p>Public-facing reverse-engineering reference with diagrams, formulas, and subsystem overviews.</p>
+        <code>docs/paper/index.html</code>
+      </a>
+      <a class="card" href="./liquidation/index.html">
+        <h2>Liquidation &amp; ADL</h2>
+        <p>Dedicated execution reference for perp liquidation, portfolio margin, BOLE, and auto-deleveraging.</p>
+        <code>docs/liquidation/index.html</code>
+      </a>
+      <a class="card" href="./block-lifecycle/index.html">
+        <h2>Block Lifecycle</h2>
+        <p>Whole-block execution reference covering topology, leader rotation, hook points, hashing, and VoteAppHash.</p>
+        <code>docs/block-lifecycle/index.html</code>
+      </a>
+      <a class="card" href="./call-graphs.html">
+        <h2>Call Graphs</h2>
+        <p>Rendered subsystem call graphs and architecture relationships.</p>
+        <code>docs/call-graphs.html</code>
+      </a>
+      <a class="card" href="./whitepaper/index.md">
+        <h2>White Paper</h2>
+        <p>Narrative architecture shell for system goals, safety model, and high-level behavior.</p>
+        <code>docs/whitepaper/index.md</code>
+      </a>
+      <a class="card" href="./yellowpaper/index.md">
+        <h2>Yellow Paper</h2>
+        <p>Protocol-truth shell for execution order, state layout, hashing, and chain-specific differences.</p>
+        <code>docs/yellowpaper/index.md</code>
+      </a>
+      <a class="card" href="./findings/index.md">
+        <h2>Findings</h2>
+        <p>Dated RE artifacts, solvency reviews, runtime extracts, and compiled claim indexes.</p>
+        <code>docs/findings/index.md</code>
+      </a>
+      <a class="card" href="./status/index.md">
+        <h2>Status</h2>
+        <p>Open claims, implementation sequencing, and the active task surface.</p>
+        <code>docs/status/index.md</code>
+      </a>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>Knowledge Layout</h3>
+    <p>
+      The repo is moving toward a structured knowledge compiler. Humans consume the docs,
+      while agents maintain the structured source layer under <code>knowledge/</code>.
+    </p>
+    <ul>
+      <li><a class="inline" href="./knowledge/README.md">Knowledge overview</a></li>
+      <li><a class="inline" href="./knowledge/claims/README.md">Claims layer</a></li>
+      <li><a class="inline" href="./knowledge/sources/README.md">Sources layer</a></li>
+      <li><a class="inline" href="./findings/claims-index.md">Compiled claims index</a></li>
+      <li><a class="inline" href="./status/open-claims.md">Compiled open claims</a></li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Hypurrliquid Paper -- A Reverse Engineering Reference</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg-primary: #0f0f17;
+  --bg-secondary: #16161f;
+  --bg-tertiary: #1c1c2b;
+  --bg-code: #1a1a2e;
+  --bg-table-head: #1f1f35;
+  --bg-hover: #22223a;
+  --text-primary: #e0e0e8;
+  --text-secondary: #a0a0b0;
+  --text-muted: #707088;
+  --accent: #8B5CF6;
+  --accent-dim: #6d45c8;
+  --accent-bright: #a78bfa;
+  --accent-glow: rgba(139, 92, 246, 0.15);
+  --accent-border: rgba(139, 92, 246, 0.35);
+  --border: #2a2a3d;
+  --border-light: #35354a;
+  --green: #34d399;
+  --blue: #60a5fa;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --orange: #fb923c;
+  --sidebar-width: 300px;
+  --font-mono: 'SF Mono','Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --font-sans: 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-serif: 'Iowan Old Style','Palatino Linotype','Georgia',serif;
+}
+.light-mode {
+  --bg-primary: #fafaf9;
+  --bg-secondary: #f0f0ee;
+  --bg-tertiary: #e8e8e4;
+  --bg-code: #eeeee8;
+  --bg-table-head: #e4e4de;
+  --bg-hover: #ddddd8;
+  --text-primary: #1c1c1c;
+  --text-secondary: #555;
+  --text-muted: #888;
+  --accent: #7c3aed;
+  --accent-dim: #6d28d9;
+  --accent-bright: #8b5cf6;
+  --accent-glow: rgba(124,58,237,0.08);
+  --accent-border: rgba(124,58,237,0.25);
+  --border: #d0d0c8;
+  --border-light: #bbbbb5;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; scroll-padding-top:36px; }
+body {
+  background:var(--bg-primary);
+  color:var(--text-primary);
+  font-family:var(--font-serif);
+  font-size:17px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  transition: background .3s, color .3s;
+}
+nav#sidebar {
+  position:fixed; top:0; left:0; width:var(--sidebar-width); height:100vh;
+  background:var(--bg-secondary); border-right:1px solid var(--border);
+  overflow-y:auto; z-index:100; padding:24px 0 80px 0;
+  transition: transform .3s, background .3s;
+}
+nav#sidebar.collapsed { transform:translateX(calc(-1 * var(--sidebar-width))); }
+nav#sidebar .logo { padding:0 20px 18px; border-bottom:1px solid var(--border); }
+nav#sidebar .logo h2 { font-family:var(--font-mono); color:var(--accent); font-size:15px; letter-spacing:1px; }
+nav#sidebar .logo p { font-size:12px; color:var(--text-muted); margin-top:2px; }
+nav#sidebar ul { list-style:none; padding:8px 0; }
+nav#sidebar li a {
+  display:block; padding:5px 20px; font-size:13px; color:var(--text-secondary);
+  text-decoration:none; font-family:var(--font-sans); border-left:3px solid transparent;
+  transition: all .15s;
+}
+nav#sidebar li a:hover, nav#sidebar li a.active {
+  color:var(--accent-bright); background:var(--accent-glow);
+  border-left-color:var(--accent);
+}
+nav#sidebar li.depth-2 a { padding-left:36px; font-size:12px; }
+nav#sidebar li.depth-2 { display:none; }
+nav#sidebar li.depth-2.chapter-open { display:block; }
+nav#sidebar .chapter-toggle {
+  display:block; padding:7px 20px; font-size:13px; font-weight:600;
+  color:var(--text-primary); font-family:var(--font-sans);
+  cursor:pointer; user-select:none; border-left:3px solid transparent;
+  transition: all .15s; background:none; border:none; width:100%; text-align:left;
+}
+nav#sidebar .chapter-toggle:hover { color:var(--accent-bright); background:var(--accent-glow); }
+nav#sidebar .chapter-toggle::before {
+  content:'\25B6'; font-size:9px; display:inline-block; margin-right:6px;
+  transition: transform .2s; color:var(--text-muted);
+}
+nav#sidebar .chapter-toggle.open::before { transform:rotate(90deg); color:var(--accent); }
+nav#sidebar .chapter-toggle.open { border-left-color:var(--accent-dim); }
+#reading-progress {
+  position:fixed; top:0; left:0; width:0; height:2px; z-index:300;
+  background:linear-gradient(90deg, var(--accent), var(--accent-bright));
+  transition: width .1s;
+}
+#search-results { padding:0 16px; font-size:12px; color:var(--text-muted); font-family:var(--font-sans); }
+.search-highlight { background:rgba(139,92,246,0.3); border-radius:2px; padding:0 2px; }
+#nav-list .chapter-count {
+  font-size:10px; color:var(--text-muted); float:right; margin-right:12px;
+  font-family:var(--font-mono);
+}
+nav#sidebar::-webkit-scrollbar { width:4px; }
+nav#sidebar::-webkit-scrollbar-thumb { background:var(--border-light); border-radius:2px; }
+main {
+  margin-left:var(--sidebar-width); padding:48px 64px 120px;
+  max-width:960px; transition: margin .3s;
+}
+main.full { margin-left:0; }
+#menu-toggle {
+  position:fixed; top:12px; left:12px; z-index:200; background:var(--bg-tertiary);
+  border:1px solid var(--border); border-radius:6px; color:var(--text-secondary);
+  padding:6px 10px; cursor:pointer; font-size:18px; display:none; transition: background .3s;
+}
+#menu-toggle:hover { background:var(--accent-glow); color:var(--accent); }
+.topbar {
+  position:fixed; top:0; right:0; z-index:150; padding:10px 24px;
+  display:flex; gap:10px; align-items:center;
+}
+.topbar button {
+  background:var(--bg-tertiary); border:1px solid var(--border); border-radius:6px;
+  color:var(--text-secondary); padding:5px 12px; cursor:pointer; font-size:13px;
+  font-family:var(--font-sans); transition: all .15s;
+}
+.topbar a {
+  background:var(--bg-tertiary); border:1px solid var(--border); border-radius:6px;
+  color:var(--text-secondary); padding:5px 12px; cursor:pointer; font-size:13px;
+  font-family:var(--font-sans); transition: all .15s; text-decoration:none;
+}
+.topbar button:hover { border-color:var(--accent); color:var(--accent); }
+.topbar a:hover { border-color:var(--accent); color:var(--accent); }
+#search-bar {
+  padding:8px 16px; font-size:14px; font-family:var(--font-sans);
+  background:var(--bg-tertiary); color:var(--text-primary);
+  border:1px solid var(--border); border-radius:6px; width:220px;
+  transition: border .2s, background .3s, color .3s;
+}
+#search-bar:focus { outline:none; border-color:var(--accent); }
+h1 { font-size:36px; font-weight:700; color:var(--accent); margin-bottom:8px; font-family:var(--font-sans); }
+.subtitle { color:var(--text-muted); font-size:16px; margin-bottom:40px; font-family:var(--font-sans); }
+h2 {
+  font-size:26px; font-weight:700; color:var(--text-primary);
+  margin:56px 0 16px; padding-bottom:8px; border-bottom:2px solid var(--accent-border);
+  font-family:var(--font-sans);
+}
+h3 { font-size:20px; font-weight:600; color:var(--text-primary); margin:36px 0 12px; font-family:var(--font-sans); }
+h4 { font-size:16px; font-weight:600; color:var(--accent-bright); margin:24px 0 8px; font-family:var(--font-sans); }
+.anchor-link { font-size:14px; color:var(--text-muted); text-decoration:none; margin-left:6px; opacity:0; transition: opacity .15s; }
+h2:hover .anchor-link, h3:hover .anchor-link { opacity:1; }
+details { margin:16px 0; }
+details > summary {
+  cursor:pointer; font-family:var(--font-sans); font-weight:600;
+  font-size:16px; color:var(--accent-bright); padding:12px 16px;
+  background:var(--bg-secondary); border:1px solid var(--border);
+  border-radius:8px; list-style:none; user-select:none; transition: background .15s;
+}
+details > summary::-webkit-details-marker { display:none; }
+details > summary::before { content:'\25B6  '; font-size:10px; transition: transform .2s; display:inline-block; }
+details[open] > summary::before { transform:rotate(90deg); }
+details > summary:hover { background:var(--accent-glow); border-color:var(--accent-border); }
+details > .detail-body { padding:16px 20px; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; background:var(--bg-secondary); }
+pre {
+  background:var(--bg-code); border:1px solid var(--border); border-radius:8px;
+  padding:16px 20px; overflow-x:auto; font-family:var(--font-mono); font-size:13px;
+  line-height:1.6; color:var(--text-primary); margin:12px 0; position:relative;
+  transition: background .3s;
+}
+code { font-family:var(--font-mono); font-size:14px; color:var(--accent-bright); }
+pre code { color:var(--text-primary); font-size:13px; }
+.copy-btn {
+  position:absolute; top:8px; right:8px; background:var(--bg-tertiary);
+  border:1px solid var(--border); border-radius:4px; color:var(--text-muted);
+  padding:3px 8px; cursor:pointer; font-size:11px; font-family:var(--font-sans);
+  opacity:0; transition: opacity .15s;
+}
+pre:hover .copy-btn { opacity:1; }
+.copy-btn:hover { color:var(--accent); border-color:var(--accent); }
+table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; font-family:var(--font-sans); }
+th { background:var(--bg-table-head); color:var(--accent-bright); font-weight:600; text-align:left; padding:10px 12px; border:1px solid var(--border); font-size:13px; }
+td { padding:8px 12px; border:1px solid var(--border); vertical-align:top; }
+tr:hover td { background:var(--bg-hover); }
+td code { font-size:12px; }
+sup a { color:var(--accent); text-decoration:none; font-size:11px; font-weight:700; padding:0 2px; }
+sup a:hover { text-decoration:underline; }
+.citation-tag { font-size:11px; font-family:var(--font-mono); padding:2px 6px; border-radius:3px; margin:0 2px; display:inline; }
+.cite-bin { background:rgba(248,113,113,0.15); color:var(--red); }
+.cite-api { background:rgba(96,165,250,0.15); color:var(--blue); }
+.cite-snap { background:rgba(52,211,153,0.15); color:var(--green); }
+.cite-re { background:rgba(139,92,246,0.15); color:var(--accent); }
+.cite-obs { background:rgba(251,191,36,0.15); color:var(--yellow); }
+.mermaid { margin:20px 0; text-align:center; }
+.badge { font-size:11px; font-family:var(--font-sans); font-weight:600; padding:2px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:0.5px; }
+.badge-confirmed { background:rgba(52,211,153,0.2); color:var(--green); }
+.badge-observed { background:rgba(96,165,250,0.2); color:var(--blue); }
+.badge-inferred { background:rgba(251,191,36,0.2); color:var(--yellow); }
+#back-to-top {
+  position:fixed; bottom:24px; right:24px; background:var(--accent);
+  color:#fff; border:none; border-radius:50%; width:44px; height:44px;
+  cursor:pointer; font-size:20px; z-index:200; opacity:0;
+  transition: opacity .3s, transform .3s; transform:translateY(20px);
+  box-shadow:0 4px 20px rgba(139,92,246,0.4);
+}
+#back-to-top.visible { opacity:1; transform:translateY(0); }
+@media print {
+  nav#sidebar, .topbar, #back-to-top, #menu-toggle, .copy-btn { display:none !important; }
+  main { margin-left:0 !important; padding:20px !important; max-width:100% !important; }
+  body { font-size:12px; color:#000; background:#fff; }
+  h1,h2,h3,h4 { color:#000; }
+  pre, code { font-size:10px; }
+  details[open] > .detail-body { display:block !important; }
+  a { color:#333; }
+}
+@media (max-width:900px) {
+  nav#sidebar { transform:translateX(calc(-1 * var(--sidebar-width))); }
+  nav#sidebar.open { transform:translateX(0); }
+  main { margin-left:0; padding:24px 20px 80px; }
+  #menu-toggle { display:block; }
+  .topbar { right:auto; left:50px; }
+}
+p { margin:8px 0; }
+ul, ol { margin:8px 0 8px 24px; }
+li { margin:4px 0; }
+a { color:var(--accent-bright); }
+hr { border:none; border-top:1px solid var(--border); margin:32px 0; }
+blockquote { border-left:3px solid var(--accent); padding:8px 16px; margin:12px 0; background:var(--accent-glow); border-radius:0 6px 6px 0; font-style:italic; color:var(--text-secondary); }
+.hidden { display:none !important; }
+.section { margin-bottom:24px; }
+</style>
+</head>
+<body>
+<div id="reading-progress"></div>
+<button id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776;</button>
+<nav id="sidebar">
+<div class="logo">
+<h2>HYPURRLIQUID</h2>
+<p>Reverse Engineering Reference v2.0</p>
+<p style="margin-top:4px;font-size:11px;color:var(--text-muted)">2026-04-03 &middot; <span id="nav-chapter-count"></span></p>
+</div>
+<div style="padding:8px 16px;">
+<input type="text" id="search-bar" placeholder="Search... (Ctrl+K)" oninput="filterSections()">
+<div id="search-results"></div>
+</div>
+<div style="padding:0 16px 8px; display:flex; gap:6px;">
+<button onclick="expandAllChapters()" style="flex:1;padding:3px 0;font-size:11px;font-family:var(--font-sans);background:var(--bg-tertiary);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);cursor:pointer;">Expand All</button>
+<button onclick="collapseAllChapters()" style="flex:1;padding:3px 0;font-size:11px;font-family:var(--font-sans);background:var(--bg-tertiary);border:1px solid var(--border);border-radius:4px;color:var(--text-muted);cursor:pointer;">Collapse All</button>
+</div>
+<ul id="nav-list"></ul>
+</nav>
+<div class="topbar">
+<a href="../index.html" title="Docs hub">Docs</a>
+<button onclick="toggleTheme()" id="theme-btn" title="Toggle dark/light mode">Light</button>
+<button onclick="window.print()" title="Print">Print</button>
+</div>
+<main id="main-content">
+<h1>The Hypurrliquid Paper</h1>
+<p class="subtitle">A Complete Reverse Engineering Reference for the Hyperliquid L1<br><span style="font-size:13px;color:var(--text-muted)">lastdotnet/hyperliquid-rust &middot; Binary build <code>105cb1dc</code> (2026-03-21) mainnet / <code>331bef9b</code> (2026-04-03) testnet &middot; Hardfork v81</span></p>
+<blockquote>This document is derived entirely from reverse engineering of the deployed <code>hl-node</code> binary (81MB stripped ELF), live traffic captures, on-chain observation, and ABCI state snapshot analysis. It is not official Hyperliquid documentation. Every structural claim traces to confirmed binary evidence and is cited with its source.</blockquote>
+
+<section class="section" id="architecture">
+<h2>1. Architecture Overview <a href="#architecture" class="anchor-link">#</a></h2>
+<p>Hyperliquid L1 (HyperCore) is a purpose-built blockchain for perpetual futures, spot trading, lending (BOLE), prediction markets (HIP-4), and an integrated EVM (HyperEVM). It uses HyperBFT consensus with sub-second block times and processes ~200,000 operations/second.<sup><a href="#ref-1">[1]</a></sup></p>
+<h3 id="arch-stack">1.1 System Stack</h3>
+<div class="mermaid">
+graph TD
+    A["HyperBFT Consensus\n24 validators, ~70ms blocks"] --> B["Exchange State Machine\n56-field god struct"]
+    B --> C["Matching Engine\nPrice-time priority"]
+    B --> D["Clearinghouse\n18 fields, margin"]
+    B --> E["HyperEVM\nrevm 36, Cancun"]
+    B --> F["BOLE Lending\n19-field BolePool"]
+    B --> G["Outcomes HIP-4\nPrediction markets"]
+    C --> H["Funding Settlement\n1h interval, EMA"]
+    D --> I["Liquidation Engine\nADL, backstop"]
+    E --> J["CoreWriter\n0x3333...3333"]
+    style A fill:#8B5CF6,stroke:#6d45c8,color:#fff
+</div>
+<h3 id="arch-crates">1.2 Crate Map</h3>
+<table><tr><th>Crate</th><th>Lines</th><th>Purpose</th></tr>
+<tr><td><code>hl-engine</code></td><td>~4K</td><td>Exchange state machine, matching, clearinghouse, funding, fees, state hash (LtHash16)</td></tr>
+<tr><td><code>hl-evm</code></td><td>~2.5K</td><td>revm 36, Cancun spec, L1 precompiles (0x0800+), CoreWriter, RocksDB, JSON-RPC</td></tr>
+<tr><td><code>hl-consensus</code></td><td>~1.5K</td><td>HyperBFT two-chain commit, QC/TC validation, mempool, epoch manager</td></tr>
+<tr><td><code>hl-network</code></td><td>~2K</td><td>Gossip wire protocol, TCP framing, LZ4, MsgConcise/OutMsgConcise parsing</td></tr>
+<tr><td><code>hl-devnet</code></td><td>~2K</td><td>Devnet orchestrator: mock oracle/bridge/broadcaster, block producer, HTTP API</td></tr>
+<tr><td><code>hl-node</code></td><td>~1K</td><td>CLI binary (<code>hlx</code>), node builder, mode dispatch</td></tr>
+<tr><td><code>hl-primitives</code></td><td>~1.5K</td><td>Core types: blocks, actions, validators, chain config</td></tr>
+<tr><td><code>hl-rpc</code></td><td>~500</td><td>HTTP RPC server, /info API (30+ query types)</td></tr>
+<tr><td><code>hl-storage</code></td><td>~500</td><td>QMDB backend, S3 ingest</td></tr>
+<tr><td><code>hl-stages</code></td><td>~300</td><td>Reth-style pipeline stages</td></tr>
+<tr><td><code>hl-exex</code></td><td>~200</td><td>Execution extensions (ExEx) framework</td></tr>
+<tr><td><code>hl-re</code></td><td>~200</td><td>Binary RE tools (not runtime)</td></tr></table>
+<h3 id="arch-deps">1.3 Confirmed Dependency Versions</h3>
+<p>Extracted from path strings in the 81MB binary.<sup><a href="#ref-2">[2]</a></sup></p>
+<table><tr><th>Crate</th><th>Version</th><th>Purpose</th></tr>
+<tr><td><code>blake3</code></td><td>1.7.0</td><td>LtHash XOF (SSE2/AVX2/AVX512)</td></tr>
+<tr><td><code>sha2</code></td><td>0.10.8</td><td>LtHash finalization (SHA-256)</td></tr>
+<tr><td><code>k256</code></td><td>0.13.3</td><td>secp256k1 signatures</td></tr>
+<tr><td><code>secp256k1</code></td><td>0.29.0</td><td>Consensus signing</td></tr>
+<tr><td><code>rmp-serde</code></td><td>1.3.0</td><td>State serialization (MessagePack)</td></tr>
+<tr><td><code>ethers-core</code></td><td>2.0.14</td><td>Ethereum types</td></tr>
+<tr><td><code>tiny-keccak</code></td><td>2.0.2</td><td>Keccak-256 (address derivation)</td></tr>
+<tr><td><code>revm</code></td><td>19.2.0</td><td>EVM executor</td></tr>
+<tr><td><code>revm-precompile</code></td><td>16.0.0</td><td>EVM precompiles</td></tr>
+<tr><td><code>alloy-rpc-types-eth</code></td><td>0.9.2</td><td>RPC types</td></tr>
+<tr><td><code>alloy-consensus</code></td><td>0.9.2</td><td>Consensus types</td></tr>
+<tr><td><code>tokio</code></td><td>1.44.2</td><td>Async runtime</td></tr>
+<tr><td><code>serde_json</code></td><td>1.0.120</td><td>JSON serialization</td></tr>
+<tr><td><code>chrono</code></td><td>0.4.38</td><td>Timestamps</td></tr>
+<tr><td><code>clap</code></td><td>2.34.0</td><td>CLI parsing</td></tr>
+<tr><td><code>rand_chacha</code></td><td>0.3.1</td><td>Deterministic RNG</td></tr></table>
+<details><summary>Internal Source Layout (from binary panic paths)</summary><div class="detail-body"><pre><code>/home/ubuntu/hl/code_Mainnet/        (mainnet build 105cb1dc)
++-- base/          -- Shared utilities (40+ files)
++-- db/            -- RocksDB backend
++-- evm_rpc/       -- EVM JSON-RPC
++-- l1/            -- Core logic
+|   +-- abci/engine.rs, state.rs
+|   +-- book/book/impl_insert_order.rs
+|   +-- clearinghouse/
+|   +-- exchange/impl_trading.rs, end_block.rs, exchange.rs, impl_outcome.rs
+|   +-- evm/hyper_evm.rs, transactor.rs
+|   +-- staking.rs, vault/, fees/compute.rs, bole/user_state.rs
++-- net_utils/     -- TCP + LZ4
++-- node/consensus/ -- state.rs, server.rs, types.rs, timer.rs, mempool.rs,
+                      client_block.rs, heartbeat_tracker.rs, rpc.rs, network.rs
+
+/home/ubuntu/hl/code_Testnet/        (testnet build 331bef9b, 2026-04-03)
++-- base/          -- Utilities (50+ files, expanded)
++-- db/            -- RocksDB backend
++-- evm_rpc/       -- EVM JSON-RPC
++-- l1/            -- Core logic (+ core_writer.rs in evm/)
++-- node/          -- Orchestration + Consensus</code></pre></div></details>
+</section>
+
+<section class="section" id="consensus">
+<h2>2. Consensus: HyperBFT <a href="#consensus" class="anchor-link">#</a></h2>
+<p>HyperBFT is a <strong>two-chain HotStuff</strong> variant. <span class="badge badge-confirmed">CONFIRMED</span> <span class="citation-tag cite-bin">BIN: "CertifiedTwoChainCommit" in rodata</span><sup><a href="#ref-3">[3]</a></sup></p>
+<h3 id="consensus-params">2.1 Parameters</h3>
+<table><tr><th>Parameter</th><th>Value</th><th>Evidence</th></tr>
+<tr><td>Block time</td><td>~70ms</td><td><span class="badge badge-observed">OBSERVED</span></td></tr>
+<tr><td>Finality</td><td>Instant (no reorgs)</td><td><span class="badge badge-confirmed">CONFIRMED</span></td></tr>
+<tr><td>Active validators</td><td>24 (mainnet), top 50 (testnet)</td><td><span class="badge badge-observed">OBSERVED</span></td></tr>
+<tr><td>Epoch</td><td>100,000 rounds (~90 min)</td><td><span class="badge badge-confirmed">CONFIRMED</span></td></tr>
+<tr><td>Proposer selection</td><td><code>RoundRobinTtl</code></td><td><span class="badge badge-confirmed">CONFIRMED</span></td></tr>
+<tr><td>Signing</td><td>secp256k1</td><td><span class="citation-tag cite-bin">BIN: k256-0.13.3, secp256k1-0.29.0</span></td></tr>
+<tr><td>Domain separator</td><td><code>"Hyperliquid Consensus Payload"</code></td><td><span class="citation-tag cite-bin">BIN: VA 0x76db94</span></td></tr>
+<tr><td>VoteAppHash</td><td>Every 2000 blocks</td><td><span class="badge badge-observed">OBSERVED</span></td></tr></table>
+<h3 id="consensus-lifecycle">2.2 Round Lifecycle</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant P as Proposer
+    participant V as Validators (2/3+)
+    participant N as Next Proposer
+    Note over P: Round R begins
+    P->>V: PROPOSE (Block + QC for R-1)
+    V->>V: Verify proposer, QC, parent_round
+    V->>P: VOTE (sign block hash)
+    Note over V: 2/3+ stake votes
+    P->>V: QC formed for Round R
+    Note over N: Round R+1
+    N->>V: PROPOSE (Block + QC for R)
+    Note over V: Block R COMMITTED (two-chain)
+</div>
+<h3 id="consensus-structs">2.3 Core Structures</h3>
+<pre><code>Block { round, parent_round, tx_hashes, qc, tc, block_hash, time, proposer }
+ClientBlock { proof: { signed_block, commit_proof }, txs }
+Qc { block_hash, round, signatures }
+Tc { signed_timeouts, round }
+CommitProof { child: Signed&lt;Block&gt;, grandchild_qc: Qc }
+EpochTracker { epoch_states, active_epoch, cur_epoch_state, cur_epoch, epoch_duration_seconds }</code></pre>
+<h3 id="consensus-errors">2.4 Consensus Errors</h3>
+<p><span class="badge badge-confirmed">CONFIRMED</span> at VA 0x6600fa.<sup><a href="#ref-4">[4]</a></sup></p>
+<table><tr><th>Error</th><th>Meaning</th></tr>
+<tr><td><code>QcNoQuorum</code></td><td>Insufficient stake weight</td></tr>
+<tr><td><code>QcRoundBeforeHardfork</code></td><td>QC before hardfork boundary</td></tr>
+<tr><td><code>EmptyValidators</code></td><td>No validators</td></tr>
+<tr><td><code>CommitProofChildQc</code></td><td>Child QC must reference committed block</td></tr>
+<tr><td><code>CommitProofGrandchildQc</code></td><td>Grandchild QC must reference child</td></tr>
+<tr><td><code>CommitProofConsecutive</code></td><td>Blocks must be consecutive rounds</td></tr>
+<tr><td><code>TcNoQuorum</code></td><td>Insufficient TC stake weight</td></tr>
+<tr><td><code>TimeoutRoundMismatch</code></td><td>Timeout round mismatch</td></tr>
+<tr><td><code>AlreadyHaveTimeoutFromNode</code></td><td>Duplicate timeout</td></tr>
+<tr><td><code>BadBlockRound</code></td><td>Block/commit round mismatch</td></tr>
+<tr><td><code>BlockAlreadyRegistered</code></td><td>Duplicate block</td></tr>
+<tr><td><code>ValidatorIPMismatch</code></td><td>IP mismatch</td></tr></table>
+<h3 id="consensus-signing-gates">2.5 Validator Signing Gates (6 Checks)</h3>
+<table><tr><th>#</th><th>Check</th><th>Failure</th></tr>
+<tr><td>1</td><td><code>is_main_signer</code></td><td>Not designated signer</td></tr>
+<tr><td>2</td><td>Active set</td><td>"Home validator has left the active set."</td></tr>
+<tr><td>3</td><td>Not jailed</td><td><code>jailed_signers</code></td></tr>
+<tr><td>4</td><td><code>last_vote_round</code></td><td>Double-vote prevention</td></tr>
+<tr><td>5</td><td>Not disabled</td><td><code>disabled_validators</code></td></tr>
+<tr><td>6</td><td>Round match</td><td>Vote round != consensus round</td></tr></table>
+</section>
+
+<section class="section" id="mempool">
+<h2>3. Mempool <a href="#mempool" class="anchor-link">#</a></h2>
+<pre><code>Mempool {
+    committed_tx_hashes:  HashSet,    // dedup
+    uncommitted_txs:      HashMap,    // pending
+    tx_hash_to_seq_num:   HashMap,    // ordering
+    block_hash_to_block:  HashMap,    // block buffer
+    broadcaster_nonces:   HashMap,    // per-broadcaster
+}</code></pre>
+<p>No hard mempool size limit <span class="badge badge-confirmed">CONFIRMED</span>. Eviction is time-based.<sup><a href="#ref-5">[5]</a></sup></p>
+<h3 id="mempool-admission">3.1 Admission Pipeline (7 Stages)</h3>
+<table><tr><th>Stage</th><th>Check</th><th>Error</th></tr>
+<tr><td>1</td><td>Parse action</td><td><code>"could not parse action"</code></td></tr>
+<tr><td>2</td><td>Signature verify</td><td><code>AddTxNotSigned</code></td></tr>
+<tr><td>3</td><td>Broadcaster whitelist</td><td><code>TxUnexpectedBroadcaster</code></td></tr>
+<tr><td>4</td><td>Broadcaster nonce</td><td><code>TxInvalidBroadcasterNonce</code></td></tr>
+<tr><td>5</td><td>Dedup</td><td><code>AddTxDuplicate</code></td></tr>
+<tr><td>6</td><td>Already committed</td><td><code>AddTxCommitted</code></td></tr>
+<tr><td>7</td><td>Enqueue</td><td>--</td></tr></table>
+</section>
+
+<section class="section" id="execution">
+<h2>4. Block Execution Pipeline <a href="#execution" class="anchor-link">#</a></h2>
+<p><span class="badge badge-confirmed">CONFIRMED</span> from binary VA 0x01e748e0 and string at 0x539f8a. Pipeline: <code>RecoverUsers &rarr; BeginBlock &rarr; DeliverSignedActions &rarr; ProcessFills &rarr; EVM Block &rarr; EndBlock &rarr; Commit &rarr; VoteAppHash</code>.<sup><a href="#ref-6">[6]</a></sup></p>
+<div class="mermaid">
+graph LR
+    A["RecoverUsers"] --> B["BeginBlock\n9 named effects"]
+    B --> B2["Supplementary\n5 per-book effects"]
+    B2 --> C["DeliverSignedActions\n90 action types"]
+    C --> D["ProcessFills\nFees + Settlement"]
+    D --> E["EVM Block\nSmall (1s) + Big (60s)"]
+    E --> F["EndBlock\nMark prices"]
+    F --> G["Commit\nLtHash16 + SHA-256"]
+    G --> H["VoteAppHash\n(every 2000 blocks)"]
+    style B fill:#fbbf24,stroke:#333,color:#000
+    style C fill:#34d399,stroke:#333,color:#000
+    style D fill:#34d399,stroke:#333,color:#000
+    style E fill:#60a5fa,stroke:#333,color:#000
+    style F fill:#fb923c,stroke:#333,color:#000
+    style G fill:#8B5CF6,stroke:#333,color:#fff
+</div>
+
+<h3 id="exec-phase1">4.1 RecoverUsers</h3>
+<p>Before any effects: parse block header, validate proposer is active validator, verify broadcaster authorization per bundle, recover EIP-712 signers, reject duplicate nonces.</p>
+
+<h3 id="exec-beginblock">4.2 BeginBlock &mdash; 9 Named Effects <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Binary-confirmed order from VA <code>0x01e748e0</code> (2026-04-02). Note: this ordering differs from older RE notes which placed BOLE after funding.</p>
+<table><tr><th>#</th><th>Effect</th><th>Guard</th><th>What</th></tr>
+<tr><td>1</td><td><code>update_oracle</code></td><td>&mdash;</td><td>Pre-process oracle state for block</td></tr>
+<tr><td>2</td><td><code>distribute_funding</code></td><td><code>funding_distribute_guard</code> (8s)</td><td>Settle funding: <code>payment = szi &times; px &times; &Delta;cum_funding</code></td></tr>
+<tr><td>3</td><td><code>apply_bole_liquidations</code></td><td>&mdash;</td><td>Health &lt; 0.8 &rarr; partial/market/backstop liquidation + ADL cascade</td></tr>
+<tr><td>4</td><td><code>update_funding_rates</code></td><td><code>funding_update_guard</code> (8s)</td><td>Sample premium, update DeterministicEma</td></tr>
+<tr><td>5</td><td><code>refresh_hip3_stale_mark_pxs</code></td><td><code>hip3_stale_mark_px_guard</code></td><td>Fall back stale mark prices to oracle (10s window)</td></tr>
+<tr><td>6</td><td><code>prune_book_empty_user_states</code></td><td><code>book_empty_user_states_pruning_guard</code> (60s)</td><td>Remove users with zero-size positions</td></tr>
+<tr><td>7</td><td><code>update_staking_rewards</code></td><td>&mdash;</td><td>Stage epoch staking rewards</td></tr>
+<tr><td>8</td><td><code>update_action_delayer</code></td><td>&mdash;</td><td>Drain matured CoreWriter delayed actions and execute as L1</td></tr>
+<tr><td>9</td><td><code>update_aligned_quote_token</code></td><td>&mdash;</td><td>Sample stake-weighted median SOFR rate from validator votes</td></tr></table>
+
+<h4>Supplementary per-book maintenance (after the 9 named effects):</h4>
+<table><tr><th>Effect</th><th>Guard</th></tr>
+<tr><td><code>check_trigger_orders</code> (TP/SL)</td><td>&mdash;</td></tr>
+<tr><td><code>cancel_aggressive_orders_at_oi_cap</code></td><td><code>cancel_oi_cap_guard</code> (1s)</td></tr>
+<tr><td><code>validator_l1_vote_tracker_prune_expired</code></td><td>Internal (60s)</td></tr>
+<tr><td><code>reset_recent_ois</code></td><td><code>reset_recent_oi_guard</code> (1s)</td></tr>
+<tr><td><code>update_stale_mark_guards</code></td><td>Per-book</td></tr></table>
+
+<h3 id="exec-phase3">4.3 DeliverSignedActions</h3>
+<p>Each bundle is processed sequentially. Per action: resolve actor (EIP-712 recovery), nonce check, try typed dispatch (<code>HlAction</code> enum, 90 variants), fall back to JSON string dispatch. Fills accumulate in <code>BlockResult</code>.</p>
+
+<h3 id="exec-phase4">4.4 ProcessFills</h3>
+<p>After all actions: per-fill fee computation (<code>compute_fee()</code> with tiers + referral), debit fees, <code>clearinghouse.process_fill()</code> for position updates, volume tracking for tier progression, fill history (capped 1000/user), ExEx event emission.</p>
+
+<h3 id="exec-phase5">4.5 EVM Block Phase</h3>
+<p>Dual-block architecture: <strong>small blocks</strong> (1s, 2M gas) for responsive UX + <strong>big blocks</strong> (60s, 30M gas) for heavy computation. Each block's receipts are scanned for CoreWriter <code>RawAction(address,bytes)</code> logs from <code>0x3333...3333</code>. Decoded actions enqueued in <code>ActionDelayer</code> with <code>delay_scale &times; 3000ms</code> delay &mdash; fire in Effect 8 of the NEXT block.</p>
+<p>In replay mode (no executor): raw tx calldata parsed via minimal RLP scanner to extract CoreWriter calls without EVM execution.</p>
+
+<h3 id="exec-phase6">4.6 EndBlock</h3>
+<p>Update mark prices from order book mid-prices: for each book with orders, <code>mark_prices[asset] = book.mid_price()</code>.</p>
+
+<h3 id="exec-phase7">4.7 Commit + VoteAppHash</h3>
+<p>State hash: <code>rmp_serde &rarr; blake3 XOF (2048B) &rarr; paddw u16 (LtHash16) &rarr; SHA-256 (32B)</code>. 14 L1 + 3 EVM accumulator categories. Every 2000 blocks, validators submit <code>VoteAppHash</code>; quorum at 2/3+ stake agreement.</p>
+
+<h3 id="exec-timing">4.8 Timing Parameters</h3>
+<table><tr><th>Parameter</th><th>Value</th></tr>
+<tr><td>Block time (HyperBFT)</td><td>~70ms</td></tr>
+<tr><td>Funding interval</td><td>8000ms</td></tr>
+<tr><td>OI cap check</td><td>1000ms</td></tr>
+<tr><td>Book pruning</td><td>60000ms</td></tr>
+<tr><td>HIP-3 stale mark</td><td>From snapshot</td></tr>
+<tr><td>CoreWriter delay</td><td>3000ms &times; delay_scale</td></tr>
+<tr><td>BOLE partial liq cooldown</td><td>30s</td></tr>
+<tr><td>VoteAppHash checkpoint</td><td>2000 blocks</td></tr>
+<tr><td>Aligned quote token vote</td><td>Daily 22:00 UTC</td></tr></table>
+<h3 id="exec-actions">4.2 Action Dispatch (97 Variants)</h3>
+<p>Main dispatcher at VA <code>0x0272a320</code> (>500KB). <span class="badge badge-confirmed">CONFIRMED</span>: <code>variant index 0 &lt;= i &lt; 90</code> (mainnet). Testnet build <code>331bef9b</code> (2026-04-03): 97 variants (+7 new).<sup><a href="#ref-8">[8]</a></sup></p>
+<details><summary>Complete Action Type Catalog</summary><div class="detail-body">
+<h4>Trading (~15)</h4>
+<table><tr><th>Action</th><th>Wire Name</th><th>Share</th></tr>
+<tr><td>Order</td><td><code>order</code></td><td>68.2%</td></tr>
+<tr><td>CancelByCloid</td><td><code>cancelByCloid</code></td><td>16.7%</td></tr>
+<tr><td>Cancel</td><td><code>cancel</code></td><td>10.5%</td></tr>
+<tr><td>BatchModify</td><td><code>batchModify</code></td><td>0.9%</td></tr>
+<tr><td>ScheduleCancel</td><td><code>scheduleCancel</code></td><td>0.3%</td></tr>
+<tr><td>Modify, TwapOrder, TwapCancel, Liquidate</td><td>--</td><td>&lt;0.1% each</td></tr></table>
+<h4>Account (~8)</h4>
+<p><code>updateLeverage</code>, <code>updateIsolatedMargin</code>, <code>topUpIsolatedOnlyMargin</code>, <code>approveAgent</code>, <code>approveBuilderFee</code>, <code>setReferrer</code>, <code>setDisplayName</code>, <code>userPortfolioMargin</code></p>
+<h4>Transfers (~5)</h4>
+<p><code>usdSend</code>, <code>usdClassTransfer</code>, <code>spotSend</code>, <code>sendAsset</code>, <code>withdraw3</code></p>
+<h4>Vaults (~4)</h4>
+<p><code>createVault</code>, <code>vaultTransfer</code>, <code>vaultDistribute</code>, <code>vaultModify</code></p>
+<h4>Staking (~3)</h4>
+<p><code>tokenDelegate</code>, <code>claimRewards</code>, <code>linkStakingUser</code></p>
+<h4>SetGlobalAction (14 sub-types)</h4>
+<table><tr><th>#</th><th>Sub-variant</th></tr>
+<tr><td>0</td><td><code>registerAsset</code></td></tr><tr><td>1</td><td><code>setOracle</code></td></tr>
+<tr><td>2</td><td><code>insertMarginTable</code></td></tr><tr><td>3</td><td><code>setFeeRecipient</code></td></tr>
+<tr><td>4</td><td><code>haltTrading</code></td></tr><tr><td>5</td><td><code>setMarginTableIds</code></td></tr>
+<tr><td>6</td><td><code>setOpenInterestCaps</code></td></tr><tr><td>7</td><td><code>setFundingMultipliers</code></td></tr>
+<tr><td>8</td><td><code>setMarginModes</code></td></tr><tr><td>9</td><td><code>setFeeScale</code></td></tr>
+<tr><td>10</td><td><code>setGrowthModes</code></td></tr><tr><td>11</td><td><code>setFundingInterestRates</code></td></tr>
+<tr><td>12</td><td><code>disableDex</code></td></tr><tr><td>13</td><td><code>setPerpAnnotation</code></td></tr></table>
+<h4>Bridge (~4)</h4>
+<p><code>VoteEthDepositAction</code>(3 fields), <code>ValidatorSignWithdrawalAction</code>(5 fields), <code>SignValidatorSetUpdateAction</code>, <code>VoteEthFinalizedWithdrawalAction</code></p>
+<h4>EVM, BOLE, Outcomes, Governance, Other</h4>
+<p><code>evmRawTx</code> (1.7%), <code>sendToEvmWithData</code>, <code>borrowLend</code> (borrow/supply/repay/defaultLiquidator/optOut), <code>systemBole</code> (Reserve(9)/Adl(2)/BackstopLiquidatorTokenParams(4)/ResetIndex(2)/RateLimit(7)/TestnetAction(2)), <code>userOutcome</code> (Split/Merge/Negate/MergeQuestion), <code>govPropose</code>(6), <code>govVote</code>(5), <code>perpDeploy</code>, <code>subAccountTransfer</code>, <code>multiSig</code>, <code>userDexAbstraction</code>, <code>noop</code>(1.1%)</p>
+<h4>New in Testnet 2026-04-03 (+7 Variants) <span class="badge badge-confirmed">CONFIRMED</span></h4>
+<table><tr><th>Action</th><th>Notes</th></tr>
+<tr><td><code>GossipPriorityBidAction</code></td><td>Priority fee bidding for gossip ordering</td></tr>
+<tr><td><code>ReserveRequestWeightAction</code></td><td>Reserve request weight management</td></tr>
+<tr><td><code>SystemAlignedQuoteSupplyDeltaAction</code></td><td>System-level aligned quote token supply adjustment</td></tr>
+<tr><td><code>DeployerSendToEvmForFrozenUserAction</code></td><td>Recovery path: deployer sends to EVM on behalf of frozen users</td></tr>
+<tr><td><code>SystemUsdClassTransferAction</code></td><td>System-level USD class transfer</td></tr>
+<tr><td><code>FinalizeEvmContractAction</code></td><td>Finalize EVM contract deployment from L1</td></tr>
+<tr><td><code>SubAccountSpotTransferAction</code></td><td>Sub-account spot token transfer</td></tr></table>
+<p><strong>Testnet vs Mainnet</strong>: 97 vs 90 action variants (testnet build 331bef9b, 2026-04-03). RestingOrder +2 fields, Fill +12 fields on testnet.<sup><a href="#ref-9">[9]</a></sup></p>
+</div></details>
+</section>
+
+<section class="section" id="state">
+<h2>5. Exchange State (57 Keys) <a href="#state" class="anchor-link">#</a></h2>
+<p>The <code>Exchange</code> struct: ALL L1 state. ~1.1GB as .rmp, saved every ~20 min.<sup><a href="#ref-10">[10]</a></sup></p>
+<p><span class="badge badge-confirmed">CONFIRMED</span> Serde struct chain discovered at <code>.rodata</code> offset <code>0x543428</code> in testnet binary (2026-04-03). This gives the complete ABCI state serialization layout -- every field name, order, and nesting depth for the full Exchange struct hierarchy. <span class="citation-tag cite-bin">BIN: testnet 331bef9b .rodata 0x543428</span></p>
+<details><summary>All 57 Exchange Fields</summary><div class="detail-body">
+<table><tr><th>#</th><th>Field</th><th>Type</th></tr>
+<tr><td>1</td><td><code>locus</code></td><td>Locus(15)</td></tr>
+<tr><td>2</td><td><code>perp_dexs</code></td><td>PerpDex(4)[]</td></tr>
+<tr><td>3</td><td><code>spot_books</code></td><td>Book[]</td></tr>
+<tr><td>4</td><td><code>agent_tracker</code></td><td>AgentTracker(5)</td></tr>
+<tr><td>5-6</td><td><code>funding_distribute_guard</code>, <code>funding_update_guard</code></td><td>BucketGuard</td></tr>
+<tr><td>7</td><td><code>sub_account_tracker</code></td><td>SubAccountTracker(2)</td></tr>
+<tr><td>8</td><td><code>allowed_liquidators</code></td><td>Vec</td></tr>
+<tr><td>9</td><td><code>bridge2</code></td><td>Bridge2(10)</td></tr>
+<tr><td>10</td><td><code>staking</code></td><td>Staking(6)</td></tr>
+<tr><td>11</td><td><code>c_staking</code></td><td>CStaking(23)</td></tr>
+<tr><td>12</td><td><code>funding_err_dur_guard</code></td><td>ErrDurGuard</td></tr>
+<tr><td>13</td><td><code>max_order_distance_from_anchor</code></td><td>Config</td></tr>
+<tr><td>14-15</td><td><code>scheduled_freeze_height</code>, <code>simulate_crash_height</code></td><td>Option&lt;u64&gt;</td></tr>
+<tr><td>16</td><td><code>validator_power_updates</code></td><td>Vec</td></tr>
+<tr><td>17</td><td><code>cancel_aggressive_orders_at_oi_cap_guard</code></td><td>BucketGuard</td></tr>
+<tr><td>18-20</td><td><code>last_hlp_cancel_time</code>, <code>post_only_until_time</code>, <code>post_only_until_height</code></td><td>u64/Option</td></tr>
+<tr><td>21-24</td><td><code>spot_twap_tracker</code>, <code>user_to_display_name</code>, <code>book_empty_user_states_pruning_guard</code>, <code>user_to_scheduled_cancel</code></td><td>Various</td></tr>
+<tr><td>25-29</td><td><code>hyperliquidity</code>, <code>spot_disabled</code>, <code>prune_agent_idx</code>, <code>max_hlp_withdraw_fraction_per_day</code>, <code>hlp_start_of_day_account_value</code></td><td>Various</td></tr>
+<tr><td>30-32</td><td><code>register_token_gas_auction</code>, <code>perp_deploy_gas_auction</code>, <code>spot_pair_deploy_gas_auction</code></td><td>GasAuction</td></tr>
+<tr><td>33</td><td><code>hyper_evm</code></td><td>HyperEvm(13)</td></tr>
+<tr><td>34-36</td><td><code>vtg</code>, <code>app_hash_vote_tracker</code>, <code>begin_block_logic_guard</code></td><td>Various</td></tr>
+<tr><td>37-39</td><td><code>user_to_evm_state</code>, <code>multi_sig_tracker</code>, <code>reserve_accumulators</code></td><td>Various</td></tr>
+<tr><td>40-43</td><td><code>partial_liquidation_cooldown</code>, <code>evm_enabled</code>, <code>validator_l1_vote_tracker</code>, <code>staking_link_tracker</code></td><td>Various</td></tr>
+<tr><td>44-47</td><td><code>action_delayer</code>(9), <code>default_hip3_limits</code>(6), <code>hip3_stale_mark_px_guard</code>, <code>disabled_precompiles</code></td><td>Various</td></tr>
+<tr><td>48-54</td><td><code>lvt</code>, <code>hip3_no_cross</code>, <code>initial_usdc_evm_system_balance</code>, <code>validator_l1_stream_tracker</code>, <code>last_aligned_quote_token_sample_time</code>, <code>user_to_evm_to_l1_wei_remaining</code>, <code>dex_abstraction_enabled</code></td><td>Various</td></tr>
+<tr><td>55-57</td><td><code>hil</code>, <code>oh</code>, <code>abstraction</code></td><td>Unknown/AbstractionState</td></tr></table>
+</div></details>
+<h3 id="state-locus">5.1 Locus (15 Keys, 3-Char Serde Renames)</h3>
+<p><strong>Locus is the compact core container</strong> inside the 57-field Exchange. The parent Exchange uses full field names in serde; <code>Locus</code> is the notable exception that still uses short 3-character keys.</p>
+<table><tr><th>Key</th><th>Full name</th><th>Role</th></tr>
+<tr><td><code>cls</code></td><td>clearinghouses</td><td>Main perp clearinghouse plus HIP-3 clearinghouses.</td></tr>
+<tr><td><code>scl</code></td><td>spot_clearinghouse</td><td>Separate spot clearinghouse state.</td></tr>
+<tr><td><code>ctx</code></td><td>context</td><td>Block height, round, time, next IDs, system nonce.</td></tr>
+<tr><td><code>ftr</code></td><td>fee_tracker</td><td>Fee schedule, referral state, builder fees.</td></tr>
+<tr><td><code>ust</code></td><td>user_states</td><td>Main user state map.</td></tr>
+<tr><td><code>chn</code></td><td>chain</td><td>Chain label such as <code>Mainnet</code> or <code>Testnet</code>.</td></tr>
+<tr><td><code>pdl</code></td><td>perps_disabled_launch</td><td>Launch / gating flag for perp activity.</td></tr>
+<tr><td><code>uaR</code></td><td>user_action_registry</td><td>Sparse or empty registry surface; exact operational use still weakly grounded.</td></tr>
+<tr><td><code>blp</code></td><td>bole_pool</td><td>BOLE lending pool and reserve-level state.</td></tr>
+<tr><td><code>qus</code></td><td>queue_signers</td><td>Queue signer addresses.</td></tr>
+<tr><td><code>ctr</code></td><td>counters</td><td>Transaction / validation / action counters.</td></tr>
+<tr><td><code>uac</code></td><td>user_account_configs</td><td>Per-user account configuration and mode state.</td></tr>
+<tr><td><code>vlt</code></td><td>vaults</td><td>All vault state.</td></tr>
+<tr><td><code>hcm</code></td><td>hot_cold_mode</td><td>Operational hot/cold mode switch.</td></tr>
+<tr><td><code>aux</code></td><td>auxiliary</td><td>Later-added auxiliary slot; present in snapshots even though older binary descriptors still say 14 elements.</td></tr></table>
+<h3 id="state-clearinghouse">5.2 Clearinghouse (18 Fields)</h3>
+<p>This is the perp risk and balance core that <code>locus.cls[]</code> stores for the main market and each HIP-3 perp universe.</p>
+<table><tr><th>Field</th><th>Role</th></tr>
+<tr><td><code>meta</code></td><td>Perp metadata, margin tables, collateral token, and market-level configuration.</td></tr>
+<tr><td><code>user_states</code></td><td>Per-user position, balance, and open-order state for this clearinghouse.</td></tr>
+<tr><td><code>oracle</code></td><td>Oracle and external-perp pricing state for this clearinghouse.</td></tr>
+<tr><td><code>total_net_deposit</code></td><td>Aggregate net deposits into the clearinghouse.</td></tr>
+<tr><td><code>total_non_bridge_deposit</code></td><td>Non-bridge deposit aggregate used in accounting and safety checks.</td></tr>
+<tr><td><code>perform_auto_deleveraging</code></td><td>Flag that ADL is active for this clearinghouse.</td></tr>
+<tr><td><code>adl_shortfall_remaining</code></td><td>Residual shortfall still needing deleveraging.</td></tr>
+<tr><td><code>bridge2_withdraw_fee</code></td><td>Bridge-related withdrawal fee carried in clearinghouse state.</td></tr>
+<tr><td><code>daily_exchange_scaled_and_raw_vlms</code></td><td>Volume accounting and daily scaled volume trackers.</td></tr>
+<tr><td><code>halted_assets</code></td><td>Per-asset halt state.</td></tr>
+<tr><td><code>override_max_signed_distances_from_oracle</code></td><td>Per-asset order-distance overrides relative to oracle / anchor prices.</td></tr>
+<tr><td><code>max_withdraw_leverage</code></td><td>Withdrawal leverage guardrail.</td></tr>
+<tr><td><code>last_set_global_time</code></td><td>Timestamp of the last oracle / governance-style global update.</td></tr>
+<tr><td><code>usdc_ntl_scale</code></td><td>USDC notional scaling tuple.</td></tr>
+<tr><td><code>isolated_external</code></td><td>Isolated-margin external accounting surface.</td></tr>
+<tr><td><code>isolated_oracle</code></td><td>Oracle-side isolated-margin state.</td></tr>
+<tr><td><code>moh</code></td><td><code>MainOrHip3</code> discriminator for main clearinghouse vs HIP-3 clearinghouse.</td></tr>
+<tr><td><code>znfn</code></td><td>Fill nonce counter.</td></tr></table>
+<h3 id="state-cstaking">5.3 CStaking (23 Fields)</h3>
+<p><code>CStaking</code> is the on-chain validator, delegation, governance, and broadcaster-control surface. The raw binary inventory is easier to use when grouped by purpose.</p>
+<table><tr><th>Field</th><th>Purpose</th></tr>
+<tr><td><code>stakes</code></td><td>Validator stake ledger.</td></tr>
+<tr><td><code>allow_all_validators</code></td><td>Open vs permissioned validator-set switch.</td></tr>
+<tr><td><code>allowed_validators</code></td><td>Explicit allow-list when the set is permissioned.</td></tr>
+<tr><td><code>broadcasters</code></td><td>Whitelisted broadcaster addresses for signed user action intake.</td></tr>
+<tr><td><code>validator_to_profile</code></td><td>Validator metadata and profile state.</td></tr>
+<tr><td><code>validator_to_last_signer_change_time</code></td><td>Signer rotation timing guard.</td></tr>
+<tr><td><code>delegations</code></td><td>Delegator-to-validator stake mapping.</td></tr>
+<tr><td><code>proposals</code></td><td>Governance proposal storage.</td></tr>
+<tr><td><code>stakes_decay_bucket_guard</code></td><td>Rate limiter for stake decay / maintenance logic.</td></tr>
+<tr><td><code>jailed_signers</code></td><td>Currently jailed signer set.</td></tr>
+<tr><td><code>jail_vote_tracker</code></td><td>Vote aggregation for jailing decisions.</td></tr>
+<tr><td><code>jail_until</code></td><td>Jail expiry timestamps.</td></tr>
+<tr><td><code>signer_to_last_manual_unjail_time</code></td><td>Manual unjail cooldown tracking.</td></tr>
+<tr><td><code>native_token_reserve</code></td><td>Native-token reward / reserve pool.</td></tr>
+<tr><td><code>stage_reward_bucket_guard</code></td><td>Rate limiter for reward staging.</td></tr>
+<tr><td><code>validator_to_staged_rewards</code></td><td>Pending rewards not yet distributed.</td></tr>
+<tr><td><code>distribute_reward_bucket_guard</code></td><td>Rate limiter for reward distribution.</td></tr>
+<tr><td><code>pending_withdrawals</code></td><td>Unstaking and pending withdrawal queue.</td></tr>
+<tr><td><code>self_delegation_requirement</code></td><td>Minimum self-bond requirement for validators.</td></tr>
+<tr><td><code>disabled_validators</code></td><td>Validators removed from service without deleting historical state.</td></tr>
+<tr><td><code>disabled_node_ips</code></td><td>Node IP denylist / disable surface.</td></tr>
+<tr><td><code>validator_to_state</code></td><td>Per-validator lifecycle state.</td></tr>
+<tr><td><code>gversion</code></td><td>Governance version marker.</td></tr></table>
+<h3 id="state-size">5.4 Live State Size</h3>
+<table><tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Users</td><td>2,138,136</td></tr><tr><td>Positions</td><td>3,760,980</td></tr>
+<tr><td>Total USDC</td><td>$3.01B</td></tr><tr><td>Order book levels</td><td>170,972</td></tr></table>
+</section>
+
+<section class="section" id="matching">
+<h2>6. Matching Engine <a href="#matching" class="anchor-link">#</a></h2>
+<h3 id="match-cancel">6.1 Cancel Reasons (11)</h3>
+<p><span class="badge badge-confirmed">CONFIRMED</span> at offset 0x64f964.<sup><a href="#ref-11">[11]</a></sup></p>
+<table><tr><th>#</th><th>Status</th><th>Cause</th></tr>
+<tr><td>0</td><td><code>marginCanceled</code></td><td>Insufficient margin</td></tr>
+<tr><td>1</td><td><code>perpMaxPositionCanceled</code></td><td>Exceeds max position</td></tr>
+<tr><td>2</td><td><code>vaultWithdrawalCanceled</code></td><td>Vault withdrawal</td></tr>
+<tr><td>3</td><td><code>openInterestCapCanceled</code></td><td>OI cap</td></tr>
+<tr><td>4</td><td><code>selfTradeCanceled</code></td><td>Self-trade prevention</td></tr>
+<tr><td>5</td><td><code>reduceOnlyCanceled</code></td><td>Would increase position</td></tr>
+<tr><td>6</td><td><code>siblingFilledCanceled</code></td><td>OCO sibling filled</td></tr>
+<tr><td>7</td><td><code>liquidatedCanceled</code></td><td>User liquidated</td></tr>
+<tr><td>8</td><td><code>outcomeSettledCanceled</code></td><td>Market settled</td></tr>
+<tr><td>9</td><td><code>scheduledCancel</code></td><td>User-scheduled</td></tr>
+<tr><td>10</td><td><code>internalCancel</code></td><td>System-internal</td></tr></table>
+<h3 id="match-reject">6.2 Reject Reasons (17)</h3>
+<table><tr><th>#</th><th>Status</th><th>Message</th></tr>
+<tr><td>0</td><td><code>tickRejected</code></td><td>"Price must be divisible by tick size."</td></tr>
+<tr><td>1</td><td><code>minTradeNtlRejected</code></td><td>Below minimum notional</td></tr>
+<tr><td>2</td><td><code>perpMarginRejected</code></td><td>"Insufficient margin to place order."</td></tr>
+<tr><td>3</td><td><code>perpMaxPositionRejected</code></td><td>"Order would exceed maximum position size"</td></tr>
+<tr><td>4</td><td><code>reduceOnlyRejected</code></td><td>"Reduce only order would increase position."</td></tr>
+<tr><td>5</td><td><code>iocCancelRejected</code></td><td>"Order could not immediately match"</td></tr>
+<tr><td>6</td><td><code>badTriggerPxRejected</code></td><td>"Invalid TP/SL price."</td></tr>
+<tr><td>7</td><td><code>badAloPxRejected</code></td><td>"Post only order would have immediately matched."</td></tr>
+<tr><td>8</td><td><code>marketOrderNoLiquidityRejected</code></td><td>"No liquidity available for market order."</td></tr>
+<tr><td>9</td><td><code>positionIncreaseAtOpenInterestCapRejected</code></td><td>"Cannot increase position when OI is at cap."</td></tr>
+<tr><td>10</td><td><code>positionFlipAtOpenInterestCapRejected</code></td><td>"Cannot flip position when OI is at cap."</td></tr>
+<tr><td>11</td><td><code>tooAggressiveAtOpenInterestCapRejected</code></td><td>"Asset open interest is at cap."</td></tr>
+<tr><td>12</td><td><code>openInterestIncreaseRejected</code></td><td>"Open interest is increasing too quickly."</td></tr>
+<tr><td>13</td><td><code>insufficientSpotBalanceRejected</code></td><td>"Insufficient spot balance"</td></tr>
+<tr><td>14</td><td><code>oracleRejected</code></td><td>"Price too far from oracle"</td></tr>
+<tr><td>15</td><td><code>outcomeSettledRejected</code></td><td>"Outcome has been settled"</td></tr>
+<tr><td>16</td><td><code>hip3CrossMarginReduceOnly</code></td><td>"Cross margin currently only supports reduce-only"</td></tr></table>
+<h3 id="match-fees">6.3 Fee Tiers</h3>
+<h4>VIP Tiers (7 Levels) <span class="citation-tag cite-api">API: app.hyperliquid.xyz/fees</span><sup><a href="#ref-12">[12]</a></sup></h4>
+<table><tr><th>Tier</th><th>14d NTL</th><th>Perp Taker</th><th>Perp Maker</th><th>Spot Taker</th><th>Spot Maker</th></tr>
+<tr><td>Base</td><td>$0</td><td>4.5 bps</td><td>1.5 bps</td><td>7.0 bps</td><td>4.0 bps</td></tr>
+<tr><td>VIP1</td><td>$5M</td><td>4.0</td><td>1.2</td><td>6.0</td><td>3.0</td></tr>
+<tr><td>VIP2</td><td>$25M</td><td>3.5</td><td>0.8</td><td>5.0</td><td>2.0</td></tr>
+<tr><td>VIP3</td><td>$100M</td><td>3.0</td><td>0.4</td><td>4.0</td><td>1.0</td></tr>
+<tr><td>VIP4</td><td>$500M</td><td>2.8</td><td>0.0</td><td>3.5</td><td>0.0</td></tr>
+<tr><td>VIP5</td><td>$2B</td><td>2.6</td><td>0.0</td><td>3.0</td><td>0.0</td></tr>
+<tr><td>VIP6</td><td>$7B</td><td>2.4</td><td>0.0</td><td>2.5</td><td>0.0</td></tr></table>
+<h4>MM Tiers (3): MM1 0.5%/-0.1bps, MM2 1.5%/-0.2bps, MM3 3.0%/-0.3bps</h4>
+<h4>Staking Discount Tiers (7)</h4>
+<table><tr><th>bps Staked</th><th>0</th><th>0.01</th><th>0.1</th><th>1</th><th>10</th><th>100</th><th>500</th></tr>
+<tr><td>Discount</td><td>0%</td><td>5%</td><td>10%</td><td>15%</td><td>20%</td><td>30%</td><td>40%</td></tr></table>
+<h3 id="match-fee-structs">6.3.1 FeeSchedule and FeeTracker Layouts</h3>
+<p><span class="badge badge-confirmed">CONFIRMED</span> from binary struct chain in testnet build <code>331bef9b</code> (2026-04-03). <span class="citation-tag cite-bin">BIN: serde field chain at .rodata 0x543428</span></p>
+<h4>FeeSchedule (9 fields)</h4>
+<pre><code>tiers                          // VIP tier definitions
+referral_discount              // Referral discount percentage
+referrer_keep                  // Referrer keep percentage
+extra_destination_fractions    // Extra fee destination routing
+stake_discount_tiers           // Staking discount tier table
+weigh_spot_volume_double       // Double-weight spot volume flag
+aligned_quote_token_config     // Aligned quote token configuration
++2 unknown fields              // Under investigation</code></pre>
+<h4>FeeTracker (10 fields)</h4>
+<pre><code>fee_schedule                   // Active FeeSchedule(9)
+unrewarded_users               // Users pending reward distribution
+user_states                    // Per-user fee accounting state
+referrer_states                // Per-referrer fee accounting state
+code_to_referrer               // Referral code -> referrer mapping
+referral_bucket_millis         // Referral bucket timing
+total_fees_collected           // Cumulative fees collected
+total_spot_fees_collected      // Cumulative spot fees collected
+collected_builder_fees         // Builder fee accumulator
+trials_disabled                // Fee trial disable flag</code></pre>
+<h3 id="match-wire">6.4 Wire Format</h3>
+<pre><code>OrderWireSerde  { a: u32, b: bool, p: String, s: String, r: bool, t: OrderTypeWire, c: Option&lt;Cloid&gt; }
+OrderAction     { orders: Vec, builder: Option&lt;OrderBuilderInfo&gt;, grouping: Grouping }
+Cancel          { a: u32, o: u64 }
+CancelByCloid   { asset: u32, cloid: Cloid }
+ModifyWire      { oid: u64, order: OrderWireSerde }
+TwapWireSerde   { a: u32, b: bool, s: String, r: bool, m: u64, t: bool }
+// Tif: Alo | Ioc | Gtc    Tpsl: Na | NormalTpsl | PositionTpsl
+// Grouping: Na | Default | DexAbstraction | UnifiedAccount | PortfolioMargin</code></pre>
+</section>
+
+<section class="section" id="funding">
+<h2>7. Funding Rate System <a href="#funding" class="anchor-link">#</a></h2>
+<h3 id="funding-params">7.1 Parameters</h3>
+<table><tr><th>Parameter</th><th>Value</th><th>Evidence</th></tr>
+<tr><td>Settlement</td><td>1 hour</td><td><span class="citation-tag cite-api">API: fundingHistory 3600s apart</span><sup><a href="#ref-13">[13]</a></sup></td></tr>
+<tr><td>Rate expression</td><td>per 8h</td><td><span class="badge badge-inferred">INFERRED</span></td></tr>
+<tr><td>Default interest</td><td>0.01%/8h = 0.0000125/1h</td><td><span class="badge badge-observed">OBSERVED</span>: BTC pins 314/500 samples</td></tr></table>
+<h3 id="funding-algo">7.2 Algorithm</h3>
+<pre><code>1. premium = (mark_px - oracle_px) / oracle_px
+2. EMA: decay = exp(-dt * ln(2) / half_life)
+   num   = num * decay + premium * (1 - decay)
+   denom = denom * decay + (1 - decay)
+   smoothed = num / denom
+3. Clamp to [-max_slippage, +max_slippage]
+4. rate = smoothed * perp_to_funding_multiplier[asset]
+5. rate += perp_to_funding_interest_rate[asset]
+6. Binance mode: premium_index + clamp(interest - premium_index, -0.0005, 0.0005)</code></pre>
+<h3 id="funding-tracker">7.3 FundingTracker (8 Fields)</h3>
+<pre><code>1. asset_to_premiums    2. override_impact_usd    3. clamp
+4. default_impact_usd   5. hl_only_perps          6. use_binance_formula
+7. perp_to_funding_multiplier    8. perp_to_funding_interest_rate
+
+DeterministicEma(5): num, denom, decay_duration, n_samples, [last_update_time]
+DeterministicVty(7): desc, samples, emas, val, n_updates, n_bucket_updates, alert_bucket_guard</code></pre>
+</section>
+
+<section class="section" id="oracle">
+<h2>8. Oracle and Mark Price <a href="#oracle" class="anchor-link">#</a></h2>
+<p>The oracle pipeline transforms external price feeds into consensus oracle prices, mark prices, and ultimately funding rates and liquidation triggers. Every step has been confirmed from binary RE.<sup><a href="#ref-13">[13]</a></sup></p>
+
+<h3 id="oracle-pipeline">8.1 Full Oracle Pipeline</h3>
+<div class="mermaid">
+graph TD
+    A["External Feeds\nBinance, CME, etc."] --> B["Validators fetch prices\nvia HTTP"]
+    B --> C["ValidatorL1VoteAction\nper-validator signed vote"]
+    C --> D["ValidatorL1VoteTracker\nprune_bucket_guard, action_to_tracker"]
+    D --> E["StreamTracker\nstake-weighted median"]
+    E --> F["SetGlobalAction\nBroadcaster submits consensus prices"]
+    F --> G["Oracle struct\npxs, external_perp_pxs, err_dur_guard, lpxk"]
+    G --> H["Mark Price Calculation"]
+    H --> I["coin_to_mark_px\ncoin_to_oracle_px\ncoin_to_external_perp_px"]
+    I --> J["Funding + Liquidation"]
+    style E fill:#8B5CF6,stroke:#333,color:#fff
+    style F fill:#fbbf24,stroke:#333,color:#000
+</div>
+
+<h3 id="oracle-setglobal">8.2 SetGlobalAction (4 Fields) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>The broadcaster submits consensus oracle prices via <code>SetGlobalAction</code> (variant 1 of SetGlobal sub-types). The 4th field is <code>nativePx</code> -- the native token (HYPE) price. <span class="citation-tag cite-bin">BIN: confirmed 2026-04-02</span></p>
+<pre><code>SetGlobalAction {
+    pxs: Vec&lt;Option&lt;String&gt;&gt;,              // oracle prices, indexed by asset
+    externalPerpPxs: Vec&lt;Option&lt;String&gt;&gt;,   // external perp prices (Binance, etc.)
+    usdtUsdcPx: Option&lt;String&gt;,            // USDT/USDC exchange rate
+    nativePx: Option&lt;String&gt;,              // CONFIRMED: HYPE price
+}</code></pre>
+<p>Governance sub-actions (variant index 0..14): <code>registerAsset</code>, <code>setOracle</code>, <code>insertMarginTable</code>, <code>setFeeRecipient</code>, <code>haltTrading</code>, <code>setMarginTableIds</code>, <code>setOpenInterestCaps</code>, <code>setFundingMultipliers</code>, <code>setMarginModes</code>, <code>setFeeScale</code>, <code>setGrowthModes</code>, <code>setFundingInterestRates</code>, <code>disableDex</code>, <code>setPerpAnnotation</code>.</p>
+
+<h3 id="oracle-struct">8.3 Oracle Struct (4 Fields) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<pre><code>Oracle {
+    pxs: HashMap&lt;u32, f64&gt;,               // consensus oracle prices per asset
+    external_perp_pxs: HashMap&lt;u32, f64&gt;,  // external perp prices
+    err_dur_guard: BucketGuard,            // error duration tracking
+    lpxk: OracleKindMap,                   // last price kind map
+}
+
+OracleKindMap  // Maps assets to oracle kind: Reserved, NO_ERROR, universe, oraclePx, disabled</code></pre>
+
+<h3 id="oracle-history">8.4 Oracle History Ring Buffer <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Exchange field [55] <code>oh</code> is a ring buffer of 100 oracle snapshots, each containing a full copy of the oracle state at that point in time. <span class="citation-tag cite-snap">SNAP: confirmed from ABCI state at h=942770000</span></p>
+<pre><code>Exchange.oh: Vec&lt;(DateTime, OracleSnapshot)&gt;  // 100 entries
+OracleSnapshot {
+    pxs: HashMap&lt;u32, f64&gt;,
+    external_perp_pxs: HashMap&lt;u32, f64&gt;,
+    err_dur_guard: BucketGuard,
+    l: ???,   // abbreviated field, purpose TBD
+}</code></pre>
+<p>This ring buffer provides recent oracle price history for mark price smoothing, stale detection, and error duration tracking.</p>
+
+<h3 id="oracle-votes">8.5 Validator Voting Pipeline</h3>
+<p>Validators submit price votes via <code>ValidatorL1VoteAction</code>. Votes are tracked per action type with expiry-based rounds. <span class="badge badge-confirmed">CONFIRMED</span>: stake-weighted median.</p>
+<pre><code>ValidatorL1VoteTracker(3) {
+    prune_bucket_guard: BucketGuard,
+    action_to_tracker: HashMap&lt;ActionType, ActionTracker&gt;,
+    active: bool,
+}
+ActionTracker(3) { active: bool, expire_time: u64, vote_tracker: VoteTracker }
+VoteTracker(7) { version, round, initial_round, round_to_val, order_ntl, max_px, ema }
+
+StreamTracker(3) {
+    validator_to_value: HashMap&lt;Address, ValidatorValue&gt;,
+    median_value: f64,                    // CONFIRMED: stake-weighted median
+    update_median_bucket_guard: BucketGuard,
+}</code></pre>
+
+<h3 id="oracle-mark">8.6 Mark Price Formula <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Mark price is derived from the oracle price and order book impact prices. The impact price simulates a trade of <code>impact_usd</code> notional against the book to determine a fair market price.</p>
+<pre><code>Impact price configuration:
+    default_impact_usd: f64,                   // typically 200 USD
+    override_impact_usd: HashMap&lt;u32, f64&gt;,    // per-asset override
+    clamp: bool,                                // whether to clamp impact price
+
+Mark price computation:
+    impact_bid = simulate_buy(book, impact_usd_notional)
+    impact_ask = simulate_sell(book, impact_usd_notional)
+    mark_px = f(oracle_px, impact_bid, impact_ask, ema)
+
+Three parallel price maps in exchange state:
+    coin_to_mark_px: HashMap&lt;u32, f64&gt;          // mark prices
+    coin_to_oracle_px: HashMap&lt;u32, f64&gt;        // oracle prices
+    coin_to_external_perp_px: HashMap&lt;u32, f64&gt; // external perp prices</code></pre>
+<p>API response per asset (<code>PerpAssetCtx</code>): <code>markPx</code>, <code>funding</code>, <code>openInterest</code>, <code>prevDayPx</code>, <code>dayNtlVlm</code>, <code>premium</code>, <code>midPx</code>, <code>impactPxs</code> (array of [bid_impact, ask_impact]), <code>dayBaseVlm</code>, <code>circulatingSupply</code>, <code>totalSupply</code>.</p>
+
+<h3 id="oracle-hip3-stale">8.7 HIP-3 Stale Mark Price <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>HIP-3 stale mark price detection uses a <strong>10-second window</strong>. Mark prices older than 10 seconds are considered stale and refreshed during <code>begin_block</code> (effect #7 of 9). <span class="citation-tag cite-bin">BIN: hip3_stale_mark_px_guard, refresh_hip3_stale_mark_pxs</span></p>
+<pre><code>Exchange fields:
+    hip3_stale_mark_px_guard: BucketGuard,   // guards stale mark detection
+    hip3_no_cross: bool,                      // disable crossing
+
+Function: refresh_hip3_stale_mark_pxs() -- called in begin_block effect #7
+Companion: prune_book_empty_user_states() -- cleanup (begin_block effect #4)</code></pre>
+
+<h3 id="oracle-bounds">8.8 Oracle Price Bounds</h3>
+<table><tr><th>Bound</th><th>Field / Message</th></tr>
+<tr><td>Max oracle price</td><td><code>has_max_oracle_px</code></td></tr>
+<tr><td>Min oracle price</td><td><code>has_min_oracle_px</code></td></tr>
+<tr><td>Per-asset distance override</td><td><code>override_max_signed_distances_from_oracle</code></td></tr>
+<tr><td>Order distance from anchor</td><td><code>max_order_distance_from_anchor</code> = 0.95</td></tr>
+<tr><td>OI cap rejection</td><td>"more aggressive than oracle when open interest is at cap."</td></tr></table>
+</section>
+
+<section class="section" id="liquidation">
+<h2>9. Liquidation Engine <a href="#liquidation" class="anchor-link">#</a></h2>
+<p>See the dedicated <a href="../liquidation/index.html">Liquidation and ADL reference</a> for the execution split across perps, portfolio margin, BOLE, spot, and outcomes, plus the current call-graph links and open-gap table.</p>
+<div class="mermaid">
+graph TD
+    A["account_value < maintenance"] --> B{"Cross/Isolated?"}
+    B -->|Cross| C["LiquidatedCross"]
+    B -->|Isolated| D["LiquidatedIsolated"]
+    C --> E["Standard liquidation"]
+    D --> E
+    E --> F{"Shortfall?"}
+    F -->|No| G["LtHash updated"]
+    F -->|Yes| H["ADL: sort by PnL%"]
+    H --> G
+    style H fill:#f87171,stroke:#333,color:#fff
+</div>
+<table><tr><th>Type</th><th>LtHash Category</th><th>Trigger</th></tr>
+<tr><td>Cross liquidation</td><td><code>LiquidatedCross</code></td><td>Cross margin below maintenance</td></tr>
+<tr><td>Isolated liquidation</td><td><code>LiquidatedIsolated</code></td><td>Isolated margin below maintenance</td></tr>
+<tr><td>BOLE market</td><td><code>BoleMarketLiquidation</code></td><td>Health factor below threshold</td></tr>
+<tr><td>BOLE backstop</td><td><code>BoleBackstopLiquidation</code></td><td>Backstop takes over</td></tr>
+<tr><td>BOLE partial</td><td><code>BolePartialLiquidation</code></td><td>Partial reduction (cooldown)</td></tr></table>
+<p><strong>Perp liquidation condition</strong>: <code>margin_available &lt; 0</code>, equivalently <code>account_value &lt; maintenance_margin</code>. Maintenance is tiered by notional bracket using <code>lower_bound</code>, <code>max_leverage</code>, and <code>maintenance_deduction</code>. Cross positions share account equity; isolated positions use per-position allocated margin.</p>
+
+<h3 id="liq-beginblock">9.0 begin_block Liquidation Trigger Flow <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>BOLE liquidations run as effect #9 of the 9-step <code>begin_block</code> pipeline. Perp liquidations are user-initiated via the <code>Liquidate</code> action during action processing.</p>
+<div class="mermaid">
+graph TD
+    BB["begin_block"] --> E1["1. distribute_funding"]
+    E1 --> E2["2. update_funding_rates"]
+    E2 --> E3["3. cancel_aggressive_at_oi_cap"]
+    E3 --> E4["4. prune_book_empty_states"]
+    E4 --> E5["5. vote_tracker_prune"]
+    E5 --> E6["6. reset_recent_ois"]
+    E6 --> E7["7. refresh_hip3_stale_mark"]
+    E7 --> E8["8. update_stale_guards"]
+    E8 --> E9["9. apply_bole_liquidations"]
+    E9 --> DA["Drain ActionDelayer"]
+    DA --> AP["Process User Actions"]
+    AP --> LIQ{"Liquidate action?"}
+    LIQ -->|Yes| CHK["check_all_users_for_liquidatables"]
+    CHK --> MM{"maintenance_margin check"}
+    MM -->|Cross below| LC["LiquidateRequest::Cross"]
+    MM -->|Isolated below| LI["LiquidateRequest::Isolated"]
+    LC --> EXEC["Execute LiquidationMarket order"]
+    LI --> EXEC
+    EXEC --> SF{"Shortfall remaining?"}
+    SF -->|No| LT["LtHash updated"]
+    SF -->|Yes| ADL["ADL: rank by ROE"]
+    ADL --> LT
+    E9 --> BOLE{"healthFactor below 0.8?"}
+    BOLE -->|Yes| BLQ["BOLE Market/Backstop/Partial"]
+    BLQ --> BLT["LtHash: BoleMarket/Backstop/Partial"]
+    style E9 fill:#fb923c,stroke:#333,color:#fff
+    style ADL fill:#f87171,stroke:#333,color:#fff
+    style BLQ fill:#fb923c,stroke:#333,color:#fff
+</div>
+
+<h3 id="liq-margin">9.1 Margin And Trigger Logic</h3>
+<table><tr><th>Component</th><th>Current best formula / rule</th><th>Status</th></tr>
+<tr><td>Initial margin</td><td><code>sum(notional_in_tier / max_leverage)</code></td><td><span class="badge badge-confirmed">Confirmed structure</span></td></tr>
+<tr><td>Maintenance margin</td><td><code>sum(notional_in_tier / max_leverage - maintenance_deduction)</code></td><td><span class="badge badge-confirmed">Confirmed</span></td></tr>
+<tr><td>Cross liquidation</td><td><code>balance + cross_uPnL - maintenance_margin_used &lt; 0</code></td><td><span class="badge badge-confirmed">Confirmed</span></td></tr>
+<tr><td>Isolated liquidation</td><td><code>allocated_margin + uPnL - maintenance_margin &lt; 0</code></td><td><span class="badge badge-confirmed">Confirmed</span></td></tr>
+<tr><td>Liquidation price</td><td>Tier-aware maintenance boundary; local implementation uses an approximate closed form</td><td><span class="badge badge-inferred">Approximation</span></td></tr></table>
+
+<h3 id="liq-adl">9.2 Auto-Deleveraging (ADL)</h3>
+<p><strong>ADL is the shortfall path, not the first path.</strong> Standard liquidation runs first. If liquidation still leaves residual bad debt, Hyperliquid flips on <code>perform_auto_deleveraging</code> and tracks the unresolved amount in <code>adl_shortfall_remaining</code>. There are no socialized losses in the current model; loss is pushed into opposing profitable positions.</p>
+<table><tr><th>ADL property</th><th>Meaning</th></tr>
+<tr><td><code>perform_auto_deleveraging</code></td><td>Exchange / clearinghouse flag indicating ADL mode is active</td></tr>
+<tr><td><code>adl_shortfall_remaining</code></td><td>Residual shortfall that liquidation did not cover</td></tr>
+<tr><td><code>asset_and_side_to_adl_requirements</code></td><td>Per-asset, per-side shortfall buckets in the binary model</td></tr>
+<tr><td><code>position_index</code>, <code>risk_key</code></td><td>Ordering fields used in the liquidation / ADL pipeline</td></tr>
+<tr><td><code>returnOnEquity</code></td><td>API-facing profitability field that matches the ADL ranking surface</td></tr></table>
+<p><strong>Ranking rule</strong>: counter-parties are selected from the <em>opposing profitable side</em> and ranked by ROE / PnL%, i.e. <code>unrealized_pnl / margin_allocated</code>. Higher ROE means higher ADL priority. In practical terms: a liquidated long pushes into profitable shorts first; a liquidated short pushes into profitable longs first.</p>
+<pre><code>1. Detect liquidatable account
+2. Execute ordinary liquidation
+3. Compute residual shortfall
+4. If residual shortfall &gt; 0:
+   - set perform_auto_deleveraging = true
+   - update adl_shortfall_remaining
+   - bucket by (asset, opposing side)
+   - rank profitable counterparties by ROE descending
+   - delever until shortfall is exhausted or no eligible size remains</code></pre>
+
+<h3 id="liq-bole">9.3 BOLE Liquidation</h3>
+<p>BOLE is a separate lending liquidation system with its own three LtHash categories. The strongest confirmed trigger is a <strong>0.8 health-factor threshold</strong>. When a BOLE user falls below that boundary, the system can route through one of three liquidation modes:</p>
+<table><tr><th>BOLE mode</th><th>Meaning</th><th>Guardrail</th></tr>
+<tr><td>Market</td><td>Ordinary BOLE liquidation into the market path</td><td>Runs only when health is below threshold and no higher-priority backstop route applies</td></tr>
+<tr><td>Backstop</td><td>Default/backstop liquidator takes over the borrow position</td><td>Requires configured liquidator routing</td></tr>
+<tr><td>Partial</td><td>Reduce risk without fully closing the borrow</td><td>Subject to <code>partial_liquidation_cooldown</code></td></tr></table>
+<p>The current best state model for BOLE risk is: <code>supplied_value</code>, <code>borrowed_value</code>, <code>ltv</code>, and <code>healthFactor</code>. The begin-block pass <code>apply_bole_liquidations</code> is the confirmed entrypoint for that lane.</p>
+
+<h3 id="liq-safeguards">9.4 Safeguards And Safety Controls</h3>
+<table><tr><th>Control</th><th>Purpose</th></tr>
+<tr><td><code>allowed_liquidators</code></td><td>Explicit liquidator allowlist at Exchange scope</td></tr>
+<tr><td><code>defaultLiquidator</code></td><td>User/BOLE routing hint for backstop-style liquidations</td></tr>
+<tr><td><code>partial_liquidation_cooldown</code></td><td>~30 second spacing between repeated partial liquidations</td></tr>
+<tr><td><code>halted_assets</code></td><td>Per-asset halt switch preventing normal trading on frozen markets</td></tr>
+<tr><td><code>override_max_signed_distances_from_oracle</code></td><td>Per-asset mark/oracle distance overrides used in risk gating</td></tr>
+<tr><td><code>max_withdraw_leverage</code></td><td>Prevents high-leverage withdrawals from extracting too much collateral</td></tr>
+<tr><td><code>MarginMode::NoCross</code> / <code>StrictIsolated</code></td><td>Blocks unsafe cross-margin usage on selected assets</td></tr></table>
+<p><strong>Operational rule set</strong>: liquidator margin is checked before liquidation, some assets require the liquidator to use cross margin, and BOLE backstop routing sits beside the ordinary liquidation path rather than replacing it. The current implementation effort mirrors that separation: planner first, then exact state transitions once the remaining edge semantics are proved.</p>
+
+<h3 id="liq-formulas">9.5 Formula Sheet</h3>
+<pre><code>Cross account value
+  = balance + sum(unrealized_pnl_cross_positions)
+
+Cross margin available
+  = account_value - cross_maintenance_margin_used
+
+Cross liquidation trigger
+  = (margin_available &lt; 0)
+
+Isolated margin available
+  = allocated_margin + unrealized_pnl - maintenance_margin
+
+Isolated liquidation trigger
+  = (isolated_margin_available &lt; 0)
+
+Initial margin
+  = sum_over_tiers(notional_in_tier / max_leverage)
+
+Maintenance margin
+  = sum_over_tiers(notional_in_tier / max_leverage - maintenance_deduction)
+
+ADL ranking score
+  = return_on_equity
+  = unrealized_pnl / margin_allocated
+
+BOLE utilization
+  = total_borrows / total_deposits
+
+BOLE local health factor
+  = supplied_value / borrowed_value
+
+BOLE liquidation trigger
+  = (health_factor &lt; 0.8)</code></pre>
+<p><span class="badge badge-confirmed">Confirmed</span> for the trigger shapes and tier structure. <span class="badge badge-inferred">Inferred / local model</span> for parts that still depend on exact binary-side execution semantics, especially final BOLE transfer sizing and full portfolio-margin netting.</p>
+
+<h3 id="liq-products">9.6 Product Surfaces</h3>
+<table><tr><th>Surface</th><th>Trigger path</th><th>What happens</th><th>Status</th></tr>
+<tr><td>Perps, cross margin</td><td><code>margin_available &lt; 0</code> at account level</td><td>User-facing <code>Liquidate</code> path, then ADL if residual shortfall remains</td><td><span class="badge badge-confirmed">Core trigger confirmed</span></td></tr>
+<tr><td>Perps, isolated margin</td><td><code>allocated_margin + uPnL - maintenance &lt; 0</code></td><td><code>LiquidateRequest::Isolated</code> on one asset</td><td><span class="badge badge-confirmed">Confirmed</span></td></tr>
+<tr><td>Portfolio margin</td><td>Same liquidation family, but on portfolio-netted account state</td><td>Mode overlay on top of margin engine, not a separate liquidation subsystem</td><td><span class="badge badge-inferred">Semantics still being tightened</span></td></tr>
+<tr><td>Spot</td><td>No ordinary leverage liquidation engine confirmed</td><td><code>SpotDustConversion</code> is a separate system cleanup path, not perp-style liquidation</td><td><span class="badge badge-confirmed">Distinct from liquidation</span></td></tr>
+<tr><td>Outcomes (HIP-4)</td><td>No liquidation path</td><td>1x isolated-only; settlement auto-cancels open orders and rejects new orders post-settlement</td><td><span class="badge badge-confirmed">No leverage, no liquidation</span></td></tr>
+<tr><td>BOLE lending</td><td><code>healthFactor &lt; 0.8</code></td><td>Market / Backstop / Partial liquidation lane in <code>begin_block</code></td><td><span class="badge badge-confirmed">Mode family confirmed</span></td></tr></table>
+
+<h3 id="liq-callgraph">9.7 Trigger Call Graph</h3>
+<div class="mermaid">
+graph TD
+    A["Block / User action"] --> B{"Surface"}
+    B -->|Perp Cross| C["Compute account_value and maintenance"]
+    B -->|Perp Isolated| D["Compute isolated_margin_available"]
+    B -->|Portfolio Margin| E["Portfolio-netted margin engine"]
+    B -->|BOLE| F["apply_bole_liquidations in begin_block"]
+    B -->|Spot| G["SpotDustConversion / no perp-style liquidation"]
+    B -->|Outcomes| H["Settlement gating only"]
+
+    C --> I{"margin_available < 0 ?"}
+    D --> J{"isolated_margin_available < 0 ?"}
+    E --> K{"portfolio margin available < 0 ?"}
+
+    I -->|Yes| L["LiquidateRequest::Cross"]
+    J -->|Yes| M["LiquidateRequest::Isolated"]
+    K -->|Yes| L
+
+    L --> N["Check liquidator margin + allowlist + asset rules"]
+    M --> N
+    N --> O["Execute LiquidationMarket"]
+    O --> P{"Residual shortfall?"}
+    P -->|Yes| Q["ADL: bucket by asset/side, rank profitable counterparties by ROE"]
+    P -->|No| R["LtHash: LiquidatedCross / LiquidatedIsolated"]
+    Q --> S["perform_auto_deleveraging = true"]
+    S --> T["adl_shortfall_remaining updated"]
+
+    F --> U{"healthFactor < 0.8 ?"}
+    U -->|Yes| V["BOLE Market / Backstop / Partial candidate"]
+    V --> W["LtHash: BoleMarket / Backstop / Partial"]
+
+    H --> X["outcomeSettledCanceled / outcomeSettledRejected"]
+    G --> Y["Spot dust sweep / system cleanup"]
+
+    style Q fill:#f87171,stroke:#333,color:#fff
+    style V fill:#fb923c,stroke:#333,color:#fff
+    style X fill:#60a5fa,stroke:#333,color:#fff
+</div>
+</section>
+
+<section class="section" id="hashing">
+<h2>10. State Hashing: LtHash16 <a href="#hashing" class="anchor-link">#</a></h2>
+<h3 id="hash-algo">10.1 Algorithm (CRACKED)</h3>
+<pre><code>State Mutation (response struct)
+  -> rmp_serde::to_vec (compact format)    // rmp-serde 1.3.0
+  -> blake3::Hasher (streaming Write)      // blake3 1.7.0 at VA 0x04e03010
+  -> blake3 XOF (2048 bytes)
+  -> 1024 x u16 LE
+  -> SSE2 paddw wrapping-add               // VA 0x04e05786
+  -> LtHash16 checksum
+Final: SHA-256(checksum) -> 32-byte app_hash  // sha2 0.10.8</code></pre>
+<h3 id="hash-categories">10.2 All 11 L1 Hash Categories</h3>
+<p><span class="badge badge-confirmed">CONFIRMED</span> at rodata 0x65fb61.<sup><a href="#ref-15">[15]</a></sup></p>
+<table><tr><th>#</th><th>Category</th><th>Offset</th><th>Pairing</th></tr>
+<tr><td>0</td><td><code>CValidator</code></td><td>0x75fb61</td><td>[0,1]</td></tr>
+<tr><td>1</td><td><code>CSigner</code></td><td>0x75fb6b</td><td>[0,1]</td></tr>
+<tr><td>2</td><td><code>Na</code></td><td>0x75fb72</td><td>[2,3]</td></tr>
+<tr><td>3</td><td><code>LiquidatedCross</code></td><td>0x75fb74</td><td>[2,3]</td></tr>
+<tr><td>4</td><td><code>LiquidatedIsolated</code></td><td>0x75fb83</td><td>Unique</td></tr>
+<tr><td>5</td><td><code>Settlement</code></td><td>0x75fb95</td><td>Unique</td></tr>
+<tr><td>6</td><td><code>NetChildVaultPositions</code></td><td>0x75fb9f</td><td>Unique</td></tr>
+<tr><td>7</td><td><code>SpotDustConversion</code></td><td>0x75fbb5</td><td>[7,8]</td></tr>
+<tr><td>8</td><td><code>BoleMarketLiquidation</code></td><td>0x75fbc7</td><td>[7,8]</td></tr>
+<tr><td>9</td><td><code>BoleBackstopLiquidation</code></td><td>0x75fbdc</td><td>[9,10]</td></tr>
+<tr><td>10</td><td><code>BolePartialLiquidation</code></td><td>0x75fbf3</td><td>[9,10]</td></tr></table>
+<h3 id="hash-dispatch">10.3 RespHash Dispatch</h3>
+<p>VA <code>0x205a300</code>. 20-entry jump table at <code>0x37fe2c</code>. 14 accumulators at 0x800-byte intervals (0x50066c8..0x500cec8). Hashes <strong>response structs</strong> (not raw mutations).<sup><a href="#ref-15">[15]</a></sup></p>
+<details><summary>Response Struct Field Ordering (11 structs, CRACKED)</summary><div class="detail-body">
+<table><tr><th>Struct</th><th>Fields (order)</th><th>VA</th></tr>
+<tr><td><strong>OrderStatus</strong></td><td>"filled": totalSz, avgPx, oid; "error": string; "waitingForFill": oid; "waitingForTrigger": oid; "resting": oid, cloid</td><td>0x4a75120</td></tr>
+<tr><td><strong>RestingOrder</strong> (12)</td><td>coin, side, limitPx, sz, timestamp, triggerCondition, isTrigger, triggerPx, isPositionTpsl, reduceOnly, orderType, origSz</td><td>0x4a98d30</td></tr>
+<tr><td><strong>TwapSliceFill</strong> (10)</td><td>coin, user, side, sz, executedSz, executedNtl, minutes, reduceOnly, randomize, timestamp</td><td>0x4a701a0</td></tr>
+<tr><td><strong>TwapState</strong> (3)</td><td>running, twapId, error</td><td>0x4a70410</td></tr>
+<tr><td><strong>Fill/Trade</strong> (9)</td><td>coin, sz, side, startPosition, hash, fee, tid, feeToken, twapId</td><td>0x4a47ec0</td></tr>
+<tr><td><strong>SimpleResult</strong> (2)</td><td>success, error</td><td>0x4a707f0</td></tr>
+<tr><td><strong>StatusResult</strong> (1)</td><td>status</td><td>0x4a70a60</td></tr>
+<tr><td><strong>OrderBase</strong> (3)</td><td>side, sz, reduceOnly</td><td>0x4a80610</td></tr>
+<tr><td><strong>OrderWithTiming</strong> (5)</td><td>side, sz, reduceOnly, randomize, timestamp</td><td>0x4a82640</td></tr>
+<tr><td><strong>TriggerParams</strong> (2)</td><td>triggerPx, tpsl</td><td>0x4a8d2d0</td></tr>
+<tr><td><strong>TriggeredFill</strong> (2)</td><td>triggered, filled</td><td>0x4a99070</td></tr></table>
+</div></details>
+<h3 id="hash-evm">10.4 EVM Element Formats</h3>
+<table><tr><th>Category</th><th>Size</th><th>Format (raw byte concat)</th></tr>
+<tr><td><code>accounts_hash</code></td><td>92B</td><td>address(20) || balance(32 BE) || nonce(8 BE) || code_hash(32)</td></tr>
+<tr><td><code>storage_hash</code></td><td>84B</td><td>address(20) || slot(32) || value(32)</td></tr>
+<tr><td><code>contracts_hash</code></td><td>Variable</td><td>address(20) || code(bytecode)</td></tr></table>
+<h3 id="hash-vote">10.5 VoteAppHash</h3>
+<p>Every 2000 blocks, 3 validators, ~150 blocks after checkpoint. Mismatch: <code>/tmp/abci_state_with_quorum_app_hash_mismatch.rmp</code>.</p>
+
+<h3 id="hash-naming">10.6 Hash Accumulator Naming Pattern <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Binary strings reveal a systematic naming convention for hash accumulators, partitioned per clearinghouse (DEX) instance. <span class="citation-tag cite-bin">BIN: rodata string search</span></p>
+<pre><code>Pattern: {category}_{dex_prefix}
+Where dex_prefix:
+    H   = main clearinghouse (clearinghouse index 0)
+    H3  = HIP-3 clearinghouses
+
+Examples from binary strings:
+    AllBoleTH3        -- all BOLE state for HIP-3 clearinghouse
+    borrowLeH3        -- borrow ledger entries, HIP-3
+    funding_H3        -- funding state, HIP-3
+    1emasH            -- EMAs for main clearinghouse
+
+Per-clearinghouse hash partitioning confirmed:
+    Each clearinghouse (main + HIP-3 instances) maintains
+    separate LtHash16 accumulators for its own state.
+    The suffix distinguishes which clearinghouse owns the
+    accumulator. This enables incremental hashing per-DEX
+    without cross-contamination between clearinghouse instances.</code></pre>
+<p>The 14 total accumulators (11 L1 + 3 EVM) cover: validator state changes, liquidation events (cross, isolated, BOLE), settlement, vault netting, spot dust conversion, and EVM state (accounts, contracts, storage).</p>
+</section>
+
+<section class="section" id="gossip">
+<h2>11. Gossip Protocol (FULLY CRACKED) <a href="#gossip" class="anchor-link">#</a></h2>
+<h3 id="gossip-wire">11.1 Wire Frame</h3>
+<pre><code>[u32 BE body_len][u8 kind][body]   kind=0x01: LZ4 bincode-fork</code></pre>
+<h3 id="gossip-handshake">11.2 Handshake</h3>
+<pre><code>Out: [00 00 00 02][00][00][00]  (7B)    In: [00 00 00 01][00][chain]  (6B, chain=0x04=Mainnet)</code></pre>
+<h3 id="gossip-msg">11.3 MsgConcise (Tag 27, 8 variants)</h3>
+<table><tr><th>#</th><th>Variant</th></tr>
+<tr><td>0</td><td>Tx</td></tr><tr><td>1</td><td>Block</td></tr><tr><td>2</td><td>Vote</td></tr><tr><td>3</td><td>Timeout</td></tr>
+<tr><td>4</td><td>Tc</td></tr><tr><td>5</td><td>BlocksAndTxs</td></tr><tr><td>6</td><td>Heartbeat</td></tr><tr><td>7</td><td>HeartbeatAck</td></tr></table>
+<h3 id="gossip-outmsg">11.4 OutMsgConcise (Tag 28, 9+ variants)</h3>
+<table><tr><th>#</th><th>Variant</th></tr>
+<tr><td>0</td><td>Block</td></tr><tr><td>1</td><td>ClientBlock</td></tr><tr><td>2</td><td>VoteJailBundle</td></tr><tr><td>3</td><td>Timeout</td></tr>
+<tr><td>4</td><td>Tc</td></tr><tr><td>5</td><td>Heartbeat</td></tr><tr><td>6</td><td>NextProposer</td></tr><tr><td>7</td><td>Tx</td></tr><tr><td>8</td><td>RpcRequest</td></tr></table>
+<h3 id="gossip-mid">11.5 Mid Field</h3>
+<p><span class="badge badge-confirmed">CONFIRMED</span>: jump table VA <code>0x65f47c</code>.<sup><a href="#ref-20">[20]</a></sup></p>
+<table><tr><th>Mid</th><th>Label</th></tr>
+<tr><td>0</td><td><code>in</code></td></tr><tr><td>1</td><td><code>execution state</code></td></tr><tr><td>2</td><td><code>out</code></td></tr><tr><td>3</td><td><code>status</code></td></tr><tr><td>4</td><td><code>round advance</code></td></tr></table>
+<h3 id="gossip-heartbeat">11.6 Heartbeat Wire Layout</h3>
+<pre><code>Heartbeat { validator(20B), round(u64),
+  snapshot: HeartbeatSnapshot {
+    validator_set_snapshot: { stakes, jailed_validators },
+    evm_block_number: u64,
+    concise_lt_hashes: {
+      accounts_hash:  ConciseLtHash { hash_concise: [u8;32], n_elements, n_bytes },
+      contracts_hash: ConciseLtHash,
+      storage_hash:   ConciseLtHash
+    }
+  },
+  validator_to_last_msg_round, random_id
+}
+// hash_concise = 32B SHA-256 digest (NOT 2048B LtHash16)</code></pre>
+<h3 id="gossip-send">11.7 Send Path (6 Layers)</h3>
+<table><tr><th>Layer</th><th>VA</th><th>Role</th></tr>
+<tr><td>1</td><td><code>0x043b8330..8f70</code></td><td>Field serializers</td></tr>
+<tr><td>2</td><td><code>0x04593d40</code></td><td>MsgConcise struct builder</td></tr>
+<tr><td>3</td><td><code>0x042f8fc0</code></td><td>Ring buffer producer</td></tr>
+<tr><td>4</td><td><code>0x043bf670</code></td><td>send_to_destination + bincode-fork</td></tr>
+<tr><td>5</td><td><code>0x0409c0e0</code></td><td>BTreeMap peer routing</td></tr>
+<tr><td>6</td><td><code>0x01cc9d00</code></td><td>tcp_bytes (bswap for BE)</td></tr></table>
+</section>
+
+<section class="section" id="evm">
+<h2>12. HyperEVM <a href="#evm" class="anchor-link">#</a></h2>
+<table><tr><th>Param</th><th>Value</th></tr>
+<tr><td>Engine</td><td>revm 36 (upstream 19.2.0)</td></tr>
+<tr><td>Spec</td><td>Cancun (no blobs)</td></tr>
+<tr><td>Chain ID</td><td>999 mainnet / 998 testnet</td></tr>
+<tr><td>Fast blocks</td><td>1s, 3M gas</td></tr>
+<tr><td>Large blocks</td><td>60s, 30M gas</td></tr>
+<tr><td>Fees</td><td>Base + priority burned</td></tr>
+<tr><td>HYPE</td><td><code>0x2222...2222</code></td></tr>
+<tr><td>CoreWriter</td><td><code>0x3333...3333</code> (15 actions, ~25K gas)</td></tr>
+<tr><td>Read precompiles</td><td><code>0x0800+</code>, gas=2000+65*(in+out)</td></tr></table>
+
+<h3 id="evm-dual-block">12.1 Dual-Block Architecture <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>HyperEVM runs two parallel block streams with different parameters:</p>
+<table><tr><th>Property</th><th>Fast Block</th><th>Large Block</th></tr>
+<tr><td>Interval</td><td>1 second</td><td>60 seconds</td></tr>
+<tr><td>Gas limit</td><td>3,000,000</td><td>30,000,000</td></tr>
+<tr><td>Use case</td><td>Default transactions</td><td>Heavy computation (deploys, batch ops)</td></tr>
+<tr><td>Routing</td><td>Default</td><td><code>evmUserModify.usingBigBlocks</code></td></tr></table>
+<p>Users opt into large blocks via the <code>evmUserModify</code> action with <code>usingBigBlocks: true</code>. Both block types share the same state -- they are sequential, not parallel execution environments.</p>
+
+<h3 id="evm-corewriter">12.2 CoreWriter (0x3333...3333) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>CoreWriter is the EVM-to-L1 bridge contract at address <code>0x3333333333333333333333333333333333333333</code>. It is a system precompile, not a deployed contract.</p>
+<h4>Interface</h4>
+<pre><code>interface ICoreWriter {
+    event RawAction(address indexed user, bytes data);
+    function sendRawAction(bytes calldata data) external;
+}</code></pre>
+<h4>Packed Encoding</h4>
+<pre><code>abi.encodePacked(uint8(1), uint24(actionId), abi.encode(params...))</code></pre>
+<p>The version byte is always <code>1</code>. The <code>uint24</code> action ID selects the L1 action type. Parameters are standard ABI-encoded after the 4-byte prefix.</p>
+<h4>CoreWriter Action Types (15)</h4>
+<table><tr><th>ID</th><th>Action</th><th>Parameters</th></tr>
+<tr><td>1</td><td>IocOrder</td><td>asset, isBuy, limitPx, sz, reduceOnly, cloid</td></tr>
+<tr><td>2</td><td>Cancel</td><td>asset, cloid</td></tr>
+<tr><td>3</td><td>TransferUsd</td><td>destination, amount</td></tr>
+<tr><td>4</td><td>TransferSpot</td><td>destination, token, amount</td></tr>
+<tr><td>5</td><td>Withdraw</td><td>destination, amount</td></tr>
+<tr><td>6</td><td>SpotDeploy</td><td>token params</td></tr>
+<tr><td>7</td><td>VaultTransfer</td><td>vault, isDeposit, usd</td></tr>
+<tr><td>8</td><td>UpdateLeverage</td><td>asset, isCross, leverage</td></tr>
+<tr><td>9</td><td>UpdateIsolatedMargin</td><td>asset, isBuy, ntl</td></tr>
+<tr><td>10</td><td>Delegate</td><td>validator, amount</td></tr>
+<tr><td>11</td><td>Undelegate</td><td>validator, amount</td></tr>
+<tr><td>12</td><td>ApproveAgent</td><td>agentAddress, agentName</td></tr>
+<tr><td>13</td><td>ApproveBuilderFee</td><td>builder, maxFeeRate</td></tr>
+<tr><td>14</td><td>BorrowLend</td><td>operation, token, amount</td></tr>
+<tr><td>15</td><td>SetReferrer</td><td>code</td></tr></table>
+<p>All CoreWriter actions go through the <code>ActionDelayer</code> -- they are NOT executed immediately. <span class="badge badge-confirmed">CONFIRMED</span></p>
+
+<h3 id="evm-l1-to-evm">12.3 L1 to EVM Flow (sendToEvmWithData) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>The <code>sendToEvmWithData</code> action transfers funds from L1 (HyperCore) to HyperEVM, with optional calldata execution on arrival. 11 fields confirmed for the action.</p>
+<table><tr><th>Step</th><th>Description</th></tr>
+<tr><td>1</td><td>User submits <code>sendToEvmWithData</code> on L1</td></tr>
+<tr><td>2</td><td>User is debited on L1 immediately</td></tr>
+<tr><td>3</td><td>Transfer is queued for the next EVM block</td></tr>
+<tr><td>4</td><td>SystemTx is injected in next EVM block to mint tokens to the user's EVM address</td></tr>
+<tr><td>5</td><td>If calldata was specified, it is executed on the EVM side after minting</td></tr></table>
+<div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant L1 as HyperCore (L1)
+    participant EVM as HyperEVM
+    U->>L1: sendToEvmWithData(destination, amount, calldata)
+    L1->>L1: Debit user balance
+    L1->>L1: Queue transfer for next EVM block
+    L1->>EVM: Inject SystemTx (mint tokens)
+    EVM->>EVM: Execute optional calldata
+</div>
+
+<h3 id="evm-to-l1">12.4 EVM to L1 Flow (CoreWriter Scan Loop) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>After each EVM block is executed, the L1 state machine scans transaction receipts for CoreWriter log events and enqueues them as delayed L1 actions.</p>
+<div class="mermaid">
+graph TD
+    A["EVM Block Executed"] --> B["Scan Receipts for\nCoreWriter RawAction logs"]
+    B --> C{"Logs found?"}
+    C -->|No| H["Done"]
+    C -->|Yes| D["Decode packed params\nversion(u8) + actionId(uint24) + ABI params"]
+    D --> E{"Action disabled?\ndisabled_core_writer_actions"}
+    E -->|Yes| F["Drop silently"]
+    E -->|No| G["Enqueue in ActionDelayer"]
+    G --> I["Execute in future\nbegin_block when matured"]
+    style A fill:#60a5fa,stroke:#333,color:#000
+    style G fill:#fb923c,stroke:#333,color:#000
+    style I fill:#34d399,stroke:#333,color:#000
+</div>
+<table><tr><th>Step</th><th>Description</th></tr>
+<tr><td>1</td><td>EVM block finishes execution</td></tr>
+<tr><td>2</td><td>Scan all transaction receipts for <code>RawAction</code> events from <code>0x3333...3333</code></td></tr>
+<tr><td>3</td><td>Decode packed params: version byte (<code>0x01</code>) + <code>uint24</code> action ID + ABI-encoded parameters</td></tr>
+<tr><td>4</td><td>Check <code>disabled_core_writer_actions</code> per-type kill switch</td></tr>
+<tr><td>5</td><td>Enqueue in <code>ActionDelayer</code> with maturity timestamp</td></tr>
+<tr><td>6</td><td>Actions execute in a future <code>begin_block</code> when the delay has elapsed; exact placement within <code>begin_block</code> is still open in current RE</td></tr></table>
+
+<h3 id="evm-delayer">12.5 Action Delayer (9 Fields) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<pre><code>delayed_actions, user_to_n_delayed_actions, n_total_delayed_actions,
+max_n_delayed_actions, vty_trackers, status_guard, enabled,
+delayer_mode(Alternating), delay_scale</code></pre>
+<p><strong>Capacity behavior</strong>: When the delayer is at capacity (<code>n_total_delayed_actions >= max_n_delayed_actions</code>), new actions are <strong>silently rejected</strong>. There is no eviction of existing actions and no error returned to the caller. <span class="badge badge-confirmed">CONFIRMED</span></p>
+<p><strong>Placement note</strong>: the current local engine drains matured delayed actions after the 9 standard begin-block effects. Older RE notes place <code>update_action_delayer</code> as effect 8 inside the begin-block body. The delayed-action lane is confirmed; its exact binary placement relative to BOLE and other begin-block effects is still open.</p>
+<h4>ActionDelayerStatus</h4>
+<pre><code>enum ActionDelayerStatus {
+    On,                           // Always active
+    Alternating { seconds: u64 }, // Active in alternating windows
+}</code></pre>
+<h4>DelayedActionSerde</h4>
+<pre><code>DelayedActionSerde {
+    action,          // The L1 action to execute
+    id,              // Unique action identifier
+    is_frontend,     // Whether submitted via frontend
+    expires_after,   // Expiry timestamp
+    evm_tx_hash,     // Source EVM transaction hash
+    broadcaster,     // Broadcasting validator
+}</code></pre>
+
+<h3 id="evm-security">12.6 Security Model</h3>
+<table><tr><th>Control</th><th>Purpose</th></tr>
+<tr><td>No ERC20 approve attack</td><td>CoreWriter reads <code>msg.sender</code> directly -- no <code>transferFrom</code> pattern, preventing approval-based exploits</td></tr>
+<tr><td><code>disabled_core_writer_actions</code></td><td>Per-action-type kill switch. Validators can disable individual CoreWriter action IDs</td></tr>
+<tr><td><code>l1_transfers_enabled</code></td><td>Global kill switch for all L1 transfers</td></tr>
+<tr><td>Action delay</td><td>All CoreWriter actions go through <code>ActionDelayer</code>, preventing MEV/front-running from EVM contracts</td></tr>
+<tr><td>Frozen user recovery</td><td><code>DeployerSendToEvmForFrozenUserAction</code> allows deployers to recover funds for frozen users (new in testnet 2026-04-03)</td></tr>
+<tr><td>Silent rejection at capacity</td><td>No eviction, no error -- prevents DoS amplification</td></tr></table>
+</section>
+
+<section class="section" id="bridge">
+<h2>13. Bridge <a href="#bridge" class="anchor-link">#</a></h2>
+<p>The ETH-Hyperliquid bridge (version 2, "Bridge2") enables deposits and withdrawals between Ethereum L1 (Arbitrum) and HyperCore. Bridge operations use the same validator signer keys as consensus -- there are NOT separate EOA signing keys for bridge operations. <span class="badge badge-confirmed">CONFIRMED</span><sup><a href="#ref-22">[22]</a></sup></p>
+
+<h3 id="bridge-struct">13.1 Bridge2 Struct (10 Fields) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Exchange field [8] <code>bridge2</code>. <span class="citation-tag cite-snap">SNAP: confirmed from ABCI state</span></p>
+<pre><code>Bridge2(10) {
+    eth_id_to_deposit_votes,           // deposit confirmation tracking
+    finished_deposits_data,            // completed deposits
+    withdrawal_signatures,             // withdrawal signature collection
+    withdrawal_finalized_votes,        // finalization vote tracking
+    finished_withdrawal_to_time,       // withdrawal completion timestamps
+    validator_set_signatures,          // validator set update signatures
+    validator_set_finalized_votes,     // validator set finalization votes
+    bal,                               // bridge balance tracking
+    last_pruned_deposit_block_number,  // deposit pruning watermark
+    oaw,                               // (abbreviated, pending full decode)
+}</code></pre>
+
+<h3 id="bridge-signing">13.2 Signing Model <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p><strong>Bridge signing = consensus signing</strong>. The consensus signer key (the key used for HyperBFT voting) is the same key that signs bridge withdrawal messages and validator set updates. There are NOT separate EOAs.</p>
+<table><tr><th>Property</th><th>Value</th></tr>
+<tr><td>Signing key</td><td>Same secp256k1 key as consensus (hot signer)</td></tr>
+<tr><td>Quorum threshold</td><td>2/3+ stake-weighted (same as HyperBFT consensus)</td></tr>
+<tr><td>Ethereum-side architecture</td><td>Hot/cold wallet on Bridge2.sol contract</td></tr>
+<tr><td>Hot signers</td><td>Validator signer keys (mirrors consensus signer set)</td></tr>
+<tr><td>Cold signers</td><td>Higher-security keys for validator set updates and emergencies</td></tr>
+<tr><td>Dispute period</td><td>Withdrawals have a dispute period before finalization on Ethereum</td></tr></table>
+
+<h3 id="bridge-deposit">13.3 Deposit Flow</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant ETH as Ethereum L1 (Arbitrum)
+    participant V as Validators (2/3+)
+    participant HL as HyperCore
+    U->>ETH: Deposit ETH/tokens to Bridge2.sol
+    ETH->>V: Validators observe deposit on-chain
+    V->>HL: VoteEthDepositAction(3)
+    Note over V: deposit_id, chain, validator
+    Note over HL: Accumulate votes
+    HL->>HL: 2/3+ stake-weighted votes reached
+    HL->>U: Funds credited on HyperCore
+</div>
+<p><strong>VoteEthDepositAction</strong> (3 fields): <code>deposit_id</code>, <code>chain</code>, <code>validator</code>. Each validator independently observes the Ethereum deposit and submits a vote. When 2/3+ of stake weight has voted, the deposit is confirmed and funds are credited.</p>
+
+<h3 id="bridge-withdrawal">13.4 Withdrawal Flow</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant HL as HyperCore
+    participant V as Validators (2/3+)
+    participant ETH as Ethereum L1 (Arbitrum)
+    U->>HL: withdraw3 action
+    HL->>HL: Debit user balance
+    V->>HL: ValidatorSignWithdrawalAction(5)
+    Note over V: signature, chain, nonce, withdrawal_hash, validator
+    Note over HL: Collect signatures
+    HL->>HL: 2/3+ stake-weighted signatures
+    HL->>ETH: Withdrawal enters dispute period
+    Note over ETH: Dispute window open
+    ETH->>ETH: Dispute period expires
+    ETH->>U: Funds released on Ethereum
+</div>
+<p><strong>ValidatorSignWithdrawalAction</strong> (5 fields): <code>signature</code>, <code>chain</code>, <code>nonce</code>, <code>withdrawal_hash</code>, <code>validator</code>. Validators sign the withdrawal using their consensus signer keys. After 2/3+ signatures are collected, the withdrawal enters a dispute period on Ethereum before funds can be claimed.</p>
+
+<h3 id="bridge-valset">13.5 Validator Set Update Flow</h3>
+<p>When the active validator set changes (due to staking changes, jailing, or epoch transitions), the bridge's Ethereum-side contract must be updated to reflect the new signer set.</p>
+<pre><code>1. Validator set changes on HyperCore (epoch transition, delegation change)
+2. Validators sign the new validator set: SignValidatorSetUpdateAction
+3. validator_set_signatures accumulates signatures
+4. 2/3+ stake-weighted signatures collected
+5. validator_set_finalized_votes confirms finalization
+6. New validator set submitted to Bridge2.sol on Ethereum
+7. Bridge2.sol updates hot/cold signer sets</code></pre>
+
+<h3 id="bridge-actions">13.6 Bridge Action Types</h3>
+<table><tr><th>Action</th><th>Fields</th><th>Purpose</th></tr>
+<tr><td><code>VoteEthDepositAction</code></td><td>3</td><td>Vote to confirm L1 deposit</td></tr>
+<tr><td><code>ValidatorSignWithdrawalAction</code></td><td>5</td><td>Sign withdrawal message</td></tr>
+<tr><td><code>SignValidatorSetUpdateAction</code></td><td>--</td><td>Sign validator set change</td></tr>
+<tr><td><code>VoteEthFinalizedWithdrawalAction</code></td><td>--</td><td>Finalize withdrawal on L1</td></tr>
+<tr><td><code>InvalidateWithdrawals</code></td><td>--</td><td>Cancel pending withdrawals during dispute period</td></tr></table>
+
+<h3 id="bridge-security">13.7 Security Model</h3>
+<table><tr><th>Finding</th><th>Severity</th><th>Detail</th></tr>
+<tr><td>Broadcaster centralization</td><td>Critical</td><td>Single broadcaster controls action ordering and inclusion. MEV extraction possible.</td></tr>
+<tr><td>InvalidateWithdrawals</td><td>Critical</td><td>Validators can cancel ANY pending withdrawal during dispute period. No escape hatch for users if validators collude.</td></tr>
+<tr><td>No escape hatch</td><td>Critical</td><td>Users cannot force-withdraw if the validator set becomes adversarial. Bridge is fully trust-dependent on active validator set.</td></tr>
+<tr><td>Broadcaster MEV</td><td>High</td><td>Broadcaster sees all pending transactions before inclusion and can front-run, sandwich, or censor.</td></tr>
+<tr><td>Instant validator set update</td><td>High</td><td><code>ModifyBroadcaster</code> is instant (no timelock). Validator set update on Ethereum can be changed with hot key quorum.</td></tr>
+<tr><td>Configurable withdrawal fee</td><td>Medium</td><td><code>bridge2_withdraw_fee</code> -- validators can change the withdrawal fee via governance.</td></tr></table>
+</section>
+
+<section class="section" id="outcomes">
+<h2>14. HIP-4: Outcomes <a href="#outcomes" class="anchor-link">#</a></h2>
+<p>Native L1 prediction markets (event contracts). Binary instruments that settle between 0 and 1 (or fractionally via <code>settleFraction</code>). Deployed through the HIP-3 (builder-deployed perps) pipeline but with fundamentally different mechanics: 1x isolated margin only, no leverage, no liquidation, no continuous oracle feed. Price discovery is purely CLOB-based. Settlement by deployer-designated <code>oracleUpdater</code>. Requires 1M HYPE stake (slashable for oracle manipulation).<sup><a href="#ref-23">[23]</a></sup></p>
+
+<h3 id="outcomes-tracker">14.1 OutcomeTracker (11 Fields) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>The <code>OutcomeTracker</code> is stored in the Exchange state and manages all live/active outcomes. <span class="citation-tag cite-bin">BIN: struct OutcomeTracker with 11 elements</span></p>
+<pre><code>State structures:
+    OutcomeTracker(11)     -- manages all outcome state in Exchange
+    OutcomeSpec(4)         -- tuple struct: settleFraction, details, questions, outcome
+    OutcomeSideSpec(3)     -- one side (YES or NO)
+    QuestionSpec(5)        -- question grouping related outcomes
+    SettledOutcome         -- resolved state
+    SettledOutcomeSpec(3)  -- settlement parameters
+    SettledOutcomeHistory(3) -- historical record
+    SettledQuestionSpec(4) -- question-level settlement</code></pre>
+
+<h3 id="outcomes-lifecycle">14.2 Outcome Lifecycle</h3>
+<div class="mermaid">
+graph TD
+    A["Deploy via Hip3DeployAction\n1M HYPE stake required"] --> B["Opening Auction\n~15 min single-price clearing"]
+    B --> C["Continuous Trading\nStandard CLOB, 1x isolated"]
+    C --> D{"oracleUpdater posts\nSettleOutcome?"}
+    D -->|Yes| E["Trading halts immediately"]
+    E --> F["Open orders auto-cancelled\noutcomeSettledCanceled"]
+    F --> G["Positions auto-settle\nat posted outcome value"]
+    G --> H["Slot Recycling\nReuse 1M HYPE stake"]
+    D -->|No| C
+    style A fill:#8B5CF6,stroke:#333,color:#fff
+    style E fill:#f87171,stroke:#333,color:#fff
+    style H fill:#34d399,stroke:#333,color:#000
+</div>
+
+<h3 id="outcomes-deploy">14.3 OutcomeDeploy Enum (8 Variants) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Nested inside <code>Hip3DeployAction</code>. <span class="citation-tag cite-bin">BIN: impl_outcome.rs</span></p>
+<table><tr><th>Variant</th><th>Fields</th><th>Purpose</th></tr>
+<tr><td><code>RegisterQuestion</code></td><td>3</td><td>Create question grouping multiple outcomes</td></tr>
+<tr><td><code>RegisterOutcome</code></td><td>4</td><td>Create outcome (outcome, settleFraction, details, namedOutcome)</td></tr>
+<tr><td><code>RegisterNamedOutcome</code></td><td>2</td><td>Add named outcome to existing question</td></tr>
+<tr><td><code>ChangeOutcomeDescription</code></td><td>2</td><td>Update outcome metadata</td></tr>
+<tr><td><code>SettleOutcome</code></td><td>3</td><td>Oracle posts final resolution</td></tr>
+<tr><td><code>ChangeQuestionDescription</code></td><td>2</td><td>Update question metadata</td></tr>
+<tr><td><code>RegisterOutcomeToken</code></td><td>1</td><td>Register backing token for outcome market</td></tr>
+<tr><td><code>RegisterTokensAndStandaloneOutcome</code></td><td>3</td><td>Combined token + outcome registration</td></tr></table>
+
+<h3 id="outcomes-user">14.4 UserOutcomeAction Enum (4 Variants) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<table><tr><th>Variant</th><th>Fields</th><th>Purpose</th></tr>
+<tr><td><code>SplitOutcome</code></td><td>2 (wei, outcome_id)</td><td>Lock collateral, mint YES+NO pair. Deposit 1 unit collateral = 1 YES + 1 NO.</td></tr>
+<tr><td><code>MergeOutcome</code></td><td>1</td><td>Burn 1 YES + 1 NO to reclaim 1 unit of collateral. Exit without directional view.</td></tr>
+<tr><td><code>MergeQuestion</code></td><td>1</td><td>Redeem complete set across all outcomes in a question (multi-outcome markets).</td></tr>
+<tr><td><code>NegateOutcome</code></td><td>3</td><td>Flip YES to NO (or vice versa) atomically. Swap without two separate trades.</td></tr></table>
+
+<h3 id="outcomes-settlement">14.5 Settlement Flow</h3>
+<p>The <code>oracleUpdater</code> address is set at deployment time in <code>Hip3SchemaInput</code>. It is the deployer-designated settlement authority -- the deployer IS the oracle. There is no Chainlink, Pyth, or continuous feed for outcome prices.</p>
+<pre><code>Settlement flow:
+    1. oracleUpdater submits SettleOutcome(3) via Hip3DeployAction
+    2. Trading halts immediately
+    3. All open orders auto-cancelled (outcomeSettledCanceled)
+    4. New orders rejected (outcomeSettledRejected)
+    5. Positions auto-settle at posted outcome value (0, 1, or settleFraction)
+    6. Collateral released to winners in collateralToken
+    7. Slot recycled -- 1M HYPE stake available for new markets
+
+Price bounds during trading: 0.001 to 0.999
+Settlement values: 0 or 1 (binary), or fractional via settleFraction
+Collateral: configurable per deployment (any aligned quote token, NOT restricted to USDH)</code></pre>
+
+<h3 id="outcomes-price">14.6 Price Discovery Model</h3>
+<table><tr><th>Property</th><th>Perps (HIP-3)</th><th>Outcomes (HIP-4)</th></tr>
+<tr><td>Price during trading</td><td><code>coin_to_oracle_px</code> (external feed) + <code>coin_to_mark_px</code> (book)</td><td>CLOB mid only -- no external oracle feed</td></tr>
+<tr><td>Oracle role</td><td>Continuous price feed (Binance/Pyth) for mark/funding</td><td>Settlement only -- <code>oracleUpdater</code> posts final 0/1 result</td></tr>
+<tr><td>Mark price</td><td>Derived from oracle + book</td><td>Derived from book only</td></tr>
+<tr><td>Funding</td><td>Yes (EMA premium)</td><td>No funding rates</td></tr>
+<tr><td>Leverage</td><td>Up to 50x</td><td>1x only (isolated)</td></tr>
+<tr><td>Liquidation</td><td>Yes (margin engine)</td><td>None -- loss capped at premium</td></tr></table>
+
+<h3 id="outcomes-hip3">14.7 HIP-3 Shared Infrastructure</h3>
+<p>Outcomes share deployment and orderbook infrastructure with HIP-3 perps:</p>
+<pre><code>Hip3SchemaInput(3): collateralToken, oracleUpdater, OutcomeDeploy
+Hip3Schema(9): full_name, oracle_updater, fee_recipient, asset_to_oi_cap,
+    sub_deployers, deployer_fee_scale, last_deployer_fee_scale_change_time, +2
+Hip3Limits(6): total_oi_cap2, oi_sz_cap_per_perp, max_transfer_ntl2,
+    max_under_initial_margin_transfer_ntl2, daily_px_range, max_n_users_with_positions
+
+LtHash category: Settlement (index 5 of 11 L1 categories)</code></pre>
+</section>
+
+<section class="section" id="bole">
+<h2>15. BOLE Lending <a href="#bole" class="anchor-link">#</a></h2>
+<p>Protocol-controlled lending system built into HyperCore L1. Not an EVM contract. BOLE is NOT deployer-configurable -- pool parameters (reserves, rate limits, ADL, backstop liquidation) are set at protocol level by validator governance via <code>SystemBole</code> (action 46, broadcaster-only).<sup><a href="#ref-24">[24]</a></sup></p>
+
+<h3 id="bole-pool">15.1 BolePool (19 Fields) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Per-token lending pool state. Stored in <code>locus.blp</code> (Exchange Locus field [8]). <span class="citation-tag cite-snap">SNAP: confirmed from ABCI state</span></p>
+<pre><code>BolePool(19) {
+    dp, du, o, pmmt, e, pmv, r, p, n, b,
+    bog, pmdl, pml, uobc, ubgl, ubul, bwo, mbs, u
+}
+// Abbreviated serde names. Maps to:
+//   totalSupplied, totalBorrowed, utilization, rates,
+//   reserve config, user states, backstop params, etc.
+
+Key API state per token:
+    totalSupplied        // total supplied to pool
+    totalBorrowed        // total borrowed from pool
+    utilization          // totalBorrowed / totalSupplied
+    healthFactor         // per-user health metric
+    ltv                  // loan-to-value ratio
+    predictedRate        // predicted interest rate
+    borrowYearlyRate     // annualized borrow rate
+    interestAmount       // accrued interest
+    portfolioMarginEnabled // portfolio margin flag</code></pre>
+
+<h3 id="bole-actions">15.2 User Operations <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p><code>BoleAction(3)</code>: operation, token, amount. Wire name: <code>borrowLend</code>.</p>
+<table><tr><th>Operation</th><th>Description</th></tr>
+<tr><td><code>borrow</code></td><td>Borrow tokens from pool. Requires sufficient collateral.</td></tr>
+<tr><td><code>supply</code></td><td>Supply tokens to pool. Earn interest.</td></tr>
+<tr><td><code>repay</code></td><td>Repay borrowed tokens.</td></tr>
+<tr><td><code>defaultLiquidator</code></td><td>Designate a default liquidator for borrow positions.</td></tr>
+<tr><td><code>optOut</code></td><td>Opt out of lending.</td></tr></table>
+
+<h3 id="bole-rate">15.3 Rate Curve (Aave-Style Kink Model) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Interest rates follow a standard two-slope kink model, similar to Aave/Compound.</p>
+<pre><code>RawRateCurve {
+    kink_rate: f64,          // interest rate at kink utilization point
+    kink_utilization: f64,   // utilization threshold where slope changes
+    base_rate: f64,          // base interest rate (at 0% utilization)
+    slope1: f64,             // slope below kink (gentle)
+    slope2: f64,             // slope above kink (steep)
+}
+
+Rate computation:
+    if utilization &lt;= kink_utilization:
+        rate = base_rate + (utilization / kink_utilization) * slope1
+    else:
+        excess = (utilization - kink_utilization) / (1 - kink_utilization)
+        rate = base_rate + slope1 + excess * slope2</code></pre>
+
+<h3 id="bole-governance">15.4 SetBole Governance Variants (6) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Protocol-level configuration via <code>SystemBole</code> (broadcaster-only). <span class="citation-tag cite-bin">BIN: SetBole variants from Ghidra</span></p>
+<table><tr><th>Variant</th><th>Fields</th><th>Purpose</th></tr>
+<tr><td><code>Reserve</code></td><td>9</td><td>Configure reserve parameters per token</td></tr>
+<tr><td><code>Adl</code></td><td>2</td><td>Auto-deleveraging for lending positions</td></tr>
+<tr><td><code>BackstopLiquidatorTokenParams</code></td><td>4</td><td>Per-token backstop liquidator configuration</td></tr>
+<tr><td><code>ResetIndex</code></td><td>2</td><td>Reset lending index (administrative)</td></tr>
+<tr><td><code>RateLimit</code></td><td>7</td><td>Rate limiting configuration for lending operations</td></tr>
+<tr><td><code>TestnetAction</code></td><td>2</td><td>Testnet-only operations</td></tr></table>
+
+<h3 id="bole-liquidation">15.5 BOLE Liquidation Flow <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>BOLE liquidation is triggered in <code>begin_block</code> effect #9 (<code>apply_bole_liquidations</code>). Health factor threshold: <strong>0.8</strong>. Three liquidation modes with distinct LtHash categories.</p>
+<div class="mermaid">
+graph TD
+    BB["begin_block effect #9\napply_bole_liquidations"] --> HC{"healthFactor below 0.8?"}
+    HC -->|No| SAFE["No action"]
+    HC -->|Yes| MODE{"Liquidation mode"}
+    MODE -->|Standard| MKT["BoleMarketLiquidation\nOrdinary market liquidation"]
+    MODE -->|Backstop| BST["BoleBackstopLiquidation\nBackstop liquidator takes position"]
+    MODE -->|Partial| PRT["BolePartialLiquidation\nPartial reduction, cooldown enforced"]
+    MKT --> LT["LtHash updated"]
+    BST --> LT
+    PRT --> LT
+    style BB fill:#fb923c,stroke:#333,color:#fff
+    style MKT fill:#f87171,stroke:#333,color:#fff
+    style BST fill:#f87171,stroke:#333,color:#fff
+    style PRT fill:#fbbf24,stroke:#333,color:#000
+</div>
+<pre><code>BOLE health computation:
+    healthFactor = supplied_value / borrowed_value
+    Liquidation trigger: healthFactor &lt; 0.8
+
+Order type: borrowLendLiquidation (display: "Borrow Liquidation")
+Cooldown: partial_liquidation_cooldown = 30.0 seconds
+
+Error messages:
+    "Insufficient collateral for operation"
+    "Insufficient balance"
+    "Exceeded cap for asset"
+    "Only supplying is enabled"
+    "Too many operations"
+    "borrow_cap > supply_cap"</code></pre>
+
+<h3 id="bole-hash">15.6 Hash Accumulator Naming <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>BOLE state is tracked in per-clearinghouse hash accumulators following the naming pattern from Section 10.6.</p>
+<pre><code>AllBoleTH3      -- all BOLE state for HIP-3 clearinghouse
+borrowLeH3      -- borrow ledger entries, HIP-3
+
+LtHash categories for BOLE liquidation events:
+    BoleMarketLiquidation    (index 8 of 11 L1 categories)
+    BoleBackstopLiquidation  (index 9, paired with [9,10])
+    BolePartialLiquidation   (index 10, paired with [9,10])
+
+Exchange field: reserve_accumulators -- Vec of (token_id, accumulator) pairs
+    Mainnet keys: 107, 207, 232, 255 (4 tokens with BOLE reserves)</code></pre>
+</section>
+
+<section class="section" id="guards">
+<h2>16. Guards (16 BucketGuards) <a href="#guards" class="anchor-link">#</a></h2>
+<table><tr><th>Guard</th><th>Purpose</th></tr>
+<tr><td><code>funding_distribute_guard</code></td><td>Hourly funding</td></tr>
+<tr><td><code>funding_update_guard</code></td><td>EMA updates</td></tr>
+<tr><td><code>begin_block_logic_guard</code></td><td>Reentrancy</td></tr>
+<tr><td><code>cancel_aggressive_orders_at_oi_cap_guard</code></td><td>OI cap cancels</td></tr>
+<tr><td><code>book_empty_user_states_pruning_guard</code></td><td>State pruning</td></tr>
+<tr><td><code>ensure_order_bucket_guard</code></td><td>Order validation</td></tr>
+<tr><td><code>reset_recent_oi_bucket_guard</code></td><td>OI reset</td></tr>
+<tr><td><code>stakes_decay_bucket_guard</code></td><td>Stake decay</td></tr>
+<tr><td><code>stage_reward_bucket_guard</code></td><td>Reward staging</td></tr>
+<tr><td><code>distribute_reward_bucket_guard</code></td><td>Reward distribution</td></tr>
+<tr><td><code>update_median_bucket_guard</code></td><td>Median price</td></tr>
+<tr><td><code>prune_bucket_guard</code></td><td>General pruning</td></tr>
+<tr><td><code>alert_bucket_guard</code></td><td>Alert rate</td></tr>
+<tr><td><code>partial_liquidation_cooldown</code></td><td>~30s spacing</td></tr>
+<tr><td><code>hip3_stale_mark_px_guard</code></td><td>HIP-3 stale detection</td></tr>
+<tr><td><code>status_guard</code></td><td>Action Delayer</td></tr></table>
+<p><strong>Volume-Gated</strong>: Sub-accounts, scheduled cancels, portfolio margin, extra agents, referral codes.</p>
+</section>
+
+<section class="section" id="validator">
+<h2>17. Validator Operations <a href="#validator" class="anchor-link">#</a></h2>
+<p>Hyperliquid uses a two-key model per validator: a <strong>cold validator key</strong> that holds funds, receives rewards, and manages the validator profile, and a <strong>hot signer key</strong> stored in <code>node_config.json</code> that signs consensus messages and bridge operations.</p>
+
+<h3 id="val-cstaking">17.1 CStaking (23 Fields) <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Exchange field [10] <code>c_staking</code>. Full consensus staking state. <span class="citation-tag cite-snap">SNAP: confirmed from ABCI state</span></p>
+<pre><code>CStaking(23) {
+    stakes,                                // validator stakes
+    allowed_validators,                    // validator allowlist
+    allow_all_validators,                  // permissionless mode flag
+    broadcasters,                          // whitelisted broadcasters
+    validator_to_profile,                  // CValidatorProfile per validator
+    validator_to_last_signer_change_time,  // signer rotation tracking
+    delegations,                           // delegation state per user
+    proposals,                             // governance proposals
+    stakes_decay_bucket_guard,             // stake decay timing
+    jailed_signers,                        // currently jailed signers
+    jail_vote_tracker,                     // jail vote accumulation
+    jail_until,                            // jail expiry per validator
+    signer_to_last_manual_unjail_time,     // unjail cooldown tracking
+    native_token_reserve,                  // HYPE reserve for rewards
+    stage_reward_bucket_guard,             // reward staging timing
+    validator_to_staged_rewards,           // staged (pending) rewards
+    distribute_reward_bucket_guard,        // reward distribution timing
+    user_states,                           // per-user staking state
+    pending_withdrawals,                   // pending stake withdrawals
+    self_delegation_requirement,           // minimum self-delegation
+    disabled_validators,                   // disabled validator set
+    disabled_node_ips,                     // disabled node IPs
+    validator_to_state,                    // per-validator state tracking
+}</code></pre>
+
+<h3 id="val-profile">17.2 CValidatorProfile and CValidatorAction <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<h4>CValidatorProfile (6 Fields)</h4>
+<pre><code>CValidatorProfile {
+    node_ip: String,                // validator node IP address
+    delegations_disabled: bool,     // whether delegations are accepted
+    commission_bps: u32,            // commission in basis points
+    signer: Address,                // hot signer key address
+    register_time: u64,             // registration timestamp
+    last_signer_change_time: u64,   // last signer rotation time
+}</code></pre>
+<h4>CValidatorAction (16 Variants) <span class="badge badge-confirmed">CONFIRMED</span></h4>
+<p>Requires cold validator key. <span class="citation-tag cite-bin">BIN: variant index 0 &lt;= i &lt; 16</span></p>
+<table><tr><th>Action</th><th>Purpose</th></tr>
+<tr><td><code>Register</code> (3 fields)</td><td>Register as validator (profile, signer, initial stake)</td></tr>
+<tr><td><code>ChangeProfile</code> (7 fields)</td><td>Update node_ip, delegations_disabled, commission_bps, signer, etc.</td></tr>
+<tr><td><code>registerAsset</code></td><td>Register new tradeable asset</td></tr>
+<tr><td><code>registerAsset2</code></td><td>Extended asset registration</td></tr>
+<tr><td><code>setOracle</code></td><td>Oracle management</td></tr>
+<tr><td><code>setFeeRecipient</code></td><td>Fee destination configuration</td></tr>
+<tr><td><code>setFeeScale</code></td><td>Fee scale adjustment</td></tr>
+<tr><td><code>insertMarginTable</code></td><td>Add margin table</td></tr>
+<tr><td><code>setMarginTableIds</code></td><td>Assign margin tables to assets</td></tr>
+<tr><td><code>setOpenInterestCaps</code></td><td>Set OI caps per asset</td></tr>
+<tr><td><code>setFundingMultipliers</code></td><td>Per-asset funding multipliers</td></tr>
+<tr><td><code>setFundingInterestRates</code></td><td>Per-asset funding interest rates</td></tr>
+<tr><td><code>disableDex</code></td><td>Disable a DEX instance</td></tr>
+<tr><td><code>setPerpAnnotation</code></td><td>Set perp annotation metadata</td></tr>
+<tr><td><code>setMarginModes</code></td><td>Set margin modes per asset</td></tr>
+<tr><td><code>setGrowthModes</code></td><td>Set growth modes per asset</td></tr></table>
+<h4>CSignerAction (3 Variants)</h4>
+<p>Requires hot signer key. <span class="citation-tag cite-bin">BIN: CSignerAction dispatch at VA 0x3352310</span></p>
+<table><tr><th>Action</th><th>Purpose</th></tr>
+<tr><td><code>unjailSelf</code></td><td>Self-unjail after cooldown period</td></tr>
+<tr><td><code>jailSelf</code></td><td>Voluntary jail before shutdown/maintenance</td></tr>
+<tr><td><code>jailSelfIsolated</code></td><td>Jail in isolated mode</td></tr></table>
+
+<h3 id="val-epoch">17.3 Epoch Lifecycle <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Validator set transitions are epoch-based. The active set is determined by total delegation at epoch boundaries.</p>
+<pre><code>Staking(6) {
+    epoch_states,             // historical epoch state snapshots
+    active_epoch,             // currently active epoch index
+    cur_epoch_state,          // current epoch validator set
+    cur_epoch,                // current epoch number
+    epoch_duration_seconds,   // epoch length (e.g. ~90 min for 100K rounds)
+    allowed_validators,       // validator whitelist
+}
+
+EpochTracker {
+    epoch_states,             // Vec of epoch snapshots
+    active_epoch,             // active epoch index
+    cur_epoch_state,          // current state
+    cur_epoch,                // epoch counter
+    epoch_duration_seconds,   // duration
+}
+
+Epoch transition:
+    1. ForceIncreaseEpoch action triggers epoch boundary
+    2. Rank validators by total delegation (self + delegated)
+    3. Top N validators become the active set (24 mainnet, 50 testnet)
+    4. New proposer rotation computed from new active set
+    5. Bridge validator set updated (same signer keys)
+    6. validator_power_updates applied to consensus</code></pre>
+
+<h3 id="val-delegation">17.4 Delegation Flow <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Users delegate HYPE to validators via <code>tokenDelegate</code>. Rewards are distributed per epoch based on commission rates.</p>
+<pre><code>Delegation flow:
+    1. User submits tokenDelegate action (validator, amount)
+    2. Delegation recorded in c_staking.delegations
+    3. Takes effect at next epoch boundary
+    4. Rewards staged: stage_reward_bucket_guard fires periodically
+    5. Rewards distributed: distribute_reward_bucket_guard fires
+    6. User claims via claimRewards action
+
+Reward distribution:
+    validator_reward = block_reward * validator_stake_fraction
+    validator_commission = validator_reward * commission_bps / 10000
+    delegator_share = (validator_reward - commission) * delegator_fraction
+
+Constraints:
+    self_delegation_requirement enforced (minimum self-stake)
+    pending_withdrawals tracked for unbonding period
+    stakes_decay_bucket_guard handles stake decay over time</code></pre>
+
+<h3 id="val-jailing">17.5 Jailing <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Validators are jailed for poor performance (latency) or manual self-jailing for maintenance.</p>
+<div class="mermaid">
+graph TD
+    R["Register validator\nCValidatorAction::Register"] --> A["Active in epoch\ntop N by delegation"]
+    A --> P["Proposing blocks\nRoundRobinTtl rotation"]
+    P --> HB["Heartbeat monitoring\nvalidator_latency_ema"]
+    HB --> JC{"latency_ema above\njail threshold?"}
+    JC -->|No| P
+    JC -->|Yes| JV["JailVoteTimer fires\nConstruct VoteJailBundle"]
+    JV --> JQ{"2/3+ validators\nagree to jail?"}
+    JQ -->|No| P
+    JQ -->|Yes| J["JAILED\njailed_signers, jail_until"]
+    J --> UJ{"Unjail conditions met?\ncooldown elapsed, active epoch"}
+    UJ -->|Yes| US["CSignerAction::unjailSelf"]
+    US --> A
+    UJ -->|No| J
+    A --> SJ["CSignerAction::jailSelf\nvoluntary maintenance"]
+    SJ --> J
+    style J fill:#f87171,stroke:#333,color:#fff
+    style A fill:#34d399,stroke:#333,color:#000
+</div>
+<pre><code>Jailing fields:
+    validator_latency_ema            // EMA of response latency
+    latency_ema_jail_threshold       // threshold for jailing
+    validators_missing_heartbeat     // set of non-responsive validators
+    disconnected_validators          // detected network partitions
+    jailed_signers                   // currently jailed signer set
+    jail_until                       // jail expiry timestamp per validator
+    signer_to_last_manual_unjail_time // unjail cooldown tracking
+    jail_vote_tracker                // vote accumulation for jailing
+
+Unjail requirements:
+    1. Jail cooldown period must have elapsed (jail_until)
+    2. Validator must be in active epoch set
+    3. Submit CSignerAction::unjailSelf with hot signer key
+    4. "Signer invalid or inactive for current epoch" if not in active set</code></pre>
+
+<h3 id="val-rpc-backfill">17.6 RPC Backfill (9 Validation Checks)</h3>
+<table><tr><th>#</th><th>Check</th><th>Error</th></tr>
+<tr><td>1</td><td>QC round</td><td><code>ClientBlockQcRound</code></td></tr>
+<tr><td>2</td><td>QC hash</td><td><code>ClientBlockQcHash</code></td></tr>
+<tr><td>3</td><td>Tx validity</td><td><code>ClientBlockTx</code></td></tr>
+<tr><td>4</td><td>tx_hashes match</td><td><code>ClientBlockTxHashes</code></td></tr>
+<tr><td>5</td><td>Timestamp monotonic</td><td><code>ClientBlockTime</code></td></tr>
+<tr><td>6</td><td>Commit proof</td><td><code>ClientBlockMissingCommitProof</code></td></tr>
+<tr><td>7</td><td>Child QC</td><td><code>CommitProofChildQc</code></td></tr>
+<tr><td>8</td><td>Grandchild QC</td><td><code>CommitProofGrandchildQc</code></td></tr>
+<tr><td>9</td><td>Consecutive rounds</td><td><code>CommitProofConsecutive</code></td></tr></table>
+</section>
+
+<section class="section" id="addresses">
+<h2>18. Key Function Addresses <a href="#addresses" class="anchor-link">#</a></h2>
+<table><tr><th>Function</th><th>VA</th></tr>
+<tr><td>Main Exchange dispatcher</td><td><code>0x0272a320</code></td></tr>
+<tr><td>RespHash dispatch</td><td><code>0x0205a300</code></td></tr>
+<tr><td>compute_resps_hash (testnet)</td><td><code>0x2355860</code></td></tr>
+<tr><td>Blake3 hasher write</td><td><code>0x04e03010</code></td></tr>
+<tr><td>SSE2 paddw</td><td><code>0x04e05786</code></td></tr>
+<tr><td>LtHash insert</td><td><code>0x04e0ccf0</code></td></tr>
+<tr><td>MsgConcise serializer</td><td><code>0x42b7e50</code></td></tr>
+<tr><td>OutMsgConcise serializer</td><td><code>0x42b87e0</code></td></tr>
+<tr><td>ConciseMid serializer</td><td><code>0x42b92f0</code></td></tr>
+<tr><td>HeartbeatSnapshot ser/de</td><td><code>0x438fcc0</code> / <code>0x43b9a10</code></td></tr>
+<tr><td>ConciseLtHash ser/de</td><td><code>0x43db480</code> / <code>0x4387640</code></td></tr>
+<tr><td>bincode-fork serializer</td><td><code>0x474f3f0</code></td></tr>
+<tr><td>send_to_destination</td><td><code>0x43bf670</code></td></tr>
+<tr><td>BTreeMap peer routing</td><td><code>0x409c0e0</code></td></tr>
+<tr><td>tcp_bytes</td><td><code>0x1cc9d00</code></td></tr>
+<tr><td>Greeting builder</td><td><code>0x2767ee0</code></td></tr>
+<tr><td>Peer rejection</td><td><code>0x75fe5e</code></td></tr>
+<tr><td>CSignerAction dispatch</td><td><code>0x3352310</code></td></tr>
+<tr><td>Signer epoch check</td><td><code>0x3355790</code></td></tr>
+<tr><td>Validator lookup</td><td><code>0x2eb8fb0</code></td></tr></table>
+</section>
+
+<section class="section" id="binary-structure">
+<h2>19. Binary Structure <a href="#binary-structure" class="anchor-link">#</a></h2>
+<p>Source module map from testnet binary <code>331bef9b</code> (2026-04-03). <span class="badge badge-confirmed">CONFIRMED</span> from panic paths and debug strings in the stripped ELF.</p>
+<table><tr><th>Property</th><th>Value</th></tr>
+<tr><td>Binary</td><td>Testnet build 2026-04-03</td></tr>
+<tr><td>Size</td><td>87 MB (stripped ELF)</td></tr>
+<tr><td>SHA-256</td><td><code>1a99c892...</code></td></tr>
+<tr><td>Commit</td><td><code>331bef9b</code></td></tr>
+<tr><td>Build date</td><td>2026-04-03</td></tr></table>
+<h3 id="binary-modules">19.1 Source Module Map</h3>
+<pre><code>/home/ubuntu/hl/code_Testnet/
++-- base/src/      -- Utilities (50+ files)
+|   +-- types.rs, config.rs, serialize.rs, ...
++-- db/src/        -- RocksDB backend
+|   +-- db.rs, compaction.rs
++-- evm_rpc/src/   -- EVM JSON-RPC
+|   +-- server.rs, handlers.rs
++-- l1/src/        -- Core L1 logic
+|   +-- abci/engine.rs, state.rs
+|   +-- book/book/impl_insert_order.rs
+|   +-- clearinghouse/
+|   +-- exchange/impl_trading.rs, end_block.rs, exchange.rs, impl_outcome.rs
+|   +-- evm/hyper_evm.rs, transactor.rs, core_writer.rs
+|   +-- staking.rs, vault/, fees/compute.rs, bole/user_state.rs
++-- node/src/      -- Orchestration + Consensus
+|   +-- consensus/state.rs, server.rs, types.rs, timer.rs, mempool.rs
+|   +-- client_block.rs, heartbeat_tracker.rs, rpc.rs, network.rs</code></pre>
+<p>Compared to mainnet build <code>105cb1dc</code> (40+ files in base/), the testnet binary shows 50+ files in base/ and additional modules in the evm/ subtree.</p>
+</section>
+
+<section class="section" id="references">
+<h2>References <a href="#references" class="anchor-link">#</a></h2>
+<ol style="font-size:13px;font-family:var(--font-sans);color:var(--text-secondary);">
+<li id="ref-1"><span class="citation-tag cite-obs">OBS</span> Live mainnet: peak 7,746 actions/second, 2,451 in one 70ms block.</li>
+<li id="ref-2"><span class="citation-tag cite-bin">BIN</span> Crate versions from path strings in rodata. Binary: 81MB ELF, build 105cb1dc.</li>
+<li id="ref-3"><span class="citation-tag cite-bin">BIN</span> "CertifiedTwoChainCommit" in rodata. Domain separator at VA 0x76db94.</li>
+<li id="ref-4"><span class="citation-tag cite-bin">BIN</span> Consensus errors at VA 0x6600fa. Field names from serde at VA 0x660467.</li>
+<li id="ref-5"><span class="citation-tag cite-bin">BIN</span> No capacity string. "dropping txs/blocks" confirmed. Source: mempool.rs.</li>
+<li id="ref-6"><span class="citation-tag cite-bin">BIN</span> Pipeline at offset 0x539f8a.</li>
+<li id="ref-7"><span class="citation-tag cite-bin">BIN</span> begin_block_logic_guard. 5-step order from end_block.rs.</li>
+<li id="ref-8"><span class="citation-tag cite-bin">BIN</span> variant index 0..90. Dispatcher at VA 0x0272a320.</li>
+<li id="ref-9"><span class="citation-tag cite-re">RE</span> Testnet: RestingOrder 12 fields, Fill 21 fields, 92 action variants.</li>
+<li id="ref-10"><span class="citation-tag cite-snap">SNAP</span> Exchange state at h=535280000. 57 keys. 2.1M users, $3.01B.</li>
+<li id="ref-11"><span class="citation-tag cite-bin">BIN</span> Cancel reasons at 0x64f964, index 0..10. Rejects at adjacent offsets.</li>
+<li id="ref-12"><span class="citation-tag cite-api">API</span> Fee tiers from app.hyperliquid.xyz/fees.</li>
+<li id="ref-13"><span class="citation-tag cite-api">API</span> fundingHistory 3600s apart. BTC 0.0000125 in 314/500 samples.</li>
+<li id="ref-14"><span class="citation-tag cite-bin">BIN</span> blake3 at 0x04e03010, paddw at 0x04e05786, SHA-256 final.</li>
+<li id="ref-15"><span class="citation-tag cite-bin">BIN</span> 11 categories at 0x65fb61. RespHash at 0x205a300. 14 accumulators.</li>
+<li id="ref-16"><span class="citation-tag cite-bin">BIN</span> compute_resps_hash at 0x2355860, table at 0x3aa3f8.</li>
+<li id="ref-17"><span class="citation-tag cite-snap">SNAP</span> EVM sizes from lt_hashes.json: 92B accounts, 84B storage.</li>
+<li id="ref-18"><span class="citation-tag cite-bin">BIN</span> Wire: bswap at 0x1cc9f59, kind at 0x1cc9f5b.</li>
+<li id="ref-19"><span class="citation-tag cite-bin">BIN</span> MsgConcise table 0x65f418, OutMsgConcise 0x65f458. Type: RpcUpdate.</li>
+<li id="ref-20"><span class="citation-tag cite-bin">BIN</span> Mid table at 0x65f47c. 5 LEA: "in", "execution state", "out", "status", "round advance".</li>
+<li id="ref-21"><span class="citation-tag cite-bin">BIN</span> hash_concise hex loop at 0x449e0f0, 32 bytes. ValidatorSetSnapshot 2 fields at 0x42b9b80.</li>
+<li id="ref-22"><span class="citation-tag cite-re">RE</span> ModifyBroadcaster no timelock. invalidateWithdrawals confirmed.</li>
+<li id="ref-23"><span class="citation-tag cite-re">RE</span> impl_outcome.rs confirmed. OutcomeDeploy(8), UserOutcomeAction(4).</li>
+<li id="ref-24"><span class="citation-tag cite-bin">BIN</span> BolePool(19), SetBole variants, BoleAction(3). Source: bole/user_state.rs.</li>
+<li id="ref-25"><span class="citation-tag cite-bin">BIN</span> Testnet binary 331bef9b (2026-04-03, 87MB). 97 action variants, 9 BeginBlock steps.</li>
+<li id="ref-26"><span class="citation-tag cite-bin">BIN</span> Serde struct chain at .rodata 0x543428 -- complete ABCI state serialization layout.</li>
+<li id="ref-27"><span class="citation-tag cite-bin">BIN</span> FeeSchedule(9) and FeeTracker(10) field layouts from struct chain.</li>
+<li id="ref-28"><span class="citation-tag cite-bin">BIN</span> CoreWriter scan loop, ActionDelayer silent reject at capacity, DelayedActionSerde(6).</li>
+<li id="ref-29"><span class="citation-tag cite-bin">BIN</span> 7 new action variants: GossipPriorityBidAction, ReserveRequestWeightAction, SystemAlignedQuoteSupplyDeltaAction, DeployerSendToEvmForFrozenUserAction, SystemUsdClassTransferAction, FinalizeEvmContractAction, SubAccountSpotTransferAction.</li>
+<li id="ref-30"><span class="citation-tag cite-bin">BIN</span> SetGlobalAction 4th field confirmed as nativePx (HYPE price). Oracle(4) struct fields confirmed. Oracle history ring buffer (100 entries) at Exchange field [55] oh.</li>
+<li id="ref-31"><span class="citation-tag cite-re">RE</span> Bridge2(10) full field layout from ABCI state. Bridge signing = consensus signing confirmed. Deposit/withdrawal flows from binary action handlers.</li>
+<li id="ref-32"><span class="citation-tag cite-bin">BIN</span> OutcomeTracker(11), OutcomeDeploy(8 variants), UserOutcomeAction(4 variants). Source: l1/src/exchange/impl_outcome.rs.</li>
+<li id="ref-33"><span class="citation-tag cite-bin">BIN</span> CStaking(23) full field layout. CValidatorProfile(6), CValidatorAction(16 variants). Staking(6) epoch lifecycle. Jailing: latency_ema_jail, VoteJailBundle.</li>
+<li id="ref-34"><span class="citation-tag cite-bin">BIN</span> Hash accumulator naming: AllBoleTH3, borrowLeH3, funding_H3, 1emasH. Per-clearinghouse partitioning confirmed from binary strings.</li>
+<li id="ref-35"><span class="citation-tag cite-bin">BIN</span> RawRateCurve kink model fields: kink_rate, kink_utilization. BOLE health factor threshold 0.8. apply_bole_liquidations in begin_block effect #9.</li>
+</ol>
+</section>
+
+<hr>
+<p style="text-align:center;color:var(--text-muted);font-size:13px;font-family:var(--font-sans);padding:20px 0;">The Hypurrliquid Paper &middot; lastdotnet/hyperliquid-rust &middot; 2026-04-03<br>Derived from reverse engineering. Not official Hyperliquid documentation.</p>
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0})">&#8593;</button>
+<script>
+mermaid.initialize({startOnLoad:true,theme:'dark',themeVariables:{primaryColor:'#8B5CF6',primaryTextColor:'#e0e0e8',primaryBorderColor:'#6d45c8',lineColor:'#8B5CF6',secondaryColor:'#1c1c2b',tertiaryColor:'#16161f',fontFamily:'Inter,-apple-system,sans-serif',fontSize:'13px'}});
+
+// === Collapsible Chapter Navigation ===
+var chapterState = {};
+var navObservedTargets = [];
+
+function buildNav() {
+  var m = document.getElementById('main-content');
+  var n = document.getElementById('nav-list');
+  n.innerHTML = '';
+  navObservedTargets = [];
+  var chapterCount = 0;
+  var sections = m.querySelectorAll('section.section[id]');
+
+  sections.forEach(function(section) {
+    var heading = section.querySelector('h2');
+    if (!heading) return;
+
+    chapterCount++;
+    var chapterId = section.id;
+    var text = heading.textContent.replace(/#$/,'').replace(/CONFIRMED|OBSERVED|INFERRED/g,'').trim();
+
+    var toggleLi = document.createElement('li');
+    var btn = document.createElement('button');
+    btn.className = 'chapter-toggle' + (chapterState[chapterId] ? ' open' : '');
+    btn.textContent = text;
+    btn.dataset.chapter = chapterId;
+    btn.onclick = function() { toggleChapter(chapterId); };
+    toggleLi.appendChild(btn);
+    n.appendChild(toggleLi);
+
+    var li = document.createElement('li');
+    li.className = 'depth-2' + (chapterState[chapterId] ? ' chapter-open' : '');
+    li.dataset.chapter = chapterId;
+    var a = document.createElement('a');
+    a.href = '#' + chapterId;
+    a.textContent = 'Overview';
+    a.dataset.section = chapterId;
+    a.style.fontStyle = 'italic';
+    a.style.color = 'var(--text-muted)';
+    li.appendChild(a);
+    n.appendChild(li);
+    navObservedTargets.push({ element: section, id: chapterId });
+
+    section.querySelectorAll('h3[id]').forEach(function(subheading) {
+      var subLi = document.createElement('li');
+      subLi.className = 'depth-2' + (chapterState[chapterId] ? ' chapter-open' : '');
+      subLi.dataset.chapter = chapterId;
+      var subA = document.createElement('a');
+      subA.href = '#' + subheading.id;
+      subA.textContent = subheading.textContent.replace(/#$/,'').replace(/CONFIRMED|OBSERVED|INFERRED/g,'').trim();
+      subA.dataset.section = subheading.id;
+      subLi.appendChild(subA);
+      n.appendChild(subLi);
+      navObservedTargets.push({ element: subheading, id: subheading.id });
+    });
+  });
+
+  document.getElementById('nav-chapter-count').textContent = chapterCount + ' chapters';
+}
+
+function toggleChapter(chapterId) {
+  chapterState[chapterId] = !chapterState[chapterId];
+  var btn = document.querySelector('.chapter-toggle[data-chapter="'+chapterId+'"]');
+  if (btn) btn.classList.toggle('open');
+  document.querySelectorAll('#nav-list li[data-chapter="'+chapterId+'"]').forEach(function(li) {
+    li.classList.toggle('chapter-open');
+  });
+}
+
+function expandAllChapters() {
+  document.querySelectorAll('.chapter-toggle').forEach(function(btn) {
+    var id = btn.dataset.chapter;
+    chapterState[id] = true;
+    btn.classList.add('open');
+  });
+  document.querySelectorAll('#nav-list li.depth-2').forEach(function(li) {
+    li.classList.add('chapter-open');
+  });
+}
+
+function collapseAllChapters() {
+  document.querySelectorAll('.chapter-toggle').forEach(function(btn) {
+    var id = btn.dataset.chapter;
+    chapterState[id] = false;
+    btn.classList.remove('open');
+  });
+  document.querySelectorAll('#nav-list li.depth-2').forEach(function(li) {
+    li.classList.remove('chapter-open');
+  });
+}
+
+buildNav();
+
+// === Active section tracking ===
+var obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) {
+      document.querySelectorAll('#nav-list a').forEach(function(a) { a.classList.remove('active'); });
+      var a = document.querySelector('#nav-list a[data-section="'+e.target.id+'"]');
+      if (a) {
+        a.classList.add('active');
+        a.scrollIntoView({block:'nearest',behavior:'smooth'});
+        // Auto-expand the chapter this section belongs to
+        var li = a.closest('li');
+        if (li && li.dataset.chapter && !chapterState[li.dataset.chapter]) {
+          toggleChapter(li.dataset.chapter);
+        }
+      }
+    }
+  });
+}, {rootMargin:'-15% 0px -75% 0px'});
+navObservedTargets.forEach(function(target) { obs.observe(target.element); });
+
+// === Reading progress bar ===
+window.addEventListener('scroll', function() {
+  document.getElementById('back-to-top').classList.toggle('visible', window.scrollY > 400);
+  var h = document.documentElement.scrollHeight - window.innerHeight;
+  var pct = h > 0 ? (window.scrollY / h) * 100 : 0;
+  document.getElementById('reading-progress').style.width = pct + '%';
+});
+
+// === Copy buttons on code blocks ===
+document.querySelectorAll('pre').forEach(function(pre) {
+  var btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'Copy';
+  btn.onclick = function() {
+    navigator.clipboard.writeText(pre.querySelector('code') ? pre.querySelector('code').textContent : pre.textContent);
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  };
+  pre.appendChild(btn);
+});
+
+// === Theme toggle ===
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  document.getElementById('theme-btn').textContent = document.body.classList.contains('light-mode') ? 'Dark' : 'Light';
+  // Update mermaid theme
+  mermaid.initialize({theme: document.body.classList.contains('light-mode') ? 'default' : 'dark'});
+}
+
+// === Search with result count and chapter filtering ===
+function filterSections() {
+  var q = document.getElementById('search-bar').value.toLowerCase().trim();
+  var secs = document.querySelectorAll('section.section');
+  var results = document.getElementById('search-results');
+
+  if (!q) {
+    secs.forEach(function(s) { s.classList.remove('hidden'); });
+    // Restore nav to chapter state
+    document.querySelectorAll('#nav-list li').forEach(function(li) { li.classList.remove('hidden'); });
+    results.textContent = '';
+    return;
+  }
+
+  var matchCount = 0;
+  secs.forEach(function(s) {
+    var matches = s.textContent.toLowerCase().includes(q);
+    s.classList.toggle('hidden', !matches);
+    if (matches) matchCount++;
+  });
+
+  // Update nav: show all items in matching chapters, hide others
+  document.querySelectorAll('#nav-list li').forEach(function(li) {
+    var a = li.querySelector('a');
+    var btn = li.querySelector('.chapter-toggle');
+    if (btn) {
+      var chapterId = btn.dataset.chapter;
+      var sec = document.getElementById(chapterId);
+      li.classList.toggle('hidden', sec && sec.closest('section.section.hidden'));
+    } else if (a) {
+      var sid = a.dataset.section;
+      var sec = document.getElementById(sid);
+      var parentSection = sec ? sec.closest('section.section') : null;
+      var visible = parentSection && !parentSection.classList.contains('hidden');
+      li.classList.toggle('hidden', !visible);
+      if (visible) li.classList.add('chapter-open');
+    }
+  });
+
+  results.textContent = matchCount + ' section' + (matchCount !== 1 ? 's' : '') + ' match';
+}
+
+// === Keyboard shortcuts ===
+document.addEventListener('keydown', function(e) {
+  // Ctrl+K or Cmd+K -> focus search
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('search-bar').focus();
+    document.getElementById('search-bar').select();
+  }
+  // Escape -> clear search, blur
+  if (e.key === 'Escape') {
+    var bar = document.getElementById('search-bar');
+    if (document.activeElement === bar) {
+      bar.value = '';
+      filterSections();
+      bar.blur();
+    }
+  }
+  // [ -> previous chapter, ] -> next chapter
+  if (e.key === '[' || e.key === ']') {
+    if (document.activeElement.tagName === 'INPUT') return;
+    var chapters = Array.from(document.querySelectorAll('section.section'));
+    var current = null;
+    for (var i = chapters.length - 1; i >= 0; i--) {
+      if (chapters[i].getBoundingClientRect().top <= 100) { current = i; break; }
+    }
+    if (current === null) current = 0;
+    var next = e.key === ']' ? Math.min(current + 1, chapters.length - 1) : Math.max(current - 1, 0);
+    chapters[next].scrollIntoView({behavior:'smooth'});
+  }
+});
+</script>
+</body>
+</html>

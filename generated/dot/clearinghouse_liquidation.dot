@@ -1,0 +1,19 @@
+digraph G {
+  rankdir="LR";
+  node [shape=box, fontsize=10];
+  label="clearinghouse_liquidation"; labelloc="t"; fontsize=18;
+  "crates/hl-engine/src/clearinghouse.rs:is_liquidatable" [label="is_liquidatable\ncrates/hl-engine/src/clearinghouse.rs:167"];
+  "crates/hl-engine/src/clearinghouse.rs:account_value" [label="account_value\ncrates/hl-engine/src/clearinghouse.rs:129"];
+  "crates/hl-engine/src/clearinghouse.rs:total_maintenance_margin" [label="total_maintenance_margin\ncrates/hl-engine/src/clearinghouse.rs:175"];
+  "crates/hl-engine/src/types.rs:unrealized_pnl_at" [label="unrealized_pnl_at\ncrates/hl-engine/src/types.rs:154"];
+  "crates/hl-engine/src/clearinghouse.rs:resolve_price" [label="resolve_price\ncrates/hl-engine/src/clearinghouse.rs:120"];
+  "crates/hl-engine/src/types.rs:notional" [label="notional\ncrates/hl-engine/src/types.rs:150"];
+  "crates/hl-engine/src/clearinghouse.rs:compute_tiered_maintenance" [label="compute_tiered_maintenance\ncrates/hl-engine/src/clearinghouse.rs:206"];
+  "crates/hl-engine/src/clearinghouse.rs:account_value" -> "crates/hl-engine/src/clearinghouse.rs:resolve_price";
+  "crates/hl-engine/src/clearinghouse.rs:account_value" -> "crates/hl-engine/src/types.rs:unrealized_pnl_at";
+  "crates/hl-engine/src/clearinghouse.rs:is_liquidatable" -> "crates/hl-engine/src/clearinghouse.rs:account_value";
+  "crates/hl-engine/src/clearinghouse.rs:is_liquidatable" -> "crates/hl-engine/src/clearinghouse.rs:total_maintenance_margin";
+  "crates/hl-engine/src/clearinghouse.rs:total_maintenance_margin" -> "crates/hl-engine/src/clearinghouse.rs:compute_tiered_maintenance";
+  "crates/hl-engine/src/clearinghouse.rs:total_maintenance_margin" -> "crates/hl-engine/src/clearinghouse.rs:resolve_price";
+  "crates/hl-engine/src/clearinghouse.rs:total_maintenance_margin" -> "crates/hl-engine/src/types.rs:notional";
+}

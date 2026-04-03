@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hyperliquid-rust Call Graphs</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    background: #0d1117;
+    color: #c9d1d9;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  nav {
+    width: 280px;
+    min-width: 280px;
+    background: #161b22;
+    border-right: 1px solid #30363d;
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  nav h1 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #7c3aed;
+    padding: 0 20px 16px;
+    border-bottom: 1px solid #30363d;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  nav a {
+    display: block;
+    padding: 10px 20px;
+    color: #8b949e;
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  nav a:hover, nav a.active {
+    color: #c9d1d9;
+    background: #1c2128;
+    border-left-color: #7c3aed;
+  }
+  nav a .num {
+    color: #484f58;
+    margin-right: 8px;
+    font-size: 11px;
+  }
+
+  /* ── Main content ── */
+  main {
+    margin-left: 280px;
+    padding: 40px 48px;
+    flex: 1;
+    max-width: 1400px;
+  }
+
+  section {
+    margin-bottom: 80px;
+    scroll-margin-top: 20px;
+  }
+  section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #7c3aed;
+    margin-bottom: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #30363d;
+  }
+  section h2 .idx {
+    color: #484f58;
+    font-weight: 400;
+    margin-right: 6px;
+  }
+  section .desc {
+    color: #8b949e;
+    font-size: 13px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  section .desc code {
+    background: #1c2128;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #7c3aed;
+    font-size: 12px;
+  }
+
+  .mermaid {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 24px;
+    overflow-x: auto;
+  }
+
+  /* ── Legend chips ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .legend span {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid #30363d;
+  }
+  .legend .confirmed { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .legend .inferred  { background: rgba(234,179,8,0.12); color: #eab308; }
+  .legend .stub      { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+  /* Mermaid theme overrides */
+  .mermaid svg { max-width: 100%; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h1>hlx Call Graphs</h1>
+  <a href="#block-pipeline"><span class="num">01</span>Block Processing Pipeline</a>
+  <a href="#action-dispatch"><span class="num">02</span>Action Dispatch Flow</a>
+  <a href="#order-lifecycle"><span class="num">03</span>Order Lifecycle</a>
+  <a href="#funding-cycle"><span class="num">04</span>Funding Cycle</a>
+  <a href="#state-hash"><span class="num">05</span>State Hash Computation</a>
+  <a href="#gossip-protocol"><span class="num">06</span>Gossip Protocol</a>
+  <a href="#bootstrap-flow"><span class="num">07</span>Bootstrap Flow</a>
+  <a href="#evm-integration"><span class="num">08</span>EVM Integration</a>
+  <a href="#validator-lifecycle"><span class="num">09</span>Validator Lifecycle</a>
+  <a href="#perp-deploy"><span class="num">10</span>perpDeploy / HIP-3</a>
+</nav>
+
+<main>
+
+<!-- ================================================================== -->
+<!-- 1. BLOCK PROCESSING PIPELINE                                       -->
+<!-- ================================================================== -->
+<section id="block-pipeline">
+<h2><span class="idx">01</span> Block Processing Pipeline</h2>
+<div class="desc">
+  The confirmed block pipeline from binary RE (string at <code>0x539f8a</code>):
+  <code>RecoverUsers -> BeginBlock -> DeliverSignedActions -> Commit -> RespHash -> Check</code>.
+  Implemented in <code>Exchange::process_block()</code> in <code>hl-engine/src/exchange.rs</code>.
+</div>
+<div class="legend">
+  <span class="confirmed">CONFIRMED from binary RE</span>
+  <span class="inferred">INFERRED</span>
+  <span class="stub">STUB / unimplemented</span>
+</div>
+<div class="mermaid">
+flowchart TD
+    subgraph InputLayer["Block Input (replica_cmds JSON)"]
+        BLK["Block JSON<br/>round, time, hardfork,<br/>signed_action_bundles"]
+    end
+
+    subgraph Pipeline["Exchange::process_block()"]
+        direction TB
+        PB["process_block(&block)"]
+        RU["RecoverUsers<br/><i>resolve_actor(sa, bundle)</i>"]
+        BB["BeginBlock<br/><i>begin_block(round, time)</i>"]
+
+        subgraph BeginBlockEffects["begin_block: 5 Effects (confirmed order)"]
+            direction TB
+            E1["1. distribute_funding(dt)<br/>settle cum_funding to positions"]
+            E2["2. apply_bole_liquidations()<br/>BOLE lending liquidation pass"]
+            E3["3. update_funding_rates(dt)<br/>sample premium, update EMA"]
+            E4["4. refresh_hip3_stale_mark_pxs()<br/>refresh stale HIP-3 prices"]
+            E5["5. prune_book_empty_user_states()<br/>clean up empty book entries"]
+            E1 --> E2 --> E3 --> E4 --> E5
+        end
+
+        DSA["DeliverSignedActions<br/><i>for each bundle: for each sa:</i>"]
+        TYPED["serde_json::from_value::&lt;HlAction&gt;()"]
+        DT["dispatch_typed_action()"]
+        DJ["dispatch_action_json()<br/><i>fallback for unknown actions</i>"]
+
+        FILLS["Process Fills<br/>compute_fee() + clearinghouse.process_fill()"]
+        EB["end_block(round, time)<br/><i>mark price from book mid</i>"]
+
+        PB --> RU --> BB
+        BB --> BeginBlockEffects
+        BeginBlockEffects --> DSA
+        DSA --> TYPED
+        TYPED -->|"Ok(typed)"| DT
+        TYPED -->|"Err(_)"| DJ
+        DT --> FILLS
+        DJ --> FILLS
+        FILLS --> EB
+    end
+
+    subgraph OutputLayer["Block Output"]
+        BR["BlockResult<br/>fills, actions_processed,<br/>orders_placed, blocked_actions"]
+        AH["compute_app_hash()<br/>state_hasher.finalize() -> [u8; 32]"]
+    end
+
+    BLK --> PB
+    EB --> BR
+    EB --> AH
+
+    style InputLayer fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style Pipeline fill:#0d1117,stroke:#7c3aed,color:#c9d1d9
+    style BeginBlockEffects fill:#161b22,stroke:#7c3aed,color:#c9d1d9
+    style OutputLayer fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style E1 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style E2 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style E3 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style E4 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style E5 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 2. ACTION DISPATCH FLOW                                            -->
+<!-- ================================================================== -->
+<section id="action-dispatch">
+<h2><span class="idx">02</span> Action Dispatch Flow</h2>
+<div class="desc">
+  All 90 action variants dispatched via <code>HlAction</code> enum (<code>hl-engine/src/actions.rs</code>).
+  Typed dispatch via <code>dispatch_typed_action()</code>, JSON fallback via <code>dispatch_action_json()</code>.
+  11 action categories confirmed from binary dispatch table at <code>~0x1F36320</code>.
+</div>
+<div class="mermaid">
+flowchart TD
+    subgraph Ingestion["Signed Action Bundle"]
+        SA["SignedAction<br/>{action: JSON, nonce, signature}"]
+        ACTOR["resolve_actor(sa, bundle)<br/>recover user address"]
+    end
+
+    SA --> ACTOR
+
+    subgraph Dispatch["Dual Dispatch"]
+        DESER["serde_json::from_value::&lt;HlAction&gt;(action)"]
+        TYPED_PATH["dispatch_typed_action()<br/><i>pattern-match on 90 variants</i>"]
+        JSON_PATH["dispatch_action_json()<br/><i>match action_type string</i>"]
+        DESER -->|"Ok(typed)"| TYPED_PATH
+        DESER -->|"Err(_)"| JSON_PATH
+    end
+
+    ACTOR --> DESER
+
+    subgraph Categories["11 Action Categories (90 total variants)"]
+        direction TB
+        C1["Cat 1: Trading (12)<br/>order, cancel, cancelByCloid,<br/>modify, batchModify, liquidate,<br/>twapOrder, twapCancel, scheduleCancel,<br/>updateIsolatedMargin,<br/>topUpIsolatedOnlyMargin, updateLeverage"]
+        C2["Cat 2: Transfers (6)<br/>usdSend, spotSend, sendAsset,<br/>subAccountTransfer,<br/>subAccountSpotTransfer,<br/>usdClassTransfer"]
+        C3["Cat 3: Staking (5)<br/>tokenDelegate, linkStakingUser,<br/>claimRewards, registerValidator,<br/>extendLongTermStaking"]
+        C4["Cat 4: Vault (5)<br/>createVault, vaultModify,<br/>vaultTransfer, vaultDistribute,<br/>netChildVaultPositions"]
+        C5["Cat 5: Governance (3)<br/>govPropose, govVote, voteGlobal"]
+        C6["Cat 6: HIP-3/HIP-4 (4)<br/>perpDeploy, spotDeploy,<br/>userOutcome, SetGlobalAction"]
+        C7["Cat 7: Validator (11)<br/>CValidator, CSigner, validatorL1Vote,<br/>validatorL1Stream, signValidatorSetUpdate,<br/>ValidatorSignWithdrawal, VoteEthDeposit,<br/>VoteEthFinalizedWithdrawal,<br/>VoteEthFinalizedValidatorSetUpdate,<br/>voteAppHash, forceIncreaseEpoch"]
+        C8["Cat 8: Account (7)<br/>approveAgent, setDisplayName,<br/>setReferrer, convertToMultiSigUser,<br/>approveBuilderFee, startFeeTrial,<br/>createSubAccount"]
+        C9["Cat 9: DeFi (7)<br/>borrowLend, userDexAbstraction,<br/>userSetAbstraction, agentSetAbstraction,<br/>userPortfolioMargin, sendToEvmWithData,<br/>agentEnableDexAbstraction"]
+        C10["Cat 10: System (13)<br/>SystemBole, SystemSpotSend,<br/>SystemUsdClassTransfer, CWithdraw,<br/>CUserModify, EvmUserModify,<br/>ReassessFees, FinalizeEvmContract, ..."]
+        C11["Cat 11: Special/EVM (16)<br/>noop, evmRawTx, withdraw3,<br/>multiSig, priorityBid,<br/>settleFraction, registerSpot, ..."]
+    end
+
+    subgraph Results["ActionResult"]
+        AR_OK["Ok"]
+        AR_FILLS["Fills(Vec&lt;Fill&gt;)"]
+        AR_CANCEL["Cancelled(count)"]
+        AR_UNIMP["Unimplemented(reason)"]
+        AR_REJ["Rejected{action, reason}"]
+    end
+
+    TYPED_PATH --> Categories
+    JSON_PATH --> Categories
+    Categories --> Results
+
+    style Ingestion fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style Dispatch fill:#161b22,stroke:#7c3aed,color:#c9d1d9
+    style Categories fill:#0d1117,stroke:#30363d,color:#c9d1d9
+    style Results fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style C1 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style C6 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style C7 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 3. ORDER LIFECYCLE                                                 -->
+<!-- ================================================================== -->
+<section id="order-lifecycle">
+<h2><span class="idx">03</span> Order Lifecycle</h2>
+<div class="desc">
+  From user submission through <code>process_single_order()</code> to matching, fill processing,
+  and state hash update. Covers place, cancel, modify, TWAP, trigger, and scheduled cancel.
+  Code in <code>hl-engine/src/exchange.rs</code> and <code>hl-engine/src/matching.rs</code>.
+</div>
+<div class="mermaid">
+flowchart TD
+    subgraph UserAction["User Order Actions"]
+        PLACE["order<br/>(1..N orders per action)"]
+        CANCEL["cancel<br/>(asset, oid pairs)"]
+        CBYC["cancelByCloid<br/>(asset, cloid)"]
+        MODIFY["modify<br/>(cancel old + place new)"]
+        BMOD["batchModify<br/>(N x modify)"]
+        TWAP["twapOrder<br/>(TWAP sliced execution)"]
+        SCHED["scheduleCancel<br/>(volume-gated, min 5s)"]
+    end
+
+    subgraph Validation["Pre-Match Validation"]
+        direction TB
+        PARSE["Parse order JSON<br/>a=asset, b=is_buy, p=price,<br/>s=size, r=reduce_only, t=tif, c=cloid"]
+        PXSZ["Validate px > 0, sz > 0,<br/>both finite"]
+        MARGIN["margin::check_order_margin()<br/>build_user_margin_state(user)<br/>+ oracle prices + margin tiers"]
+    end
+
+    PLACE --> PARSE
+    PARSE --> PXSZ
+    PXSZ -->|"invalid"| REJECT["Return empty fills"]
+    PXSZ -->|"valid"| MARGIN
+    MARGIN -->|"Err"| REJECT_M["Reject: perpMarginRejected<br/>record_order_action_response(error)"]
+
+    subgraph Matching["MatchingEngine::process_order()"]
+        direction TB
+        ALLOC["allocate_oid()<br/>next_oid++"]
+        BUILD["Build Order struct<br/>{oid, user, asset, side,<br/>price, size, tif, reduce_only, cloid}"]
+        BOOK["book.match_order(&order)"]
+        PRICE_TIME["Price-Time Priority<br/>walk opposite side levels"]
+        GEN_FILL["Generate Fill<br/>{asset, maker, taker,<br/>price, size, side,<br/>maker_oid, taker_oid}"]
+        REST["Remainder rests on book<br/>track_resting_order(oid, identity)"]
+        IOC_CANCEL["IOC: cancel remainder<br/>no rest on book"]
+    end
+
+    MARGIN -->|"Ok"| ALLOC
+    ALLOC --> BUILD --> BOOK
+    BOOK --> PRICE_TIME --> GEN_FILL
+    BOOK -->|"no match + GTC/ALO"| REST
+    BOOK -->|"no match + IOC"| IOC_CANCEL
+
+    subgraph FillProcessing["Fill Processing (exchange.rs)"]
+        direction TB
+        FEE["compute_fee(maker/taker)<br/>fee_tracker.get_user_state()<br/>debit fees from balances"]
+        CLEAR["clearinghouse.process_fill()<br/>update positions, entry_px, szi"]
+        EMIT["emit(ExchangeEvent::Fill)"]
+        HIST["user_fills history<br/>(circular buffer, max 1000)"]
+    end
+
+    GEN_FILL --> FEE --> CLEAR --> EMIT --> HIST
+
+    subgraph HashPath["State Hash Update"]
+        HASH_FILL["state_hasher.record_fill()<br/>OrderFillHash{filled, totalSz, avgPx, oid}"]
+        HASH_ORDER["state_hasher.record_order_action_response()<br/>filled/resting/waitingForFill/error"]
+        HASH_CANCEL["state_hasher.record_cancel_action_response()<br/>Success or Error"]
+    end
+
+    FEE --> HASH_FILL
+    REST --> HASH_ORDER
+    IOC_CANCEL --> HASH_ORDER
+    CANCEL --> HASH_CANCEL
+    CBYC --> HASH_CANCEL
+
+    MODIFY -->|"cancel_order_by_asset_oid"| CANCEL
+    MODIFY -->|"process_single_order"| PARSE
+
+    style UserAction fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style Validation fill:#161b22,stroke:#7c3aed,color:#c9d1d9
+    style Matching fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style FillProcessing fill:#161b22,stroke:#7c3aed,color:#c9d1d9
+    style HashPath fill:#1c2128,stroke:#7c3aed,color:#c9d1d9
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 4. FUNDING CYCLE                                                   -->
+<!-- ================================================================== -->
+<section id="funding-cycle">
+<h2><span class="idx">04</span> Funding Cycle</h2>
+<div class="desc">
+  Oracle updates through <code>SetGlobalAction</code>, mark price computation, funding rate EMA,
+  and settlement every 3600s. Source: <code>hl-engine/src/funding.rs</code> and
+  <code>exchange.rs::begin_block()</code>. Settlement formula:
+  <code>funding_pnl = szi * oracle_px * (cum_funding_global - cum_funding_entry)</code>.
+</div>
+<div class="mermaid">
+flowchart TD
+    subgraph OracleInput["Oracle Price Pipeline"]
+        direction TB
+        EXT["External Feeds<br/>(Binance, etc.)"]
+        VOTE["ValidatorL1VoteAction<br/>validators vote on prices"]
+        MEDIAN["VoteTracker<br/>median of validator votes"]
+        SGA["SetGlobalAction<br/>{pxs, externalPerpPxs, usdtUsdcPx}"]
+        ORACLE["Oracle.set_price(asset, px)<br/>oracle.pxs HashMap"]
+        CH_ORACLE["clearinghouse.set_oracle_price(asset, px)"]
+
+        EXT --> VOTE --> MEDIAN --> SGA
+        SGA --> ORACLE
+        SGA --> CH_ORACLE
+    end
+
+    subgraph MarkPrice["Mark Price Computation"]
+        direction TB
+        BOOK_MID["OrderBook::mid_price()<br/>(best_bid + best_ask) / 2"]
+        MARK_STORE["clearinghouse.mark_prices"]
+        END_BLOCK["end_block(): update mark<br/>from book mid-prices"]
+
+        BOOK_MID --> END_BLOCK --> MARK_STORE
+    end
+
+    subgraph FundingRate["Funding Rate (begin_block effect 3)"]
+        direction TB
+        PREMIUM["Premium = (mark_px - oracle_px) / oracle_px"]
+        EMA_UPDATE["DeterministicEma::update(sample, dt)<br/>decay = exp(-dt * ln2 / half_life)<br/>num = num * decay + sample * (1 - decay)<br/>denom = denom * decay + (1 - decay)"]
+        RATE_CALC["rate = premium_ema + interest_rate<br/>interest = 0.0000125/hr (0.01%/8h)"]
+        RATE_STORE["clearinghouse.funding_rates[asset]"]
+
+        PREMIUM --> EMA_UPDATE --> RATE_CALC --> RATE_STORE
+    end
+
+    subgraph Settlement["Funding Settlement (begin_block effect 1)"]
+        direction TB
+        DT["compute_dt(block_time)<br/>~70ms per block"]
+        FUND_PER["funding_per_unit =<br/>rate * dt / 3600"]
+        CUM_UPD["cum_funding_per_asset[asset] +=<br/>funding_per_unit"]
+        POS_WALK["For each user position:<br/>delta = global_cum - pos.cum_funding_entry"]
+        PAYMENT["payment = szi * oracle_px * delta<br/>longs pay if rate > 0"]
+        BAL_ADJ["balance -= payment<br/>pos.cum_funding_entry = global_cum"]
+        HASH_SETTLE["state_hasher.record_settlement()<br/>HashCategory::Settlement"]
+
+        DT --> FUND_PER --> CUM_UPD --> POS_WALK --> PAYMENT --> BAL_ADJ --> HASH_SETTLE
+    end
+
+    ORACLE --> PREMIUM
+    MARK_STORE --> PREMIUM
+    RATE_STORE --> FUND_PER
+    ORACLE --> PAYMENT
+
+    style OracleInput fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style MarkPrice fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style FundingRate fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style Settlement fill:#161b22,stroke:#7c3aed,color:#c9d1d9
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 5. STATE HASH COMPUTATION                                          -->
+<!-- ================================================================== -->
+<section id="state-hash">
+<h2><span class="idx">05</span> State Hash Computation</h2>
+<div class="desc">
+  LtHash16 accumulator pipeline confirmed from binary RE (2026-04-01). Algorithm:
+  <code>rmp_serde::to_vec_named(response)</code> -> <code>blake3 XOF (2048B)</code> ->
+  <code>interpret as 1024 u16 LE</code> -> <code>paddw into accumulator</code> ->
+  <code>SHA-256(combined 2048B) -> 32-byte app_hash</code>.
+  All 11 L1 categories + 3 EVM categories. Code in <code>hl-engine/src/state_hash.rs</code>
+  and <code>hl-engine/src/lthash.rs</code>.
+</div>
+<div class="mermaid">
+flowchart TD
+    subgraph Responses["Action Response Structs (6 Serializers from RE)"]
+        direction TB
+        SJ["SerializerJ (0x4280c90)<br/>OrderFillHash{filled, error,<br/>waitingForFill, waitingForTrigger,<br/>resting, totalSz, avgPx, oid, cloid}"]
+        SD["SerializerD (0x427eeb0)<br/>SimpleResultResponse{success, error}"]
+        SE["SerializerE (0x427f120)<br/>StatusResultResponse{status}"]
+        SB["SerializerB (0x427e860)<br/>TwapSliceFillResponse{coin, user,<br/>side, sz, executedSz, ...}"]
+        SC["SerializerC (0x427ead0)<br/>TwapStateResponse{running, twapId, error}"]
+        SA["SerializerA (0x427dfb0)<br/>SpotDust{coin, szi}"]
+    end
+
+    subgraph HashPipeline["Hash Pipeline (per response)"]
+        direction TB
+        RMP["rmp_serde::to_vec_named(response)<br/>named msgpack, map mode, camelCase keys"]
+        BLAKE["blake3::Hasher::update(&bytes)<br/>XOF mode -> fill 2048 bytes"]
+        U16["Interpret as 1024 u16 LE values"]
+        PADDW["paddw (wrapping_add) into<br/>category LtHash16 accumulator"]
+
+        RMP --> BLAKE --> U16 --> PADDW
+    end
+
+    subgraph Categories["11 L1 Hash Categories (enum at 0x65fb61)"]
+        direction TB
+        CAT0["0: CValidator<br/>validator set changes"]
+        CAT1["1: CSigner<br/>signer key changes"]
+        CAT2["2: Na<br/>general: trades, orders, balances"]
+        CAT3["3: LiquidatedCross<br/>cross-margin liquidations"]
+        CAT4["4: LiquidatedIsolated<br/>isolated-margin liquidations"]
+        CAT5["5: Settlement<br/>funding settlements"]
+        CAT6["6: NetChildVaultPositions<br/>child vault netting"]
+        CAT7["7: SpotDustConversion<br/>dust sweeps"]
+        CAT8["8: BoleMarketLiquidation"]
+        CAT9["9: BoleBackstopLiquidation"]
+        CAT10["10: BolePartialLiquidation"]
+    end
+
+    subgraph EvmHash["3 EVM Categories (raw byte concat, NOT msgpack)"]
+        direction TB
+        EVM_A["accounts_hash<br/>addr(20B) || balance(32B) || nonce(8B) || code_hash(32B) = 92B"]
+        EVM_C["contracts_hash<br/>addr(20B) || code(variable)"]
+        EVM_S["storage_hash<br/>addr(20B) || slot(32B) || value(32B) = 84B"]
+    end
+
+    subgraph Finalize["StateHasher::finalize()"]
+        direction TB
+        COMBINE["Combine all 14 LtHash16 accumulators<br/>via paddw (wrapping add)"]
+        SHA["SHA-256(combined 2048 bytes)"]
+        APPHASH["32-byte app_hash<br/>used in VoteAppHash consensus"]
+
+        COMBINE --> SHA --> APPHASH
+    end
+
+    Responses --> RMP
+    PADDW --> Categories
+    PADDW --> EvmHash
+    Categories --> COMBINE
+    EvmHash --> COMBINE
+
+    style Responses fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style HashPipeline fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style Categories fill:#161b22,stroke:#7c3aed,color:#c9d1d9
+    style EvmHash fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style Finalize fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 6. GOSSIP PROTOCOL                                                 -->
+<!-- ================================================================== -->
+<section id="gossip-protocol">
+<h2><span class="idx">06</span> Gossip Protocol</h2>
+<div class="desc">
+  Wire protocol for Hyperliquid gossip. Port 4001 for block streaming, port 4002 for peer discovery.
+  Validated from live mainnet packet captures. Code in <code>hl-network/src/wire.rs</code>,
+  <code>hl-network/src/connection.rs</code>, and <code>hl-network/src/gossip.rs</code>.
+</div>
+<div class="mermaid">
+sequenceDiagram
+    participant C as hlx Client
+    participant P as HL Peer (port 4001)
+
+    Note over C,P: Port 4001: Block Streaming Protocol
+
+    C->>P: Greeting: [u32 BE = 2][00][00][00] (7 bytes)
+    P->>C: Response: [u32 BE = 1][00][chain=0x04] (6 bytes)
+
+    Note over C,P: chain: 0x04 = Mainnet
+
+    loop Stream Frames
+        P->>C: [u32 BE body_len][u8 kind=0x01][body]
+
+        alt Bootstrap ABCI State (~1.16 GB)
+            Note right of C: FrameKindGuess::BootstrapAbciStateCandidate
+            C->>C: Skip or save large frame
+        else Bootstrap EVM KVs (~4 GB)
+            Note right of C: FrameKindGuess::BootstrapEvmKvsCandidate
+            C->>C: Skip or save large frame
+        else Heartbeat Snapshot
+            Note right of C: WireChunkInspection::heartbeat_like()
+            C->>C: WireCodec::decode_lz4_size_prepended()
+            C->>C: Inspect for concise_lt_hashes,<br/>validator_set_snapshot,<br/>random_id, evm_block_number
+            C->>C: heartbeat_tx.try_send(payload)
+        else Block Data
+            C->>C: decode_wire_block(&chunk)
+            C->>C: block_tx.try_send(WireBlock)
+        else Concise Control Frame
+            Note right of C: MsgConcise/OutMsgConcise (tag 27/28)
+            C->>C: parse_concise_control_frame()
+        end
+
+        C->>C: data_tx.send(chunk) [broadcast raw]
+        C->>C: peer_manager.record_message()
+    end
+
+    Note over C,P: On disconnect: exponential backoff<br/>[1s, 3s, 10s, 30s, 60s]
+    C->>P: Reconnect (stream_with_reconnect)
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 7. BOOTSTRAP FLOW                                                  -->
+<!-- ================================================================== -->
+<section id="bootstrap-flow">
+<h2><span class="idx">07</span> Bootstrap Flow</h2>
+<div class="desc">
+  Fast ABCI state bootstrap using streaming msgpack decoding.
+  Memory-maps the .rmp file for zero-copy access. Target: &lt;10s for a 461MB mainnet snapshot.
+  Code in <code>hl-engine/src/bootstrap_fast.rs</code>.
+  Hash accumulators are NOT stored in snapshots -- they are rebuilt from state.
+</div>
+<div class="mermaid">
+flowchart TD
+    subgraph Input["Snapshot Input"]
+        FILE[".rmp State Snapshot<br/>(e.g. 461MB mainnet)"]
+    end
+
+    subgraph FastBootstrap["bootstrap_from_rmp_fast()"]
+        direction TB
+        MMAP["memmap2::Mmap::map(file)<br/>zero-copy memory mapping"]
+        CURSOR["Cursor&lt;&[u8]&gt; for streaming read"]
+        ROOT["Read root map: {'exchange': ...}"]
+
+        subgraph Exchange_Parse["parse_exchange()"]
+            direction TB
+            LOCUS["parse_locus()<br/>main state container"]
+            PERP["parse_perp_dexs()<br/>order books"]
+            STAKE["parse_staking()<br/>validator state"]
+            CSTAKE["parse_c_staking()<br/>cold staking state"]
+
+            LOCUS --> PERP --> STAKE --> CSTAKE
+        end
+
+        subgraph Locus_Parse["parse_locus() sub-sections"]
+            direction TB
+            CTX["parse_context() -> locus.ctx<br/>height, hardfork, next_oid"]
+            CLS["parse_cls_array()<br/>clearinghouse entries (users, positions)"]
+            UST["parse_ust_array()<br/>user state entries"]
+            FTR["parse_fee_tracker()<br/>fee tier state"]
+            BLP["parse_blp()<br/>BOLE lending positions"]
+            CHN["chn -> chain identifier<br/>configure_resp_hash_for_chain()"]
+
+            CTX --> CLS --> UST --> FTR --> BLP --> CHN
+        end
+
+        MMAP --> CURSOR --> ROOT --> Exchange_Parse
+        LOCUS --> Locus_Parse
+    end
+
+    subgraph Hydration["State Hydration"]
+        direction TB
+        EXCH["Exchange struct populated:<br/>round, hardfork_version"]
+        CLEAR["Clearinghouse:<br/>balances, positions, oracle_prices,<br/>margin_tables, mark_prices"]
+        MATCH["MatchingEngine:<br/>books per asset, next_oid"]
+        STKNG["StakingService:<br/>stakes, delegations,<br/>active_validators, broadcasters"]
+        HASH_REBUILD["rebuild_state_hash()<br/>walk positions + balances +<br/>resting orders + validators<br/>-> LtHash16 accumulators"]
+
+        EXCH --> CLEAR --> MATCH --> STKNG --> HASH_REBUILD
+    end
+
+    subgraph Output["Bootstrap Complete"]
+        STATS["BootstrapStats:<br/>round, users_loaded,<br/>positions_loaded,<br/>oracle_prices_loaded,<br/>books_loaded, book_levels"]
+        READY["Exchange ready for<br/>process_block()"]
+    end
+
+    FILE --> MMAP
+    Exchange_Parse --> Hydration
+    HASH_REBUILD --> STATS
+    STATS --> READY
+
+    style Input fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style FastBootstrap fill:#0d1117,stroke:#7c3aed,color:#c9d1d9
+    style Exchange_Parse fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style Locus_Parse fill:#161b22,stroke:#7c3aed,color:#c9d1d9
+    style Hydration fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style Output fill:#1c2128,stroke:#30363d,color:#c9d1d9
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 8. EVM INTEGRATION                                                 -->
+<!-- ================================================================== -->
+<section id="evm-integration">
+<h2><span class="idx">08</span> EVM Integration</h2>
+<div class="desc">
+  HyperCore (L1) and HyperEVM bridge via precompiles (read) and CoreWriter (write).
+  Read precompiles at <code>0x0800+</code>, CoreWriter at <code>0x3333...3333</code>.
+  Code in <code>hl-evm/src/precompiles.rs</code> and <code>hl-evm/src/core_writer.rs</code>.
+  EVM state hashed via raw byte concat (NOT msgpack) into 3 LtHash16 accumulators.
+</div>
+<div class="mermaid">
+flowchart TD
+    subgraph L1["HyperCore (L1) State"]
+        EXCHANGE["Exchange<br/>(clearinghouse, matching,<br/>oracle, staking)"]
+        STATE_HASH["StateHasher<br/>(14 LtHash16 accumulators)"]
+    end
+
+    subgraph ReadPath["Read Path: Precompiles (0x0800+)"]
+        direction TB
+        PC_ADDR["Precompile Base: 0x0000...0800"]
+        PROVIDER["L1StateProvider trait<br/>(EngineStateProvider impl)"]
+        PC1["0x0001: PERP_CLEARINGHOUSE<br/>get_position(user, asset)"]
+        PC2["0x0002: SPOT_BALANCES<br/>get_spot_balance(user, token)"]
+        PC3["0x0003: VAULT_EQUITY"]
+        PC4["0x0004: STAKING_DELEGATIONS"]
+        PC5["0x0005: ORACLE_PRICE<br/>get_oracle_price(asset)"]
+        PC6["0x0006: L1_BLOCK_NUMBER<br/>get_l1_block_number()"]
+        PC7["0x0007: MARK_PRICE<br/>get_mark_price(asset)"]
+        GAS["Gas: 2000 + 65 * (input_len + output_len)"]
+    end
+
+    subgraph WritePath["Write Path: CoreWriter (0x3333...3333)"]
+        direction TB
+        CW_ADDR["CoreWriter: 0x3333...3333"]
+        CW_GAS["Gas: ~25,000"]
+        CW_ACTIONS["15 Action Types:<br/>PlaceOrder, CancelOrder,<br/>VaultTransfer, Delegation,<br/>SpotSend, UsdTransfer,<br/>Withdraw, ApproveAgent,<br/>CreateSubAccount,<br/>SubAccountTransfer,<br/>SetReferrer, UpdateLeverage,<br/>UpdateIsolatedMargin,<br/>SendAsset, ClaimRewards"]
+        CW_EMIT["EVM Log -> CoreWriterEvent<br/>decoded by L1"]
+        CW_NOTE["Actions are INTENTS<br/>not immediate state changes.<br/>Failed actions don't revert EVM tx."]
+    end
+
+    subgraph EvmHash["EVM State Hashing"]
+        direction TB
+        EH_ACC["evm_accounts: LtHash16<br/>addr(20) || balance(32) || nonce(8) || code_hash(32) = 92B"]
+        EH_CON["evm_contracts: LtHash16<br/>addr(20) || code(variable)"]
+        EH_STO["evm_storage: LtHash16<br/>addr(20) || slot(32) || value(32) = 84B"]
+        EH_NOTE["Raw byte concat,<br/>NOT msgpack serialization"]
+    end
+
+    subgraph CrossLayer["Cross-Layer Actions"]
+        direction TB
+        SEND_EVM["sendToEvmWithData<br/>L1 -> EVM with calldata"]
+        EVM_RAW["evmRawTx<br/>raw EVM tx forwarded through L1"]
+        EVM_MOD["EvmUserModify<br/>system-generated position adjustment"]
+        FIN_CON["FinalizeEvmContract<br/>finalize EVM contract deployment"]
+    end
+
+    EXCHANGE -->|"Arc&lt;Mutex&lt;Exchange&gt;&gt;"| PROVIDER
+    PROVIDER --> PC1 & PC2 & PC3 & PC4 & PC5 & PC6 & PC7
+
+    CW_EMIT -->|"decoded log"| EXCHANGE
+    CW_ACTIONS --> CW_EMIT
+
+    EXCHANGE --> EH_ACC & EH_CON & EH_STO
+    EH_ACC & EH_CON & EH_STO --> STATE_HASH
+
+    style L1 fill:#1c2128,stroke:#7c3aed,color:#c9d1d9
+    style ReadPath fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style WritePath fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style EvmHash fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style CrossLayer fill:#1c2128,stroke:#30363d,color:#c9d1d9
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 9. VALIDATOR LIFECYCLE                                              -->
+<!-- ================================================================== -->
+<section id="validator-lifecycle">
+<h2><span class="idx">09</span> Validator Lifecycle</h2>
+<div class="desc">
+  From registration through staking, active set membership, block production, jailing, and epoch transitions.
+  Code in <code>hl-engine/src/services.rs::StakingService</code>.
+  Binary RE: <code>c_staking(23)</code> and <code>staking(6)</code> fields.
+  Undelegation cooldown: 7 days (~8.6M blocks at 70ms block time).
+</div>
+<div class="mermaid">
+stateDiagram-v2
+    [*] --> Registered: registerValidator action
+
+    Registered --> Staked: tokenDelegate (delegate)
+    Staked --> ActiveSet: meets minimum stake<br/>+ not jailed
+
+    ActiveSet --> ProducingBlocks: selected for round
+    ProducingBlocks --> ActiveSet: block committed
+
+    ActiveSet --> Jailed: CSigner::jailSelf<br/>or system jail (misbehavior)
+    ActiveSet --> JailedIsolated: CSigner::jailSelfIsolated
+
+    Jailed --> ActiveSet: CSigner::unjailSelf<br/>(rate-limited: 1hr cooldown,<br/>signer_to_last_manual_unjail_time)
+    JailedIsolated --> ActiveSet: CSigner::unjailSelf
+
+    ActiveSet --> Undelegating: tokenDelegate (undelegate)
+    Undelegating --> Unlocked: cooldown: 7 days<br/>(~8.6M blocks)
+    Unlocked --> [*]: funds returned to delegator
+
+    state ActiveSet {
+        direction LR
+        ValidateBlocks --> VoteAppHash: every 2000 blocks
+        VoteAppHash --> QuorumCheck: >2/3 validators agree
+        QuorumCheck --> ValidateBlocks
+    }
+
+    state EpochTransition {
+        direction TB
+        CurrentEpoch --> NextEpoch: forceIncreaseEpoch<br/>or epoch_duration_secs elapsed
+        NextEpoch --> RecomputeActiveSet
+        RecomputeActiveSet --> ProcessUnlocks
+    }
+
+    note right of ActiveSet
+        active_validators: Vec<Address>
+        broadcasters: 8 whitelisted addresses
+        stakes: HashMap<Address, u128>
+        delegations: HashMap<Address, HashMap<Address, u128>>
+    end note
+</div>
+</section>
+
+<!-- ================================================================== -->
+<!-- 10. PERP DEPLOY / HIP-3                                            -->
+<!-- ================================================================== -->
+<section id="perp-deploy">
+<h2><span class="idx">10</span> perpDeploy / HIP-3</h2>
+<div class="desc">
+  HIP-3 permissionless perpetual market deployment. The <code>perpDeploy</code> action contains
+  sub-actions for oracle configuration, margin table setup, and market registration.
+  Binary tag: <code>"perpDeploy"</code> (also referenced as <code>"hip3Deploy"</code>).
+  Dispatch returns <code>PerpDeployResult</code>: Applied, Skipped, or Rejected.
+  Code in <code>hl-engine/src/exchange.rs::process_perp_deploy()</code>.
+</div>
+<div class="mermaid">
+flowchart TD
+    subgraph DeployerActions["Deployer Flow"]
+        direction TB
+        DEPLOYER["Deployer (user)"]
+        PD_ACTION["perpDeploy action<br/>(HlAction::PerpDeploy)"]
+        SUB_ACTIONS["Sub-Actions within perpDeploy"]
+    end
+
+    DEPLOYER --> PD_ACTION --> SUB_ACTIONS
+
+    subgraph SubActionTypes["perpDeploy Sub-Actions"]
+        direction TB
+        SET_ORACLE["setOracle<br/>configure oracle price source"]
+        INSERT_MT["insertMarginTable<br/>set margin tiers for new market"]
+        SET_FEE["setFeeRecipient<br/>deployer fee address"]
+        SET_FEE_SCALE["setFeeScale<br/>deployer fee rate"]
+        REG_ASSET["registerAsset<br/>register asset ID + metadata"]
+        SET_MARGIN_IDS["setMarginTableIds<br/>link asset to margin table"]
+        SET_OI_CAPS["setOpenInterestCaps<br/>max open interest limits"]
+        SET_FUND_MULT["setFundingMultipliers<br/>per-asset funding multiplier"]
+        SET_MARGIN_MODES["setMarginModes<br/>Enabled/Blocked/NoCross/StrictIsolated"]
+        SET_ANNOT["setPerpAnnotation<br/>market metadata/description"]
+    end
+
+    SUB_ACTIONS --> SET_ORACLE & INSERT_MT & SET_FEE & SET_FEE_SCALE & REG_ASSET
+    SUB_ACTIONS --> SET_MARGIN_IDS & SET_OI_CAPS & SET_FUND_MULT & SET_MARGIN_MODES & SET_ANNOT
+
+    subgraph Processing["process_perp_deploy()"]
+        direction TB
+        PARSE_SUB["Parse sub-action type"]
+        RESULT["PerpDeployResult"]
+        APPLIED["Applied<br/>state updated successfully"]
+        SKIPPED["Skipped(reason)<br/>recognized but not wired"]
+        REJECTED["Rejected(reason)<br/>invalid parameters"]
+
+        PARSE_SUB --> RESULT
+        RESULT --> APPLIED
+        RESULT --> SKIPPED
+        RESULT --> REJECTED
+    end
+
+    subgraph StateEffects["State Effects"]
+        direction TB
+        ORACLE_UP["oracle.set_price(asset, px)<br/>clearinghouse.set_oracle_price()"]
+        MARGIN_UP["clearinghouse.margin_tables<br/>insert new tier table"]
+        FEE_UP["fee_schedule updates<br/>deployer fee routing"]
+        BOOK_UP["matching.get_or_create_book(asset)<br/>initialize order book"]
+        ROUTING_UP["routing.observe_universe()<br/>register DEX universe"]
+        MARK_UP["clearinghouse.mark_prices<br/>initial mark from oracle"]
+    end
+
+    SET_ORACLE --> ORACLE_UP
+    INSERT_MT --> MARGIN_UP
+    SET_FEE --> FEE_UP
+    REG_ASSET --> BOOK_UP
+    REG_ASSET --> ROUTING_UP
+    SET_ORACLE --> MARK_UP
+
+    subgraph PostDeploy["Post-Deploy"]
+        direction TB
+        LIVE["Market live on HyperCore<br/>tradeable via order action"]
+        STALE["refresh_hip3_stale_mark_pxs()<br/>begin_block effect 4:<br/>refresh stale HIP-3 mark prices"]
+        FUND["Funding enabled<br/>via funding multiplier config"]
+    end
+
+    APPLIED --> LIVE
+    LIVE --> STALE
+    SET_FUND_MULT --> FUND
+
+    style DeployerActions fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style SubActionTypes fill:#161b22,stroke:#7c3aed,color:#c9d1d9
+    style Processing fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style StateEffects fill:#161b22,stroke:#30363d,color:#c9d1d9
+    style PostDeploy fill:#1c2128,stroke:#30363d,color:#c9d1d9
+</div>
+</section>
+
+</main>
+
+<script>
+  // Initialize Mermaid with dark theme
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1e1235',
+      primaryTextColor: '#c9d1d9',
+      primaryBorderColor: '#7c3aed',
+      lineColor: '#7c3aed',
+      secondaryColor: '#161b22',
+      tertiaryColor: '#0d1117',
+      fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
+      fontSize: '12px',
+      noteBkgColor: '#161b22',
+      noteTextColor: '#c9d1d9',
+      noteBorderColor: '#30363d',
+      edgeLabelBackground: '#0d1117',
+      clusterBkg: '#161b22',
+      clusterBorder: '#30363d',
+      titleColor: '#7c3aed',
+    },
+    flowchart: {
+      curve: 'basis',
+      useMaxWidth: true,
+      htmlLabels: true,
+      padding: 16,
+    },
+    sequence: {
+      useMaxWidth: true,
+      mirrorActors: false,
+      actorMargin: 80,
+    },
+  });
+
+  // Sidebar active state tracking
+  const navLinks = document.querySelectorAll('nav a');
+  const sections = document.querySelectorAll('section');
+
+  function updateActiveLink() {
+    let current = '';
+    sections.forEach(section => {
+      const rect = section.getBoundingClientRect();
+      if (rect.top <= 120) {
+        current = section.id;
+      }
+    });
+    navLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveLink);
+  window.addEventListener('load', updateActiveLink);
+
+  // Smooth scroll for nav links
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
