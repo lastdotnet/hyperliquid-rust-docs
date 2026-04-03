@@ -4,11 +4,11 @@ Generated from `knowledge/claims` by `tools/compile_knowledge_docs.py`.
 
 ## execution
 
-- `claim.action_delayer_maturity_surface` - ActionDelayer maturity is queue-entry driven, while mode semantics remain partly open (`implemented`, `confirmed`, `local_impl`, `active`)
+- `claim.action_delayer_maturity_surface` - ActionDelayer drain is a named begin-block lane, while mode semantics remain partly open (`implemented`, `confirmed`, `local_impl`, `active`)
   - Source file: `knowledge/claims/action-delayer-maturity-surface.md`
-- `claim.begin_block_ordering_surface` - Begin-block ordering is partly confirmed, but BOLE and delayed-action placement still need closure (`confirmed`, `inferred`, `local_impl`, `open`)
+- `claim.begin_block_ordering_surface` - Begin-block ordering is 9 named effects with BOLE at #3 and ActionDelayer at #8 (`confirmed`, `confirmed`, `testnet_impl`, `closed`)
   - Source file: `knowledge/claims/begin-block-ordering-surface.md`
-- `claim.begin_block_bole_ordering_conflict` - Local begin-block notes disagree on where BOLE liquidations run (`observed`, `inferred`, `local_impl`, `open`)
+- `claim.begin_block_bole_ordering_conflict` - Stale BOLE begin-block ordering conflict is resolved (`confirmed`, `confirmed`, `testnet_impl`, `closed`)
   - Source file: `knowledge/claims/begin-block-bole-ordering-conflict.md`
 - `claim.block_lifecycle_phase_map` - The repo now uses one explicit block lifecycle phase map and hook surface (`confirmed`, `confirmed`, `local_impl`, `open`)
   - Source file: `knowledge/claims/block-lifecycle-phase-map.md`

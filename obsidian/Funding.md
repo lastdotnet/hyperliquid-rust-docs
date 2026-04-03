@@ -44,18 +44,16 @@ funding_rate = premium_index + clamp(interest - premium_index, -0.0005, 0.0005)
 5. `refresh_hip3_stale_mark_pxs` -- refreshes HIP-3 mark prices (10s stale window)
 6. `prune_book_empty_user_states` -- cleans empty book/user state
 7. `update_staking_rewards` -- stage and distribute staking rewards
-8. `update_action_delayer` (?) -- older RE placement for delayed CoreWriter execution; exact binary slot still open
+8. `update_action_delayer` -- delayed CoreWriter execution lane
 9. `update_aligned_quote_token` -- sample aligned quote token prices
 
 The previous 5-effect model was a subset. The 4 additional effects (update_oracle,
 update_staking_rewards, update_action_delayer, update_aligned_quote_token) were
 confirmed as part of the widened begin-block / execution-state surface.
 
-Important boundary: the repo's current local implementation drains matured
-delayed actions after the 9 standard begin-block effects, while older RE notes
-place `update_action_delayer` as effect 8 inside the begin-block body. Treat the
-existence of the delayed-action lane as confirmed, but its exact placement
-relative to BOLE and other begin-block effects as still open.
+Important boundary: the widened block-lifecycle note and current local `main`
+both place `update_action_delayer` at slot 8 of the named begin-block effects.
+The open work is the ActionDelayer control semantics, not the slot itself.
 
 ## FundingTracker (8 fields, serialization order confirmed)
 1. `asset_to_premiums` -- **CORRECTED**: HashMap<u32, Vec<f64>> (NOT HashMap<u32, DeterministicEma>)

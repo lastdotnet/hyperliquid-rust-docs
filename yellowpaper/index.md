@@ -30,7 +30,7 @@ RecoverUsers → BeginBlock (9+5 effects) → DeliverSignedActions (97 types)
 | 5 | `refresh_hip3_stale_mark_pxs` | from snapshot | `CONFIRMED` |
 | 6 | `prune_book_empty_user_states` | 60000ms | `CONFIRMED` |
 | 7 | `update_staking_rewards` | — | `CONFIRMED` |
-| 8 | `update_action_delayer` | — | older RE placement; exact binary slot still open |
+| 8 | `update_action_delayer` | — | `CONFIRMED` |
 | 9 | `update_aligned_quote_token` | — | `CONFIRMED` |
 
 ### 1.3 Supplementary Effects
@@ -43,7 +43,7 @@ RecoverUsers → BeginBlock (9+5 effects) → DeliverSignedActions (97 types)
 | `reset_recent_ois` | 1000ms | `CONFIRMED` |
 | `update_stale_mark_guards` | per-book | `CONFIRMED` |
 
-Important boundary: the delayed-action lane is confirmed, but the current repo claim is that its exact binary placement relative to the 9-effect body is still open. Current local `main` drains matured delayed actions after the standard begin-block effects.
+Current local `main` matches the widened 9-effect note on this ordering. What remains open on ActionDelayer is control semantics (`enabled`, `delayer_mode`, `status_guard`, `vty_trackers`), not the named drain slot.
 
 ### 1.4 EndBlock
 
@@ -144,7 +144,7 @@ Every 2000 blocks. Quorum at 2/3+ stake. Hash: `rmp_serde → blake3 XOF (2048B)
 | Special | 7 | evmRawTx, multiSig, noop, VoteAppHash, ForceIncreaseEpoch, userOutcome (4 sub), settleFraction |
 | Additional | 8 | priorityBid, registerSpot, disableDex, cancelAllOrders, quarantineUser, etc. |
 
-**All 97 variants implemented. Zero stubs.**
+Current testnet notes widen the action surface to 97 variants. The local engine has broad typed coverage, but parity work remains active and this page should not be read as a blanket “zero gaps” claim.
 
 ---
 

@@ -172,14 +172,19 @@ flowchart TD
         RU["RecoverUsers<br/><i>resolve_actor(sa, bundle)</i>"]
         BB["BeginBlock<br/><i>begin_block(round, time)</i>"]
 
-        subgraph BeginBlockEffects["begin_block: 5 Effects (confirmed order)"]
+        subgraph BeginBlockEffects["begin_block: 9 named effects + supplementary maintenance"]
             direction TB
-            E1["1. distribute_funding(dt)<br/>settle cum_funding to positions"]
-            E2["2. apply_bole_liquidations()<br/>BOLE lending liquidation pass"]
-            E3["3. update_funding_rates(dt)<br/>sample premium, update EMA"]
-            E4["4. refresh_hip3_stale_mark_pxs()<br/>refresh stale HIP-3 prices"]
-            E5["5. prune_book_empty_user_states()<br/>clean up empty book entries"]
-            E1 --> E2 --> E3 --> E4 --> E5
+            E0["1. update_oracle()<br/>pre-process oracle state"]
+            E1["2. distribute_funding(dt)<br/>settle cum_funding to positions"]
+            E2["3. apply_bole_liquidations()<br/>BOLE lending liquidation pass"]
+            E3["4. update_funding_rates(dt)<br/>sample premium, update EMA"]
+            E4["5. refresh_hip3_stale_mark_pxs()<br/>refresh stale HIP-3 prices"]
+            E5["6. prune_book_empty_user_states()<br/>clean up empty book entries"]
+            E6["7. update_staking_rewards()<br/>stage staking rewards"]
+            E7["8. update_action_delayer()<br/>drain matured CoreWriter actions"]
+            E8["9. update_aligned_quote_token()<br/>sample validator rate votes"]
+            E9["supplementary maintenance<br/>trigger orders, OI cap, stale guards"]
+            E0 --> E1 --> E2 --> E3 --> E4 --> E5 --> E6 --> E7 --> E8 --> E9
         end
 
         DSA["DeliverSignedActions<br/><i>for each bundle: for each sa:</i>"]
@@ -214,11 +219,16 @@ flowchart TD
     style Pipeline fill:#0d1117,stroke:#7c3aed,color:#c9d1d9
     style BeginBlockEffects fill:#161b22,stroke:#7c3aed,color:#c9d1d9
     style OutputLayer fill:#1c2128,stroke:#30363d,color:#c9d1d9
+    style E0 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
     style E1 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
     style E2 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
     style E3 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
     style E4 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
     style E5 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style E6 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style E7 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style E8 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
+    style E9 fill:#1e1235,stroke:#7c3aed,color:#a78bfa
 </div>
 </section>
 
@@ -228,9 +238,10 @@ flowchart TD
 <section id="action-dispatch">
 <h2><span class="idx">02</span> Action Dispatch Flow</h2>
 <div class="desc">
-  All 90 action variants dispatched via <code>HlAction</code> enum (<code>hl-engine/src/actions.rs</code>).
-  Typed dispatch via <code>dispatch_typed_action()</code>, JSON fallback via <code>dispatch_action_json()</code>.
-  11 action categories confirmed from binary dispatch table at <code>~0x1F36320</code>.
+  Dispatch-shape reference for the action layer in <code>hl-engine/src/actions.rs</code>.
+  Typed dispatch flows through <code>dispatch_typed_action()</code>, JSON fallback through
+  <code>dispatch_action_json()</code>. Use the Yellow Paper action inventory for the
+  authoritative current variant and sub-variant counts.
 </div>
 <div class="mermaid">
 flowchart TD

@@ -475,7 +475,7 @@ graph LR
 <p>After all actions: per-fill fee computation (<code>compute_fee()</code> with tiers + referral), debit fees, <code>clearinghouse.process_fill()</code> for position updates, volume tracking for tier progression, fill history (capped 1000/user), ExEx event emission.</p>
 
 <h3 id="exec-phase5">4.5 EVM Block Phase</h3>
-<p>Dual-block architecture: <strong>small blocks</strong> (1s, 2M gas) for responsive UX + <strong>big blocks</strong> (60s, 30M gas) for heavy computation. Each block's receipts are scanned for CoreWriter <code>RawAction(address,bytes)</code> logs from <code>0x3333...3333</code>. Decoded actions enqueued in <code>ActionDelayer</code> with <code>delay_scale &times; 3000ms</code> delay &mdash; fire in Effect 8 of the NEXT block.</p>
+<p>Dual-block architecture: <strong>small blocks</strong> (1s, 2M gas) for responsive UX + <strong>big blocks</strong> (60s, 30M gas) for heavy computation. Each block's receipts are scanned for CoreWriter <code>RawAction(address,bytes)</code> logs from <code>0x3333...3333</code>. Decoded actions are enqueued in <code>ActionDelayer</code> with <code>delay_scale &times; 3000ms</code> delay and later fire through the named delayed-action lane in the next block's <code>begin_block</code> (slot 8 in the current widened testnet note).</p>
 <p>In replay mode (no executor): raw tx calldata parsed via minimal RLP scanner to extract CoreWriter calls without EVM execution.</p>
 
 <h3 id="exec-phase6">4.6 EndBlock</h3>
@@ -496,7 +496,7 @@ graph LR
 <tr><td>VoteAppHash checkpoint</td><td>2000 blocks</td></tr>
 <tr><td>Aligned quote token vote</td><td>Daily 22:00 UTC</td></tr></table>
 <h3 id="exec-actions">4.9 Action Dispatch &mdash; All 97 Variants</h3>
-<p>Main dispatcher at VA <code>0x0272a320</code> (&gt;500KB). <span class="badge badge-confirmed">CONFIRMED</span>: 90 mainnet + 7 testnet-only variants. All implemented in hlx.<sup><a href="#ref-8">[8]</a></sup></p>
+<p>Main dispatcher at VA <code>0x0272a320</code> (&gt;500KB). <span class="badge badge-confirmed">CONFIRMED</span>: the current widened testnet note exposes 90 mainnet + 7 testnet-only variants. Use the dedicated Action Inventory for the authoritative family/sub-variant tables; local parity work on the full surface is still active.<sup><a href="#ref-8">[8]</a></sup></p>
 
 <h4>Trading (9 types)</h4>
 <table><tr><th>Wire Name</th><th>Action</th><th>State Touched</th><th>Share</th></tr>
@@ -650,7 +650,7 @@ graph LR
 <tr><td><code>quarantineUser</code></td><td>Freeze + cancel all</td><td>matching + quarantined_users</td></tr>
 <tr><td><code>setMarginModes</code></td><td>Set per-asset margin modes</td><td>margin_modes</td></tr></table>
 
-<p><strong>Total</strong>: 90 mainnet + 7 testnet-only = <strong>97 action variants</strong>, expanding to <strong>126 sub-types</strong> (+ 6 SetGlobal + 8 PerpDeploy + 22 VoteGlobal). All implemented in hlx with zero stubs.<sup><a href="#ref-9">[9]</a></sup></p>
+<p><strong>Total</strong>: the current widened testnet note exposes <strong>97 action variants</strong>, expanding to <strong>126 sub-types</strong> (+ 6 SetGlobal + 8 PerpDeploy + 22 VoteGlobal). Treat that as the current action-surface map, not as a blanket claim that parity is complete on every branch.<sup><a href="#ref-9">[9]</a></sup></p>
 </section>
 
 <section class="section" id="state">
@@ -993,19 +993,19 @@ graph TD
 <p><strong>Perp liquidation condition</strong>: <code>margin_available &lt; 0</code>, equivalently <code>account_value &lt; maintenance_margin</code>. Maintenance is tiered by notional bracket using <code>lower_bound</code>, <code>max_leverage</code>, and <code>maintenance_deduction</code>. Cross positions share account equity; isolated positions use per-position allocated margin.</p>
 
 <h3 id="liq-beginblock">9.0 begin_block Liquidation Trigger Flow <span class="badge badge-confirmed">CONFIRMED</span></h3>
-<p>BOLE liquidations run as effect #9 of the 9-step <code>begin_block</code> pipeline. Perp liquidations are user-initiated via the <code>Liquidate</code> action during action processing.</p>
+<p>BOLE liquidations run as effect #3 of the 9-step <code>begin_block</code> pipeline. Perp liquidations are user-initiated via the <code>Liquidate</code> action during action processing.</p>
 <div class="mermaid">
 graph TD
-    BB["begin_block"] --> E1["1. distribute_funding"]
-    E1 --> E2["2. update_funding_rates"]
-    E2 --> E3["3. cancel_aggressive_at_oi_cap"]
-    E3 --> E4["4. prune_book_empty_states"]
-    E4 --> E5["5. vote_tracker_prune"]
-    E5 --> E6["6. reset_recent_ois"]
-    E6 --> E7["7. refresh_hip3_stale_mark"]
-    E7 --> E8["8. update_stale_guards"]
-    E8 --> E9["9. apply_bole_liquidations"]
-    E9 --> DA["Drain ActionDelayer"]
+    BB["begin_block"] --> E0["1. update_oracle"]
+    E0 --> E1["2. distribute_funding"]
+    E1 --> E2["3. apply_bole_liquidations"]
+    E2 --> E3["4. update_funding_rates"]
+    E3 --> E4["5. refresh_hip3_stale_mark"]
+    E4 --> E5["6. prune_book_empty_states"]
+    E5 --> E6["7. update_staking_rewards"]
+    E6 --> E7["8. update_action_delayer"]
+    E7 --> E8["9. update_aligned_quote_token"]
+    E8 --> DA["Supplementary maintenance"]
     DA --> AP["Process User Actions"]
     AP --> LIQ{"Liquidate action?"}
     LIQ -->|Yes| CHK["check_all_users_for_liquidatables"]
@@ -1018,10 +1018,10 @@ graph TD
     SF -->|No| LT["LtHash updated"]
     SF -->|Yes| ADL["ADL: rank by ROE"]
     ADL --> LT
-    E9 --> BOLE{"healthFactor below 0.8?"}
+    E2 --> BOLE{"healthFactor below 0.8?"}
     BOLE -->|Yes| BLQ["BOLE Market/Backstop/Partial"]
     BLQ --> BLT["LtHash: BoleMarket/Backstop/Partial"]
-    style E9 fill:#fb923c,stroke:#333,color:#fff
+    style E2 fill:#fb923c,stroke:#333,color:#fff
     style ADL fill:#f87171,stroke:#333,color:#fff
     style BLQ fill:#fb923c,stroke:#333,color:#fff
 </div>
@@ -1371,7 +1371,7 @@ graph TD
 max_n_delayed_actions, vty_trackers, status_guard, enabled,
 delayer_mode(Alternating), delay_scale</code></pre>
 <p><strong>Capacity behavior</strong>: When the delayer is at capacity (<code>n_total_delayed_actions >= max_n_delayed_actions</code>), new actions are <strong>silently rejected</strong>. There is no eviction of existing actions and no error returned to the caller. <span class="badge badge-confirmed">CONFIRMED</span></p>
-<p><strong>Placement note</strong>: the current local engine drains matured delayed actions after the 9 standard begin-block effects. Older RE notes place <code>update_action_delayer</code> as effect 8 inside the begin-block body. The delayed-action lane is confirmed; its exact binary placement relative to BOLE and other begin-block effects is still open.</p>
+<p><strong>Placement note</strong>: the widened execution note and current local engine now align on <code>update_action_delayer</code> as the named delayed-action lane at slot 8. What remains open is the ActionDelayer control logic around <code>enabled</code>, <code>delayer_mode</code>, <code>status_guard</code>, and <code>vty_trackers</code>.</p>
 <h4>ActionDelayerStatus</h4>
 <pre><code>enum ActionDelayerStatus {
     On,                           // Always active
@@ -1639,10 +1639,10 @@ Rate computation:
 <tr><td><code>TestnetAction</code></td><td>2</td><td>Testnet-only operations</td></tr></table>
 
 <h3 id="bole-liquidation">15.5 BOLE Liquidation Flow <span class="badge badge-confirmed">CONFIRMED</span></h3>
-<p>BOLE liquidation is triggered in <code>begin_block</code> effect #9 (<code>apply_bole_liquidations</code>). Health factor threshold: <strong>0.8</strong>. Three liquidation modes with distinct LtHash categories.</p>
+<p>BOLE liquidation is triggered in <code>begin_block</code> effect #3 (<code>apply_bole_liquidations</code>). Health factor threshold: <strong>0.8</strong>. Three liquidation modes with distinct LtHash categories.</p>
 <div class="mermaid">
 graph TD
-    BB["begin_block effect #9\napply_bole_liquidations"] --> HC{"healthFactor below 0.8?"}
+    BB["begin_block effect #3\napply_bole_liquidations"] --> HC{"healthFactor below 0.8?"}
     HC -->|No| SAFE["No action"]
     HC -->|Yes| MODE{"Liquidation mode"}
     MODE -->|Standard| MKT["BoleMarketLiquidation\nOrdinary market liquidation"]
@@ -1965,7 +1965,7 @@ Unjail requirements:
 <li id="ref-32"><span class="citation-tag cite-bin">BIN</span> OutcomeTracker(11), OutcomeDeploy(8 variants), UserOutcomeAction(4 variants). Source: l1/src/exchange/impl_outcome.rs.</li>
 <li id="ref-33"><span class="citation-tag cite-bin">BIN</span> CStaking(23) full field layout. CValidatorProfile(6), CValidatorAction(16 variants). Staking(6) epoch lifecycle. Jailing: latency_ema_jail, VoteJailBundle.</li>
 <li id="ref-34"><span class="citation-tag cite-bin">BIN</span> Hash accumulator naming: AllBoleTH3, borrowLeH3, funding_H3, 1emasH. Per-clearinghouse partitioning confirmed from binary strings.</li>
-<li id="ref-35"><span class="citation-tag cite-bin">BIN</span> RawRateCurve kink model fields: kink_rate, kink_utilization. BOLE health factor threshold 0.8. apply_bole_liquidations in begin_block effect #9.</li>
+<li id="ref-35"><span class="citation-tag cite-bin">BIN</span> RawRateCurve kink model fields: kink_rate, kink_utilization. BOLE health factor threshold 0.8. apply_bole_liquidations in begin_block effect #3.</li>
 </ol>
 </section>
 

@@ -20,7 +20,7 @@ begin_block_logic()  -- CONFIRMED 9 effects (2026-04-02, VA 0x01e748e0)
     │  ── 5. refresh_hip3_stale_mark_pxs (10s stale window)
     │  ── 6. prune_book_empty_user_states
     │  ── 7. update_staking_rewards
-    │  ── 8. update_action_delayer (?)  -- older RE placement; exact binary slot still open
+    │  ── 8. update_action_delayer      -- drain matured CoreWriter delayed actions
     │  ── 9. update_aligned_quote_token
     ▼
 Process Actions (ordered)
@@ -39,11 +39,11 @@ end_block()
 VoteAppHash (validators agree on state)
 ```
 
-Current local `main` drains matured delayed actions after the 9 standard
-begin-block effects, inside the surrounding execution wrapper. Older RE notes
-place `update_action_delayer` as effect 8 inside the begin-block body. That
-relative placement is still open and should not be treated as fully closed
-binary truth yet.
+Current local `main` now matches the widened 9-effect note: matured delayed
+actions drain through the named `update_action_delayer` lane at slot 8. What
+remains open is the ActionDelayer control-plane behavior around `enabled`,
+`delayer_mode`, `status_guard`, and `vty_trackers`, not the existence of the
+drain lane itself.
 
 ## Consensus Messages
 

@@ -6,6 +6,8 @@ Generated from `knowledge/sources` by `tools/compile_knowledge_docs.py`.
   - Locator: `docs/generated/re/runs/2026-04-03-struct-chain.md`
 - `source.app_hash_note` - App Hash reverse-engineering note (`local_doc`, `testnet_impl`)
   - Locator: `docs/obsidian/App Hash.md`
+- `source.block_lifecycle_note` - Block Lifecycle obsidian note (`local_doc`, `testnet_impl`)
+  - Locator: `docs/obsidian/Block Lifecycle.md`
 - `source.block_lifecycle_page` - Block lifecycle reference page (`local_doc`, `local_impl`)
   - Locator: `docs/block-lifecycle/index.html`
 - `source.hyperliquid_portfolio_margin_docs` - Hyperliquid portfolio margin docs (`official_doc`, `protocol`)

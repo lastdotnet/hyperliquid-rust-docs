@@ -291,10 +291,10 @@ code {
         <h3>Current Local Main</h3>
         <p>
           <span class="badge observed">local impl</span>
-          The current engine on <code>main</code> already routes BOLE liquidation early
-          in <code>begin_block</code>. That is useful and deliberate, but it should still
-          be treated as a local implementation choice until the binary ordering is fully
-          re-closed.
+          The current engine on <code>main</code> now matches the widened execution note
+          on begin-block ordering: BOLE at slot 3 and delayed CoreWriter drain at slot 8.
+          The remaining open work is ActionDelayer mode semantics and deeper per-effect
+          internals, not the top-level slot map.
         </p>
       </div>
     </div>
@@ -500,69 +500,69 @@ flowchart LR
   <section class="section reveal" id="begin-block">
     <h2>6. BeginBlock Details</h2>
     <div class="panel">
-      <p>The repo currently needs both views visible: the older RE/paper order and the current local-main execution order.</p>
+      <p>The top-level begin-block ordering is now aligned across the widened RE note and current local <code>main</code>. The table below separates the 9 named effects from the supplementary per-book maintenance that follows them.</p>
       <table>
         <tr>
           <th>Order</th>
-          <th>Protocol / older paper baseline</th>
-          <th>Current local main</th>
+          <th>Named begin-block effect</th>
+          <th>Role</th>
         </tr>
         <tr>
           <td>1</td>
-          <td><code>distribute_funding</code></td>
-          <td><code>distribute_funding</code></td>
+          <td><code>update_oracle</code></td>
+          <td>Pre-process oracle state for the new block</td>
         </tr>
         <tr>
           <td>2</td>
-          <td><code>update_funding_rates</code></td>
-          <td><code>apply_bole_liquidations</code></td>
+          <td><code>distribute_funding</code></td>
+          <td>Settle accumulated funding payments</td>
         </tr>
         <tr>
           <td>3</td>
-          <td><code>cancel_aggressive_orders_at_oi_cap</code></td>
-          <td><code>update_funding_rates</code></td>
+          <td><code>apply_bole_liquidations</code></td>
+          <td>BOLE lending liquidation pass</td>
         </tr>
         <tr>
           <td>4</td>
-          <td><code>prune_book_empty_user_states</code></td>
-          <td><code>cancel_aggressive_orders_at_oi_cap</code></td>
+          <td><code>update_funding_rates</code></td>
+          <td>Sample premium and update funding EMAs</td>
         </tr>
         <tr>
           <td>5</td>
-          <td><code>validator_l1_vote_tracker_prune_expired</code></td>
-          <td><code>prune_book_empty_user_states</code></td>
+          <td><code>refresh_hip3_stale_mark_pxs</code></td>
+          <td>Refresh stale HIP-3 mark prices</td>
         </tr>
         <tr>
           <td>6</td>
-          <td><code>reset_recent_ois</code></td>
-          <td><code>validator_l1_vote_tracker_prune_expired</code></td>
+          <td><code>prune_book_empty_user_states</code></td>
+          <td>Remove empty user-state entries</td>
         </tr>
         <tr>
           <td>7</td>
-          <td><code>refresh_hip3_stale_mark_pxs</code></td>
-          <td><code>reset_recent_ois</code></td>
+          <td><code>update_staking_rewards</code></td>
+          <td>Stage staking rewards for the current epoch</td>
         </tr>
         <tr>
           <td>8</td>
-          <td><code>update_stale_mark_guards</code></td>
-          <td><code>refresh_hip3_stale_mark_pxs</code></td>
+          <td><code>update_action_delayer</code></td>
+          <td>Drain matured delayed CoreWriter actions</td>
         </tr>
         <tr>
           <td>9</td>
-          <td><code>apply_bole_liquidations</code></td>
-          <td><code>update_stale_mark_guards</code></td>
+          <td><code>update_aligned_quote_token</code></td>
+          <td>Sample validator risk-free-rate votes</td>
         </tr>
         <tr>
           <td>10</td>
-          <td>drain matured delayed actions</td>
-          <td>drain matured delayed actions after stale-guard / BOLE pass</td>
+          <td>supplementary maintenance</td>
+          <td><code>check_trigger_orders</code>, OI-cap cancel, vote-tracker prune, recent-OI reset, stale-mark guards</td>
         </tr>
       </table>
       <p>
-        <span class="badge warning">open conflict</span>
-        The local BOLE ordering has moved earlier on <code>main</code>. Keep using one
-        explicit begin-block hook; do not spread BOLE execution across multiple phases
-        while this remains open.
+        <span class="badge confirmed">aligned</span>
+        BOLE now sits at slot 3 and delayed CoreWriter execution at slot 8 across the
+        widened note and current local <code>main</code>. The remaining open questions on
+        this lane are guard cadence and ActionDelayer control semantics.
       </p>
     </div>
   </section>
@@ -612,8 +612,8 @@ flowchart TD
           <th>Why it matters</th>
         </tr>
         <tr>
-          <td>Exact begin-block ordering closure</td>
-          <td>Needed so BOLE, funding, OI-cap, and stale-mark hooks land in the right phase for parity.</td>
+          <td>Per-effect semantics beyond ordering</td>
+          <td>Ordering is now aligned; the remaining work is guard cadence, thresholds, and ActionDelayer mode semantics.</td>
         </tr>
         <tr>
           <td>Full action inventory page</td>

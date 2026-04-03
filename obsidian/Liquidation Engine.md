@@ -357,14 +357,14 @@ The `begin_block` function runs this pipeline (VA 0x01e748e0):
 5. refresh_hip3_stale_mark_pxs    // refresh HIP-3 mark prices (10s stale window)
 6. prune_book_empty_user_states   // cleanup empty states
 7. update_staking_rewards         // stage and distribute staking rewards
-8. update_action_delayer (?)      // older RE placement; exact binary slot still open
+8. update_action_delayer          // drain matured CoreWriter delayed actions
 9. update_aligned_quote_token     // sample aligned quote token prices
 ```
 
 `apply_bole_liquidations` runs as part of every block's begin_block, before trading.
-Current local `main` drains matured delayed actions after the 9 standard
-begin-block effects; the exact binary placement of the delayed-action lane
-relative to BOLE and the rest of the begin-block body is still open.
+Current local `main` matches the widened 9-effect note on this ordering:
+BOLE is effect 3 and delayed CoreWriter execution is effect 8. The remaining
+open questions are ActionDelayer mode semantics, not begin-block slot placement.
 
 ### Position Side Check
 ```
@@ -647,7 +647,7 @@ begin_block() -- CONFIRMED 9 effects (VA 0x01e748e0)
   |-- refresh_hip3_stale_mark_pxs() // 5. refresh HIP-3 mark prices (10s window)
   |-- prune_book_empty_user_states() // 6. cleanup
   |-- update_staking_rewards()      // 7. stage/distribute staking rewards
-  |-- update_action_delayer() (?)   // older RE placement; exact binary slot still open
+  |-- update_action_delayer()       // 8. drain matured CoreWriter delayed actions
   |-- update_aligned_quote_token()  // 9. aligned quote token sampling
   |
   v
