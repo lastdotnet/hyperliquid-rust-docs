@@ -40,7 +40,7 @@ hash = keccak256("Hyperliquid Consensus Payload" + 0x00 + content_bytes)
 sig  = secp256k1_sign_recoverable(hash, private_key)
 ```
 
-**Critical**: A NULL byte (0x00) separates domain from content. Content is BINCODE-encoded (not msgpack, despite `rmp_signable.rs` source file name).
+**Critical**: A NULL byte (0x00) separates domain from content. Content is bincode-fork varint encoding, not msgpack, despite the `rmp_signable.rs` source file name.
 
 **Signature details**:
 - RFC 6979 deterministic nonces
@@ -48,14 +48,21 @@ sig  = secp256k1_sign_recoverable(hash, private_key)
 - `v = recovery_id + 27` (Ethereum convention)
 - r,s stored as 4 u64 LE limbs, each bincode-fork varint-encoded
 
-**Wire format** (159 bytes for greeting):
+**Wire format** (variable-sized; ~1.0-1.6KB in captured samples):
 ```
-addr(20) + type(varint=5) + sig_r(4×u64_varint) + sig_s(4×u64_varint) + v(u8=27|28) + content_fields(65B)
+addr(20) + type(varint=5) + sig_r(4×u64_varint) + sig_s(4×u64_varint) + v(u8=27|28) + content(variable)
 ```
 
-**Content fields**: `addr(20) + varint(hardfork=1304) + varint(commit_height) + varint(latest_round) + pubkey(32)`
+**Content layout** (byte layout mostly closed; a few middle counters still unlabeled):
+- home-validator address (20B)
+- round (varint u64)
+- variant flag (u8)
+- optional 32-byte ABCI extra when the variant requests it
+- several additional counters/state values (mostly varints plus one raw 32-byte hash)
+- `heartbeat_statuses` as a sorted `BTreeMap<Validator, HeartbeatData>`
+- trailing mempool length varint (`0x00` in captured samples)
 
-**Status**: Signing formula confirmed. Exact greeting content serialization for signing still being determined (all 5 GDB captures were consensus messages, not greetings).
+**Status**: Signing formula and most of the content byte layout are now closed from captured sign-input blobs plus Ghidra. The remaining open work is semantic labeling of a few middle counters, not basic serialization format.
 
 ### Connection Checks (CONFIRMED 2026-04-02)
 

@@ -197,7 +197,9 @@ Previous 10-field model was from a simplified older binary version.
  4. twapId       hash_field
 ```
 
-**SerializerG** at VA 0x427f850 -- Success/Error/Status hash
+**SerializerG** at VA 0x427f850 -- Error hash payload for hybrid actions
+**CORRECTED 2026-04-05**: SerializerG is not used on success. Successful
+actions on these indices switch to SerializerH / `CancelSuccessResponse`.
 ```
  1. status       hash_field
  2. success      hash_field
@@ -205,6 +207,8 @@ Previous 10-field model was from a simplified older binary version.
 ```
 
 **SerializerH** at VA 0x427f980 -- Status-only hash
+**CORRECTED 2026-04-05**: this is also the success shape used by the hybrid
+G-family actions.
 ```
  1. status       hash_field
 ```
@@ -606,12 +610,17 @@ struct TwapSliceFillResponse {
 }
 ```
 
-**5. TwapState** (3 fields)
+**5. TwapState** (4 fields)
 ```rust
-struct TwapStateResponse { running: Option<bool>, twapId: u64, error: Option<String> }
+struct TwapStateResponse {
+    status: String,
+    running: Option<bool>,
+    error: Option<String>,
+    twapId: u64,
+}
 ```
 
-**6. Fill/Trade** (**24 fields on mainnet**, CORRECTED 2026-04-02 -- was 9)
+**6. Fill/Trade API wrapper** (**24 fields on mainnet**, CORRECTED 2026-04-02 -- was 9)
 ```rust
 // The FillResponse wraps an externally-tagged OrderStatus enum.
 // On mainnet, the full struct includes fill context + OrderStatus.
@@ -634,14 +643,27 @@ struct FillResponse {
     // + OrderStatus enum (externally tagged)
 }
 ```
+**CORRECTED 2026-04-05**: the hashed fill payload is now known to be separate
+from this API wrapper. The hash-path payload has 18 fields:
+`px, sz, startPosition, dir, closedPnl, oid, crossed, fee, builderFee, tid,
+cloid, liquidation, feeTrialEscrow, builder, twapId, deployerFee,
+liquidatedUser, markPx`. `coin` and `feeToken` are API wrapper fields, not
+members of the hashed fill payload itself.
+
 **CRITICAL**: The OrderStatus enum uses **external tagging** (serde default),
 so the JSON output is `{"filled": {"totalSz": 1.0, ...}}` NOT `{"filled": true, ...}`.
 Cancel response is `{"status": "success"}` NOT `{"success": null}`.
 
-**7. SimpleResult** (2 fields)
+**7. ActionError** (3 fields)
 ```rust
-struct SimpleResultResponse { success: bool, error: Option<String> }
+struct ActionErrorResponse {
+    status: String,
+    success: bool,
+    error: String,
+}
 ```
+**CORRECTED 2026-04-05**: this is the error-only branch for the hybrid G-family
+actions. Successful actions on the same dispatch family use `StatusResult`.
 
 **8. StatusResult** (1 field)
 ```rust

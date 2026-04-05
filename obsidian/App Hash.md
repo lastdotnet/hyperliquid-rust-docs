@@ -86,11 +86,18 @@ String offsets in binary: `0x65fb61` through `0x65fc08`
 ### RespHash dispatch architecture (from RE of vaddr 0x205a300)
 
 The dispatch function takes a response type enum (0-19) and serializes the
-response struct via rmp_serde compact format. All 11 categories use the SAME
+response struct via rmp_serde named-map format. All 11 categories use the SAME
 response enum struct type; the category only determines which accumulator
 receives the element. The 20-entry jump table at vaddr 0x37fe2c maps response
 types to 14 unique code paths. Shared paths (same struct layout) indicate
 response types that differ only in which LtHash16 accumulator they target.
+
+### 2026-04-05 Serializer Clarifications
+
+- G-family hybrid actions do **not** hash a 3-field payload on success. Success switches to the same 1-field `{"status":"success"}` map used by the H-family status path.
+- The 3-field `{"status":"err","success":false,"error":"..."}` payload is error-only.
+- Fills hash through a separate 18-field payload; API wrapper fields like `coin` and `feeToken` are not members of that hashed fill payload.
+- The current local open lane is exact fill value derivation, not basic payload membership.
 
 Response field names (from binary rodata at 0x65f9cb):
 `sz isz executedSz executedNtl minutes reduceOnly randomize timestamp

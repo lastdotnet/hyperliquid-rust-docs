@@ -33,6 +33,10 @@ Generated from `knowledge/claims` by `tools/compile_knowledge_docs.py`.
 
 ## hashing
 
+- `claim.fill_hash_struct_surface` - Fill hashes use a separate 18-field payload and API wrappers add coin and feeToken (`confirmed`, `confirmed`, `testnet_impl`, `active`)
+  - Source file: `knowledge/claims/fill-hash-struct-surface.md`
+- `claim.serializer_g_success_error_split` - G-family action hashes use H-shape success and G-shape error payloads (`confirmed`, `confirmed`, `testnet_impl`, `closed`)
+  - Source file: `knowledge/claims/serializer-g-success-error-split.md`
 - `claim.resphash_backend_split` - RespHash backends are chain-scoped, but mainnet serialization is not fully wired (`confirmed`, `confirmed`, `local_impl`, `open`)
   - Source file: `knowledge/claims/resphash-backend-split.md`
 

@@ -1,11 +1,12 @@
 # Project Status
 
-Current state of the hyperliquid-rust reimplementation as of 2026-04-03.
+Current state of the hyperliquid-rust reimplementation as of 2026-04-05.
 
 ## Stats
-- **13 crates**, ~140,000 lines of Rust, **416+ tests passing**
+- **13 crates**, ~140,000 lines of Rust, `cargo test --workspace -q` green (**606 listed tests**, **1 ignored**)
 - **57/57 bootstrap fields**, **90/90 action variants**, **6 pipeline stages**
-- 32 Obsidian docs
+- 38 Obsidian docs
+- Latest RE closes Bridge2 `bal` as `UsdcNtl [i64; 2]`, `oaw` as "only allow withdrawals", and ActionDelayer's 9-field outer shape
 - 3 repos: lastdotnet/hyperliquid-rust, lastdotnet/hlz, lastdotnet/foundry-hl
 - Deployed on hyperscan (Tailscale: `100.85.232.55`, 64 cores, 755GB RAM)
 - GhidraMCP running for interactive binary RE
@@ -61,7 +62,7 @@ hlx (node):
   - Full accumulators only available from ABCI state snapshots
 - **HeartbeatSnapshot** = {ValidatorSetSnapshot{stakes, jailed_validators}, evm_block_number, ConciseLtHashes}
 - **VoteAppHash** = {height, appHash, signatures} — tracked in `app_hash_vote_tracker`, quorum at `quorum_app_hashes`
-- **Remaining**: exact L1 element field ordering for hash verification
+- **Remaining**: exact local hash-family wiring for the still-open lanes, especially fill economics/flags and the remaining mainnet-only response families
 
 ### Gossip Protocol — FULLY CRACKED (2026-04-02)
 - **Wire format**: `[u32 BE body_len][u8 kind=0x01][LZ4-compressed bincode body]`
@@ -177,10 +178,10 @@ hlx (node):
 | State bootstrap | Done -- 57/57 fields, 2.1M users, $3B, 314 books |
 | Matching engine | Done -- full fees, self-trade, reduce-only, triggers, ADL |
 | State hash algorithm | Done -- SHA-256 + blake3 + rmp confirmed |
-| Gossip greeting | Done -- CRACKED (6-byte bincode-fork TcpGreeting) |
+| Gossip greeting | Done -- 4001 `TcpGreeting` framing is closed (7-8B on wire), and 4003 signed greeting byte layout is mostly closed |
 | MsgConcise/OutMsgConcise | Done -- CRACKED (tag 27/28, all inner variants) |
 | **L1 hash accumulator** | Blocked -- need starting value (accumulates from genesis) |
-| **Exact hash serialization** | Blocked -- field orders cracked but not fully wired |
+| **Exact hash serialization** | Active -- G/H success-error split and separate fill payload are closed; exact local field/value wiring remains open |
 
 ### Level 2: Full Non-Validator (90%)
 | Component | Status |
@@ -212,6 +213,12 @@ Each state mutation → rmp_serde::to_vec() → blake3::Hasher (streaming Write)
   → blake3 XOF (2048 bytes) → SSE2 paddw u16 wrapping-add → LtHash16 checksum
   → SHA-256(checksum) → 32-byte app_hash
 ```
+
+### Latest Hash Clarifications (CONFIRMED 2026-04-05)
+
+- Hybrid G-family actions hash as a 1-field status map on success; the 3-field `status/success/error` map is error-only.
+- Fills hash through a separate 18-field payload, not through the ordinary ledger-update wrapper fields seen in API JSON.
+- `coin` and `feeToken` are API wrapper fields for fills; they are not members of the hashed fill payload.
 
 ### Key Addresses (Ghidra)
 | Function | VA | Description |

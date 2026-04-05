@@ -224,9 +224,18 @@ flowchart TD
         </tr>
         <tr>
           <td>What is the main open gap?</td>
-          <td>Full mainnet serializer families plus exact action-to-response routing for all response categories.</td>
+          <td>Full mainnet serializer families plus the exact local field/value wiring for the still-open lanes.</td>
+        </tr>
+        <tr>
+          <td>What facts are now closed?</td>
+          <td>G-family success hashes use the 1-field H-shape, the 3-field G-shape is error-only, and fills use a separate 18-field payload rather than ordinary ledger-update wrapper fields.</td>
         </tr>
       </table>
+      <ul>
+        <li><code>{"status":"success"}</code> is the success shape for the hybrid G-family actions.</li>
+        <li><code>{"status":"err","success":false,"error":"..."}</code> is the corresponding error-only shape.</li>
+        <li><code>coin</code> and <code>feeToken</code> belong to API/user-fill wrapper surfaces, not to the hashed fill payload itself.</li>
+      </ul>
     </div>
   </section>
 
@@ -255,7 +264,7 @@ Heartbeat path
     <div class="panel panel-strong">
       <ul>
         <li>Exact mainnet serializer shapes for the remaining response families.</li>
-        <li>Exact action-to-response routing closure across all categories.</li>
+        <li>Exact local value derivation for the still-open fill fields and a few transfer-style deltas.</li>
         <li>Replay proof that the current backend split moves the first mismatch later, not just labels it better.</li>
       </ul>
     </div>

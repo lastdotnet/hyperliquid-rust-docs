@@ -233,6 +233,20 @@ Current repo truth is intentionally narrower than "hashing is solved":
 Treat `RespHashMode::Mainnet` as backend selection, not as proof that every
 mainnet response serializer is already closed.
 
+### 6.3 Current Serializer Facts
+
+Treat the following as closed facts, not loose hypotheses:
+
+- **G-family success/error split**: hybrid actions do **not** hash a 3-field payload on success. Success is the same 1-field `{status:"success"}` map used by the H-family status serializer. The 3-field `{status:"err", success:false, error:<msg>}` payload is error-only.
+- **Response-family map**: the current user-facing response surface closes four practical serializer families: F (TWAP), G (error branch for hybrid actions), H (status-only success), and J (order-status fill family).
+- **Fill hash payload**: fills hash through a separate 18-field payload: `px`, `sz`, `startPosition`, `dir`, `closedPnl`, `oid`, `crossed`, `fee`, `builderFee`, `tid`, `cloid`, `liquidation`, `feeTrialEscrow`, `builder`, `twapId`, `deployerFee`, `liquidatedUser`, `markPx`.
+- **API wrapper fields**: `coin` and `feeToken` belong to API/user-fill wrapper surfaces, not to the hashed fill payload itself.
+
+Current open lane:
+
+- exact local derivation of fill economics and flags (`startPosition`, `closedPnl`, `tid`, liquidation membership, maker/taker routing)
+- remaining mainnet-specific serializer families that are still not fully wired locally
+
 ---
 
 ## 7. CoreWriter (EVM → L1)
@@ -319,6 +333,7 @@ Current open risk lane:
 - **Port 4001 greeting**: bincode-fork `TcpGreeting` with chain-based variant index. Current live observations are testnet variant `3` (8 bytes total) and mainnet variant `2` (7 bytes total).
 - **Broader chain enum**: the ABCI-stream chain mapping still tracks `Local=0`, `Sandbox=1`, `Testnet=2`, `Mainnet=3`; do not conflate that with the observed 4001 `TcpGreeting` variant index.
 - **Port 4003 authenticated greeting**: `keccak256("Hyperliquid Consensus Payload" + 0x00 + bincode(content))`; content is bincode, not msgpack.
+- **Port 4003 signed content**: the greeting is variable-sized, not a tiny fixed blob. Captured content closes a 20-byte validator address, varint round, 1-byte variant flag, optional 32-byte ABCI extra, several additional counters plus a 32-byte hash, a sorted `heartbeat_statuses` map, and a trailing empty-mempool varint. A few middle counters still lack semantic labels.
 - **Connection**: Server-side `connection_checks` — unknown peers rejected after 5s timeout.
 - **Loopback**: Dominated by `MsgConcise`/`OutMsgConcise` (tag 27/28).
 

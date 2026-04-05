@@ -362,6 +362,25 @@ Current repo truth is intentionally narrower than "hashing is solved":
 
 Treat \nolinkurl{RespHashMode::Mainnet} as backend selection, not as proof that every mainnet response serializer is already closed.
 
+\subsection*{6.3 Current Serializer Facts}
+\addcontentsline{toc}{subsection}{6.3 Current Serializer Facts}
+
+Treat the following as closed facts, not loose hypotheses:
+
+\begin{itemize}[leftmargin=1.4em]
+            \item \textbf{G-family success/error split}: hybrid actions do \textbf{not} hash a 3-field payload on success. Success is the same 1-field \nolinkurl{{status:"success"}} map used by the H-family status serializer. The 3-field \nolinkurl{{status:"err", success:false, error:<msg>}} payload is error-only.
+\item \textbf{Response-family map}: the current user-facing response surface closes four practical serializer families: F (TWAP), G (error branch for hybrid actions), H (status-only success), and J (order-status fill family).
+\item \textbf{Fill hash payload}: fills hash through a separate 18-field payload: \nolinkurl{px}, \nolinkurl{sz}, \nolinkurl{startPosition}, \nolinkurl{dir}, \nolinkurl{closedPnl}, \nolinkurl{oid}, \nolinkurl{crossed}, \nolinkurl{fee}, \nolinkurl{builderFee}, \nolinkurl{tid}, \nolinkurl{cloid}, \nolinkurl{liquidation}, \nolinkurl{feeTrialEscrow}, \nolinkurl{builder}, \nolinkurl{twapId}, \nolinkurl{deployerFee}, \nolinkurl{liquidatedUser}, \nolinkurl{markPx}.
+\item \textbf{API wrapper fields}: \nolinkurl{coin} and \nolinkurl{feeToken} belong to API/user-fill wrapper surfaces, not to the hashed fill payload itself.
+            \end{itemize}
+
+Current open lane:
+
+\begin{itemize}[leftmargin=1.4em]
+            \item exact local derivation of fill economics and flags (\nolinkurl{startPosition}, \nolinkurl{closedPnl}, \nolinkurl{tid}, liquidation membership, maker/taker routing)
+\item remaining mainnet-specific serializer families that are still not fully wired locally
+            \end{itemize}
+
 \medskip\hrule\medskip
 
 \section*{7. CoreWriter (EVM $\rightarrow$ L1)}
@@ -449,6 +468,7 @@ Current open risk lane:
 \item \textbf{Port 4001 greeting}: bincode-fork \nolinkurl{TcpGreeting} with chain-based variant index. Current live observations are testnet variant \nolinkurl{3} (8 bytes total) and mainnet variant \nolinkurl{2} (7 bytes total).
 \item \textbf{Broader chain enum}: the ABCI-stream chain mapping still tracks \nolinkurl{Local=0}, \nolinkurl{Sandbox=1}, \nolinkurl{Testnet=2}, \nolinkurl{Mainnet=3}; do not conflate that with the observed 4001 \nolinkurl{TcpGreeting} variant index.
 \item \textbf{Port 4003 authenticated greeting}: \nolinkurl{keccak256("Hyperliquid Consensus Payload" + 0x00 + bincode(content))}; content is bincode, not msgpack.
+\item \textbf{Port 4003 signed content}: the greeting is variable-sized, not a tiny fixed blob. Captured content closes a 20-byte validator address, varint round, 1-byte variant flag, optional 32-byte ABCI extra, several additional counters plus a 32-byte hash, a sorted \nolinkurl{heartbeat_statuses} map, and a trailing empty-mempool varint. A few middle counters still lack semantic labels.
 \item \textbf{Connection}: Server-side \nolinkurl{connection_checks} --- unknown peers rejected after 5s timeout.
 \item \textbf{Loopback}: Dominated by \nolinkurl{MsgConcise}/\nolinkurl{OutMsgConcise} (tag 27/28).
             \end{itemize}

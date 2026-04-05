@@ -11,9 +11,9 @@ Binary-confirmed field order from serializer/deserializer helpers:
 - `finished_withdrawal_to_time` — withdrawal timing
 - `validator_set_signatures` — validator set update sigs
 - `validator_set_finalized_votes` — validator set votes
-- `bal` — standalone Bridge2 field; concrete runtime type/meaning still open
+- `bal` — bridge balance as `UsdcNtl` tuple `[usdc, ntl]` (observed `[990593662988097, 0]`)
 - `last_pruned_deposit_block_number` — deposit pruning watermark
-- `oaw` — standalone boolean Bridge2 field; acronym/operational meaning still open
+- `oaw` — boolean "only allow withdrawals" flag; when true, deposits are disabled and only withdrawals remain enabled
 
 ## Signing Model (CONFIRMED 2026-04-02)
 

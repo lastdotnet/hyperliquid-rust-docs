@@ -34,12 +34,12 @@
   <span class="paper-stats__subtext">Top-level chapters</span>
 </div><div class="paper-stats__card">
   <span class="paper-stats__label">Entries</span>
-  <span class="paper-stats__value">33</span>
+  <span class="paper-stats__value">36</span>
   <span class="paper-stats__subtext">List items and bullets</span>
 </div><div class="paper-stats__card">
   <span class="paper-stats__label">Read Time</span>
   <span class="paper-stats__value">3 min</span>
-  <span class="paper-stats__subtext">~601 words</span>
+  <span class="paper-stats__subtext">~660 words</span>
 </div></div>
       </section>
       <section class="article-wrap">
@@ -80,6 +80,8 @@
 <li><code>claim.action_surface_testnet</code> - Current widened testnet action surface is 97 variants with 126 sub-types (<code>execution</code>, <code>testnet_impl</code>, <code>active</code>)</li>
 <li><code>claim.begin_block_bole_ordering_conflict</code> - Stale BOLE begin-block ordering conflict is resolved (<code>execution</code>, <code>testnet_impl</code>, <code>closed</code>)</li>
 <li><code>claim.block_lifecycle_phase_map</code> - The repo now uses one explicit block lifecycle phase map and hook surface (<code>execution</code>, <code>local_impl</code>, <code>open</code>)</li>
+<li><code>claim.fill_hash_struct_surface</code> - Fill hashes use a separate 18-field payload and API wrappers add coin and feeToken (<code>hashing</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li><code>claim.serializer_g_success_error_split</code> - G-family action hashes use H-shape success and G-shape error payloads (<code>hashing</code>, <code>testnet_impl</code>, <code>closed</code>)</li>
 <li><code>claim.resphash_backend_split</code> - RespHash backends are chain-scoped, but mainnet serialization is not fully wired (<code>hashing</code>, <code>local_impl</code>, <code>open</code>)</li>
 <li><code>claim.liquidation_scope_boundaries</code> - Liquidation family boundaries are now explicit across perps, PM, BOLE, spot, and outcomes (<code>liquidation</code>, <code>local_impl</code>, <code>open</code>)</li>
 <li><code>claim.portfolio_margin_liquidation_mode</code> - Portfolio margin liquidates as a generalized cross-margin account (<code>liquidation</code>, <code>protocol</code>, <code>active</code>)</li>
@@ -96,6 +98,7 @@
 <li><code>claim.corewriter_delayed_action_surface</code> - CoreWriter re-enters L1 through a delayed action lane with 15 known action types (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>)</li>
 <li><code>claim.action_surface_testnet</code> - Current widened testnet action surface is 97 variants with 126 sub-types (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>)</li>
 <li><code>claim.block_lifecycle_phase_map</code> - The repo now uses one explicit block lifecycle phase map and hook surface (<code>confirmed</code>, <code>confirmed</code>, <code>local_impl</code>)</li>
+<li><code>claim.fill_hash_struct_surface</code> - Fill hashes use a separate 18-field payload and API wrappers add coin and feeToken (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>)</li>
 <li><code>claim.resphash_backend_split</code> - RespHash backends are chain-scoped, but mainnet serialization is not fully wired (<code>confirmed</code>, <code>confirmed</code>, <code>local_impl</code>)</li>
 <li><code>claim.liquidation_scope_boundaries</code> - Liquidation family boundaries are now explicit across perps, PM, BOLE, spot, and outcomes (<code>confirmed</code>, <code>confirmed</code>, <code>local_impl</code>)</li>
 <li><code>claim.portfolio_margin_liquidation_mode</code> - Portfolio margin liquidates as a generalized cross-margin account (<code>confirmed</code>, <code>confirmed</code>, <code>protocol</code>)</li>

@@ -106,9 +106,9 @@ ul { margin: 12px 0 0; padding-left: 22px; }
         <tr><td><code>finished_withdrawal_to_time</code></td><td>Timing/tracking surface for completed withdrawals.</td></tr>
         <tr><td><code>validator_set_signatures</code></td><td>Signature collection for bridge validator-set changes.</td></tr>
         <tr><td><code>validator_set_finalized_votes</code></td><td>Finalization votes for validator-set updates.</td></tr>
-        <tr><td><code>bal</code></td><td>Standalone Bridge2 field. Present in binary; concrete runtime meaning still open.</td></tr>
+        <tr><td><code>bal</code></td><td>Bridge balance as a <code>UsdcNtl</code> tuple <code>[usdc, ntl]</code>; observed <code>[990593662988097, 0]</code>.</td></tr>
         <tr><td><code>last_pruned_deposit_block_number</code></td><td>Deposit pruning watermark.</td></tr>
-        <tr><td><code>oaw</code></td><td>Standalone boolean Bridge2 field. Acronym and operational role still open.</td></tr>
+        <tr><td><code>oaw</code></td><td>Boolean "only allow withdrawals" flag. When true, deposits are disabled and only withdrawals remain enabled.</td></tr>
       </table>
     </div>
   </section>
@@ -160,7 +160,7 @@ flowchart TD
         <tr><th>Question</th><th>Current answer</th></tr>
         <tr><td>Is the bridge trust-minimized?</td><td>No. The current docs keep dispute-period invalidation and no-escape-hatch risk explicit.</td></tr>
         <tr><td>Is finalization a one-step action?</td><td>No. Signatures and finalized-vote state are separate surfaces.</td></tr>
-        <tr><td>Are all Bridge2 fields fully decoded?</td><td>No. Field order is closed, and <code>oaw</code> is confirmed bool-typed, but the meanings of <code>bal</code> and <code>oaw</code> are still open.</td></tr>
+        <tr><td>Are all Bridge2 fields fully decoded?</td><td>The Bridge2 tracker shells, pair lists, and nested tuple payloads are now modeled in code. The remaining gap is the exact leaf encoding for fields like <code>chain</code>, <code>tx_hash</code>, <code>destination</code>, <code>usd</code>, and signature limbs, which are still preserved as JSON-backed leaves.</td></tr>
       </table>
     </div>
   </section>

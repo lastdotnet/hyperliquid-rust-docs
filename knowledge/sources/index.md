@@ -14,6 +14,10 @@ Generated from `knowledge/sources` by `tools/compile_knowledge_docs.py`.
   - Locator: `docs/block-lifecycle/index.html`
 - `source.bridge_note` - Bridge2 note (`local_doc`, `testnet_impl`)
   - Locator: `docs/obsidian/Bridge.md`
+- `source.re_greeting_exact_result` - Exact consensus greeting byte layout result (`generated_note`, `testnet_impl`)
+  - Locator: `re_results/re_greeting_exact.json`
+- `source.re_fill_details_result` - Fill hash payload field inventory result (`generated_note`, `testnet_impl`)
+  - Locator: `re_results/re_fill_details.json`
 - `source.gossip_protocol_note` - Gossip protocol note (`local_doc`, `testnet_impl`)
   - Locator: `docs/obsidian/Gossip Protocol.md`
 - `source.hip4_outcomes_note` - HIP-4 outcomes note (`local_doc`, `testnet_impl`)
@@ -24,6 +28,8 @@ Generated from `knowledge/sources` by `tools/compile_knowledge_docs.py`.
   - Locator: `https://hyperliquid.gitbook.io/hyperliquid-docs/trading/portfolio-margin`
 - `source.l1_evm_bridge_flow_note` - L1 EVM bridge flow note (`local_doc`, `testnet_impl`)
   - Locator: `docs/obsidian/L1 EVM Bridge Flow.md`
+- `source.re_ledger_serialization_result` - Ledger serialization RE result (`generated_note`, `testnet_impl`)
+  - Locator: `re_results/re_ledger_serialization.json`
 - `source.liquidation_page` - Liquidation and ADL reference page (`local_doc`, `local_impl`)
   - Locator: `docs/liquidation/index.html`
 - `source.abci_state_machine_note` - Local ABCI state machine note (`local_doc`, `testnet_impl`)
@@ -36,5 +42,7 @@ Generated from `knowledge/sources` by `tools/compile_knowledge_docs.py`.
   - Locator: `docs/obsidian/LtHash Serialization.md`
 - `source.outcome_solvency_review_2026_04_03` - Outcome solvency review 2026-04-03 (`generated_note`, `testnet_impl`)
   - Locator: `docs/generated/outcome_solvency_review_2026-04-03.md`
+- `source.re_g_success_format_result` - Serializer G success and error format result (`generated_note`, `testnet_impl`)
+  - Locator: `re_results/re_g_success_format.json`
 - `source.validator_lifecycle_note` - Validator lifecycle note (`local_doc`, `testnet_impl`)
   - Locator: `docs/obsidian/HyperBFT.md`

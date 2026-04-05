@@ -21,6 +21,8 @@ Generated from `knowledge/claims` by `tools/compile_knowledge_docs.py`.
 - `claim.corewriter_delayed_action_surface` - CoreWriter re-enters L1 through a delayed action lane with 15 known action types (`execution`, `confirmed`, `active`)
 - `claim.action_surface_testnet` - Current widened testnet action surface is 97 variants with 126 sub-types (`execution`, `confirmed`, `active`)
 - `claim.exchange_struct_cardinality` - Exchange struct cardinality is currently 57 fields (`state`, `confirmed`, `open`)
+- `claim.fill_hash_struct_surface` - Fill hashes use a separate 18-field payload and API wrappers add coin and feeToken (`hashing`, `confirmed`, `active`)
+- `claim.serializer_g_success_error_split` - G-family action hashes use H-shape success and G-shape error payloads (`hashing`, `confirmed`, `closed`)
 - `claim.hyperbft_topology_and_rotation` - HyperBFT uses broadcaster ingress, validator/sentry admission checks, and RoundRobinTtl proposer rotation (`consensus`, `confirmed`, `active`)
 - `claim.outcome_merge_question_fallback_risk` - Multi-outcome MergeQuestion fallback reconciliation is the leading outcome solvency risk (`outcomes`, `observed`, `active`)
 - `claim.outcome_settlement_and_question_surface` - Outcomes are 1x isolated settlement markets with explicit question and fallback metadata (`outcomes`, `confirmed`, `active`)

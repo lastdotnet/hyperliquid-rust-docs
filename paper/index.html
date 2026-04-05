@@ -1271,16 +1271,17 @@ Final app_hash (32 bytes):
 <details><summary>Response Struct Field Ordering (11 structs, CRACKED)</summary><div class="detail-body">
 <table><tr><th>Struct</th><th>Fields (order)</th><th>VA</th></tr>
 <tr><td><strong>OrderStatus</strong></td><td>"filled": totalSz, avgPx, oid; "error": string; "waitingForFill": oid; "waitingForTrigger": oid; "resting": oid, cloid</td><td>0x4a75120</td></tr>
-<tr><td><strong>RestingOrder</strong> (12)</td><td>coin, side, limitPx, sz, timestamp, triggerCondition, isTrigger, triggerPx, isPositionTpsl, reduceOnly, orderType, origSz</td><td>0x4a98d30</td></tr>
+<tr><td><strong>RestingOrder</strong> (15)</td><td>coin, side, limitPx, sz, timestamp, triggerCondition, isTrigger, triggerPx, isPositionTpsl, reduceOnly, orderType, origSz, tif, cloid, children</td><td>0x4a98d30</td></tr>
 <tr><td><strong>TwapSliceFill</strong> (10)</td><td>coin, user, side, sz, executedSz, executedNtl, minutes, reduceOnly, randomize, timestamp</td><td>0x4a701a0</td></tr>
-<tr><td><strong>TwapState</strong> (3)</td><td>running, twapId, error</td><td>0x4a70410</td></tr>
-<tr><td><strong>Fill/Trade</strong> (9)</td><td>coin, sz, side, startPosition, hash, fee, tid, feeToken, twapId</td><td>0x4a47ec0</td></tr>
-<tr><td><strong>SimpleResult</strong> (2)</td><td>success, error</td><td>0x4a707f0</td></tr>
+<tr><td><strong>TwapState</strong> (4)</td><td>status, running, error, twapId</td><td>0x4a70410</td></tr>
+<tr><td><strong>Fill/Trade API wrapper</strong> (24)</td><td>API/user-fill wrapper with <code>coin</code>, <code>feeToken</code>, fill context, and externally-tagged <code>OrderStatus</code>; hashed fill payload is a separate 18-field struct</td><td>0x4a47ec0</td></tr>
+<tr><td><strong>ActionError</strong> (3)</td><td>status, success, error</td><td>0x4a707f0</td></tr>
 <tr><td><strong>StatusResult</strong> (1)</td><td>status</td><td>0x4a70a60</td></tr>
 <tr><td><strong>OrderBase</strong> (3)</td><td>side, sz, reduceOnly</td><td>0x4a80610</td></tr>
 <tr><td><strong>OrderWithTiming</strong> (5)</td><td>side, sz, reduceOnly, randomize, timestamp</td><td>0x4a82640</td></tr>
 <tr><td><strong>TriggerParams</strong> (2)</td><td>triggerPx, tpsl</td><td>0x4a8d2d0</td></tr>
 <tr><td><strong>TriggeredFill</strong> (2)</td><td>triggered, filled</td><td>0x4a99070</td></tr></table>
+<p><strong>2026-04-05 clarification:</strong> hybrid G-family actions hash as <code>{status:"success"}</code> on success and use the 3-field <code>{status:"err", success:false, error:&lt;msg&gt;}</code> payload only on error. Fill hashes also no longer share the ordinary ledger-update/API wrapper shape.</p>
 </div></details>
 <h3 id="hash-evm">10.4 EVM Element Formats</h3>
 <table><tr><th>Category</th><th>Size</th><th>Format (raw byte concat)</th></tr>
@@ -1494,9 +1495,9 @@ delayer_mode(Alternating), delay_scale</code></pre>
     finished_withdrawal_to_time,       // withdrawal completion timestamps
     validator_set_signatures,          // validator set update signatures
     validator_set_finalized_votes,     // validator set finalization votes
-    bal,                               // standalone Bridge2 field; meaning still open
+    bal,                               // bridge balance as UsdcNtl [usdc, ntl]
     last_pruned_deposit_block_number,  // deposit pruning watermark
-    oaw,                               // standalone bool field; acronym/role still open
+    oaw,                               // only-allow-withdrawals flag
 }</code></pre>
 
 <h3 id="bridge-signing">13.2 Signing Model <span class="badge badge-confirmed">CONFIRMED</span></h3>
@@ -2014,6 +2015,29 @@ Unjail requirements:
 <section class="section" id="changelog">
 <h2>Changelog &amp; Corrections <a href="#changelog" class="anchor-link">#</a></h2>
 <p>Reverse engineering is iterative. This section documents wrong assumptions, corrections, and when findings were updated. Entries are newest-first.</p>
+
+<h3>2026-04-05</h3>
+<table>
+<tr><th>Topic</th><th>Was</th><th>Now</th><th>How discovered</th></tr>
+<tr>
+  <td>G-family success shape</td>
+  <td>Success and error both treated as the same G-style family</td>
+  <td>Success hashes as <code>{status:"success"}</code>; the 3-field G payload is error-only</td>
+  <td>RE closure in <code>re_g_success_format.json</code> plus local source verification</td>
+</tr>
+<tr>
+  <td>Fill hash payload</td>
+  <td>Public fill/trade summary treated API wrapper fields as if they were the hashed payload</td>
+  <td>Hashed fills use a separate 18-field payload; <code>coin</code> and <code>feeToken</code> are API wrapper fields</td>
+  <td><code>re_fill_details.json</code> + <code>re_ledger_serialization.json</code></td>
+</tr>
+<tr>
+  <td>Port 4003 signed greeting body</td>
+  <td>Tiny fixed body model</td>
+  <td>Variable-sized bincode-fork content with validator addr, round, variant flag, optional ABCI extra, counters/hash material, sorted heartbeat map, trailing mempool varint</td>
+  <td><code>re_greeting_exact.json</code> from captured sign-input blobs + Ghidra</td>
+</tr>
+</table>
 
 <h3>2026-04-04</h3>
 <table>

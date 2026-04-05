@@ -13,9 +13,12 @@ updated: 2026-04-03
 
 ## Summary
 
-The repo explicitly tracks a `Mainnet` versus `Testnet` RespHash backend split,
-but the local implementation still only has metadata-level backend awareness for
-some response shapes. Full mainnet serializer behavior is not yet active.
+The repo explicitly tracks a `Mainnet` versus `Testnet` RespHash backend split.
+That split is real, and several formerly-open serializer facts are now closed:
+successful G-family actions hash like H-family status responses, and fills use
+a separate payload from ordinary ledger updates. The remaining gap is exact
+end-to-end local wiring, especially for mainnet-specific families and fill
+economic scalars.
 
 ## Evidence
 
@@ -25,10 +28,11 @@ some response shapes. Full mainnet serializer behavior is not yet active.
 
 ## Open Questions
 
-- Exact mainnet serializer shapes and action-to-response routing for all response families.
-- Whether the remaining backend difference is limited to serializer layout or extends to broader dispatch behavior.
+- Exact mainnet serializer field orders and action-to-response routing for the remaining response families.
+- Which backend differences are pure field-order/layout changes versus broader dispatch-path differences.
+- Exact local value derivation for the still-open fill-specific fields.
 
 ## Implementation Impact
 
 - Do not treat `RespHashMode::Mainnet` as proof that mainnet-specific hashing is fully implemented.
-- Keep replay and docs explicit about what is metadata-only versus actually active in serialization.
+- Keep replay and docs explicit about which serializer facts are closed versus which are still only partially wired locally.

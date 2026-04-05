@@ -55,7 +55,7 @@ Updated 2026-04-02 (end of session).
 
 | System | Status |
 |--------|--------|
-| Response/hash field ordering | CRACKED: 11 response structs with exact serialization order, not yet wired into `StateHasher` |
+| Response/hash field ordering | CRACKED: G-success/H-success split, separate fill payload membership, and the 20-entry response dispatch map are closed; exact local wiring remains open |
 
 ---
 
@@ -93,7 +93,7 @@ Updated 2026-04-02 (end of session).
 | 3x `parse_address` duplication | Should consolidate to hl-primitives |
 | Dead types in funding.rs | Oracle, FeeComputer, OrderStatus unused |
 | Stringly-typed action dispatch | 90 variants matched on raw strings |
-| `state_hash.rs` still hashes placeholder tuples for fills/settlements | RE field orders are cracked, but live hashing path is not fully upgraded yet |
+| Fill and transfer hash lanes still carry placeholder economics in places | RE payload membership and serializer-family routing are much tighter now, but exact local values remain incomplete in the fill lane and some transfer-style deltas |
 | `DeterministicEma` 5th field | **CONFIRMED** — `last_sample_time` as ISO 8601 String |
 | `DeterministicVty` window size 1000 | INFERRED — no binary evidence |
 | `DEFAULT_STALE_TIMEOUT = 60s` | INFERRED — not from binary |
@@ -104,7 +104,7 @@ Updated 2026-04-02 (end of session).
 ## Critical Path to App-Hash Parity
 
 ```
-1. Replace placeholder tuple hashing with recovered response structs
+1. Replace remaining placeholder hashing with the recovered response families and separate fill payload values
    │
 2. begin_block effects (9 effects, exact ordering CONFIRMED)
    │  distribute_funding → update_funding_rates → cancel_aggressive_at_oi_cap →
@@ -139,7 +139,7 @@ Steps 1-4 are serial dependencies. 5-9 can be parallelized.
 ## Next Session Priorities
 
 ### Next Session Priorities
-1. Wire the recovered response struct field ordering into `StateHasher`
+1. Wire the remaining recovered response and fill payload details into the live hashing path
 2. Use `hlx replay-validate` against replica_cmds to localize first divergence
 3. Build remaining begin_block/end_block effects with evidence labels
 4. Implement full fee computation (tiers, discounts, distribution)

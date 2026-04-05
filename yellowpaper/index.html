@@ -19,7 +19,7 @@
       <p>Protocol-truth surface for execution order, state layout, action families, and boundaries.</p>
       <div class="link-stack"><a href="../index.html">Docs Hub</a><a href="../paper/index.html">Hypurrliquid Paper</a><a href="../whitepaper/index.html">White Paper</a><a href="../latex/yellowpaper.pdf">Download PDF</a><a href="../latex/yellowpaper.tex">LaTeX Source</a><a href="./action-inventory.html">Action Inventory</a><a href="./protocol-scope-matrix.html">Scope Matrix</a><a href="./index.md">Markdown Source</a></div>
       <nav class="toc" data-paper-toc>
-        <h2>Contents</h2><a class="depth-2" href="#0-truth-surfaces">0. Truth Surfaces</a><a class="depth-2" href="#1-block-lifecycle-46-hook-points">1. Block Lifecycle (46 Hook Points)</a><a class="depth-3" href="#11-pipeline">1.1 Pipeline</a><a class="depth-3" href="#12-beginblock-9-named-effects">1.2 BeginBlock — 9 Named Effects</a><a class="depth-3" href="#13-supplementary-effects">1.3 Supplementary Effects</a><a class="depth-3" href="#14-endblock">1.4 EndBlock</a><a class="depth-3" href="#15-voteapphash">1.5 VoteAppHash</a><a class="depth-3" href="#16-consensus-topology-surface">1.6 Consensus / Topology Surface</a><a class="depth-3" href="#17-validator-lifecycle-jail-surface">1.7 Validator Lifecycle / Jail Surface</a><a class="depth-2" href="#2-exchange-state-57-fields">2. Exchange State (57 Fields)</a><a class="depth-2" href="#3-action-surface-97-variants-126-sub-types">3. Action Surface (97 Variants, 126 Sub-Types)</a><a class="depth-2" href="#4-funding-rate">4. Funding Rate</a><a class="depth-2" href="#5-liquidation-adl">5. Liquidation &amp; ADL</a><a class="depth-2" href="#6-state-hashing">6. State Hashing</a><a class="depth-3" href="#61-apphash-split">6.1 AppHash Split</a><a class="depth-3" href="#62-resphash-backend-split">6.2 RespHash Backend Split</a><a class="depth-2" href="#7-corewriter-evm-l1">7. CoreWriter (EVM → L1)</a><a class="depth-2" href="#8-bridge-finalization-and-validator-set-updates">8. Bridge Finalization and Validator-Set Updates</a><a class="depth-2" href="#9-aligned-quote-token-hpt">9. Aligned Quote Token (HPT)</a><a class="depth-2" href="#10-outcomes-and-settlement-surface">10. Outcomes and Settlement Surface</a><a class="depth-2" href="#11-gossip-protocol">11. Gossip Protocol</a><a class="depth-2" href="#12-guard-system">12. Guard System</a><a class="depth-2" href="#13-implementation-status">13. Implementation Status</a>
+        <h2>Contents</h2><a class="depth-2" href="#0-truth-surfaces">0. Truth Surfaces</a><a class="depth-2" href="#1-block-lifecycle-46-hook-points">1. Block Lifecycle (46 Hook Points)</a><a class="depth-3" href="#11-pipeline">1.1 Pipeline</a><a class="depth-3" href="#12-beginblock-9-named-effects">1.2 BeginBlock — 9 Named Effects</a><a class="depth-3" href="#13-supplementary-effects">1.3 Supplementary Effects</a><a class="depth-3" href="#14-endblock">1.4 EndBlock</a><a class="depth-3" href="#15-voteapphash">1.5 VoteAppHash</a><a class="depth-3" href="#16-consensus-topology-surface">1.6 Consensus / Topology Surface</a><a class="depth-3" href="#17-validator-lifecycle-jail-surface">1.7 Validator Lifecycle / Jail Surface</a><a class="depth-2" href="#2-exchange-state-57-fields">2. Exchange State (57 Fields)</a><a class="depth-2" href="#3-action-surface-97-variants-126-sub-types">3. Action Surface (97 Variants, 126 Sub-Types)</a><a class="depth-2" href="#4-funding-rate">4. Funding Rate</a><a class="depth-2" href="#5-liquidation-adl">5. Liquidation &amp; ADL</a><a class="depth-2" href="#6-state-hashing">6. State Hashing</a><a class="depth-3" href="#61-apphash-split">6.1 AppHash Split</a><a class="depth-3" href="#62-resphash-backend-split">6.2 RespHash Backend Split</a><a class="depth-3" href="#63-current-serializer-facts">6.3 Current Serializer Facts</a><a class="depth-2" href="#7-corewriter-evm-l1">7. CoreWriter (EVM → L1)</a><a class="depth-2" href="#8-bridge-finalization-and-validator-set-updates">8. Bridge Finalization and Validator-Set Updates</a><a class="depth-2" href="#9-aligned-quote-token-hpt">9. Aligned Quote Token (HPT)</a><a class="depth-2" href="#10-outcomes-and-settlement-surface">10. Outcomes and Settlement Surface</a><a class="depth-2" href="#11-gossip-protocol">11. Gossip Protocol</a><a class="depth-2" href="#12-guard-system">12. Guard System</a><a class="depth-2" href="#13-implementation-status">13. Implementation Status</a>
       </nav>
     </aside>
     <main class="main">
@@ -38,8 +38,8 @@
   <span class="paper-stats__subtext">Reference tables</span>
 </div><div class="paper-stats__card">
   <span class="paper-stats__label">Read Time</span>
-  <span class="paper-stats__value">9 min</span>
-  <span class="paper-stats__subtext">~1,972 words</span>
+  <span class="paper-stats__value">10 min</span>
+  <span class="paper-stats__subtext">~2,187 words</span>
 </div></div>
       </section>
       <section class="article-wrap">
@@ -73,7 +73,7 @@
 </a><a class="section-card" href="#6-state-hashing">
   <span class="section-card__index">07</span>
   <span class="section-card__title">6. State Hashing</span>
-  <span class="section-card__meta">2 subsections</span>
+  <span class="section-card__meta">3 subsections</span>
 </a><a class="section-card" href="#7-corewriter-evm-l1">
   <span class="section-card__index">08</span>
   <span class="section-card__title">7. CoreWriter (EVM → L1)</span>
@@ -797,6 +797,19 @@ the lifecycle surface.</p>
 </ul>
 <p>Treat <code>RespHashMode::Mainnet</code> as backend selection, not as proof that every
 mainnet response serializer is already closed.</p>
+<h3 id="63-current-serializer-facts">6.3 Current Serializer Facts<a class="anchor-link" href="#63-current-serializer-facts">#</a></h3>
+<p>Treat the following as closed facts, not loose hypotheses:</p>
+<ul>
+<li><strong>G-family success/error split</strong>: hybrid actions do <strong>not</strong> hash a 3-field payload on success. Success is the same 1-field <code>{status:"success"}</code> map used by the H-family status serializer. The 3-field <code>{status:"err", success:false, error:&lt;msg&gt;}</code> payload is error-only.</li>
+<li><strong>Response-family map</strong>: the current user-facing response surface closes four practical serializer families: F (TWAP), G (error branch for hybrid actions), H (status-only success), and J (order-status fill family).</li>
+<li><strong>Fill hash payload</strong>: fills hash through a separate 18-field payload: <code>px</code>, <code>sz</code>, <code>startPosition</code>, <code>dir</code>, <code>closedPnl</code>, <code>oid</code>, <code>crossed</code>, <code>fee</code>, <code>builderFee</code>, <code>tid</code>, <code>cloid</code>, <code>liquidation</code>, <code>feeTrialEscrow</code>, <code>builder</code>, <code>twapId</code>, <code>deployerFee</code>, <code>liquidatedUser</code>, <code>markPx</code>.</li>
+<li><strong>API wrapper fields</strong>: <code>coin</code> and <code>feeToken</code> belong to API/user-fill wrapper surfaces, not to the hashed fill payload itself.</li>
+</ul>
+<p>Current open lane:</p>
+<ul>
+<li>exact local derivation of fill economics and flags (<code>startPosition</code>, <code>closedPnl</code>, <code>tid</code>, liquidation membership, maker/taker routing)</li>
+<li>remaining mainnet-specific serializer families that are still not fully wired locally</li>
+</ul>
 <hr>
 <h2 id="7-corewriter-evm-l1">7. CoreWriter (EVM → L1)<a class="anchor-link" href="#7-corewriter-evm-l1">#</a></h2>
 <p><code>CONFIRMED</code> from binary and official docs.</p>
@@ -871,6 +884,7 @@ solvency-risk lane.</p>
 <li><strong>Port 4001 greeting</strong>: bincode-fork <code>TcpGreeting</code> with chain-based variant index. Current live observations are testnet variant <code>3</code> (8 bytes total) and mainnet variant <code>2</code> (7 bytes total).</li>
 <li><strong>Broader chain enum</strong>: the ABCI-stream chain mapping still tracks <code>Local=0</code>, <code>Sandbox=1</code>, <code>Testnet=2</code>, <code>Mainnet=3</code>; do not conflate that with the observed 4001 <code>TcpGreeting</code> variant index.</li>
 <li><strong>Port 4003 authenticated greeting</strong>: <code>keccak256("Hyperliquid Consensus Payload" + 0x00 + bincode(content))</code>; content is bincode, not msgpack.</li>
+<li><strong>Port 4003 signed content</strong>: the greeting is variable-sized, not a tiny fixed blob. Captured content closes a 20-byte validator address, varint round, 1-byte variant flag, optional 32-byte ABCI extra, several additional counters plus a 32-byte hash, a sorted <code>heartbeat_statuses</code> map, and a trailing empty-mempool varint. A few middle counters still lack semantic labels.</li>
 <li><strong>Connection</strong>: Server-side <code>connection_checks</code> — unknown peers rejected after 5s timeout.</li>
 <li><strong>Loopback</strong>: Dominated by <code>MsgConcise</code>/<code>OutMsgConcise</code> (tag 27/28).</li>
 </ul>
