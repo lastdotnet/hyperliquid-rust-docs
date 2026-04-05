@@ -4,45 +4,408 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hypurrliquid White Paper</title>
+<meta name="description" content="The white paper is the readable systems view: what the chain is trying to do, how value and control move, where risk lives, and which invariants a correct reimplementation needs to preserve.">
 <link rel="stylesheet" href="../assets/markdown-paper.css">
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script defer src="../assets/render-markdown-paper.js"></script>
+<script defer src="../assets/paper-nav.js"></script>
 </head>
 <body>
-  <div class="layout" data-markdown-source="./index.md">
+  <div class="reader-progress" aria-hidden="true">
+    <div class="reader-progress__bar" data-reader-progress-bar></div>
+  </div>
+  <div class="layout">
     <aside class="sidebar">
       <div class="eyebrow">Paper Set</div>
-      <h1 data-paper-title>White Paper</h1>
+      <h1>White Paper</h1>
       <p>System-design narrative for the Hyperliquid reimplementation effort.</p>
-      <div class="link-stack">
-        <a href="../index.html">Docs Hub</a>
-        <a href="../paper/index.html">Hypurrliquid Paper</a>
-        <a href="../yellowpaper/index.html">Yellow Paper</a>
-        <a href="../latex/whitepaper.tex">LaTeX Source</a>
-        <a href="./index.md">Markdown Source</a>
-      </div>
-      <nav class="toc" data-paper-toc></nav>
+      <div class="link-stack"><a href="../index.html">Docs Hub</a><a href="../paper/index.html">Hypurrliquid Paper</a><a href="../yellowpaper/index.html">Yellow Paper</a><a href="../latex/whitepaper.pdf">Download PDF</a><a href="../latex/whitepaper.tex">LaTeX Source</a><a href="./index.md">Markdown Source</a></div>
+      <nav class="toc" data-paper-toc>
+        <h2>Contents</h2><a class="depth-2" href="#fact-surfaces">Fact Surfaces</a><a class="depth-2" href="#1-abstract">1. Abstract</a><a class="depth-2" href="#2-system-model">2. System Model</a><a class="depth-2" href="#3-architectural-layers">3. Architectural Layers</a><a class="depth-3" href="#31-consensus-and-networking">3.1 Consensus and Networking</a><a class="depth-3" href="#32-exchange-execution">3.2 Exchange Execution</a><a class="depth-3" href="#33-product-families">3.3 Product Families</a><a class="depth-3" href="#34-universe-model">3.4 Universe Model</a><a class="depth-2" href="#4-account-and-risk-modes">4. Account and Risk Modes</a><a class="depth-2" href="#5-solvency-and-safety-goals">5. Solvency and Safety Goals</a><a class="depth-3" href="#51-deterministic-state-evolution">5.1 Deterministic State Evolution</a><a class="depth-3" href="#52-margin-and-liquidation-safety">5.2 Margin and Liquidation Safety</a><a class="depth-3" href="#53-collateral-conservation">5.3 Collateral Conservation</a><a class="depth-3" href="#54-controlled-evm-re-entry">5.4 Controlled EVM Re-entry</a><a class="depth-2" href="#6-liquidation-and-adl">6. Liquidation and ADL</a><a class="depth-2" href="#7-evm-bridge-and-delayed-actions">7. EVM, Bridge, and Delayed Actions</a><a class="depth-2" href="#8-outcomes-and-special-risk-surfaces">8. Outcomes and Special Risk Surfaces</a><a class="depth-2" href="#9-implementation-strategy">9. Implementation Strategy</a><a class="depth-2" href="#10-current-boundaries">10. Current Boundaries</a><a class="depth-2" href="#11-reading-guide">11. Reading Guide</a>
+      </nav>
     </aside>
     <main class="main">
       <section class="hero">
         <div class="label">Narrative Architecture</div>
         <h1>Hypurrliquid White Paper</h1>
-        <p>
-          The white paper is the readable systems view: what the chain is trying to do,
-          how value and control move, where risk lives, and which invariants a correct
-          reimplementation needs to preserve.
-        </p>
-        <div class="hero-links">
-          <a href="../latex/whitepaper.tex">Download TeX</a>
-          <a href="../yellowpaper/index.html">Read Yellow Paper</a>
-          <a href="../findings/truth-register.html">Truth Register</a>
-          <a href="../liquidation/index.html">Liquidation &amp; ADL</a>
-          <a href="../block-lifecycle/index.html">Block Lifecycle</a>
-        </div>
+        <p>The white paper is the readable systems view: what the chain is trying to do, how value and control move, where risk lives, and which invariants a correct reimplementation needs to preserve.</p>
+        <div class="hero-links"><a href="../latex/whitepaper.pdf">Download PDF</a><a href="../latex/whitepaper.tex">Download TeX</a><a href="../yellowpaper/index.html">Read Yellow Paper</a><a href="../findings/truth-register.html">Truth Register</a><a href="../liquidation/index.html">Liquidation &amp; ADL</a><a href="../block-lifecycle/index.html">Block Lifecycle</a></div>
+        <div class="paper-stats"><div class="paper-stats__card">
+  <span class="paper-stats__label">Sections</span>
+  <span class="paper-stats__value">12</span>
+  <span class="paper-stats__subtext">Top-level chapters</span>
+</div><div class="paper-stats__card">
+  <span class="paper-stats__label">Tables</span>
+  <span class="paper-stats__value">1</span>
+  <span class="paper-stats__subtext">Reference tables</span>
+</div><div class="paper-stats__card">
+  <span class="paper-stats__label">Read Time</span>
+  <span class="paper-stats__value">8 min</span>
+  <span class="paper-stats__subtext">~1,801 words</span>
+</div></div>
       </section>
       <section class="article-wrap">
+        <section class="section-overview">
+  <div class="section-overview__eyebrow">Document Map</div>
+  <h2>Jump To The Major Sections</h2>
+  <div class="section-overview__grid"><a class="section-card" href="#fact-surfaces">
+  <span class="section-card__index">01</span>
+  <span class="section-card__title">Fact Surfaces</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#1-abstract">
+  <span class="section-card__index">02</span>
+  <span class="section-card__title">1. Abstract</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#2-system-model">
+  <span class="section-card__index">03</span>
+  <span class="section-card__title">2. System Model</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#3-architectural-layers">
+  <span class="section-card__index">04</span>
+  <span class="section-card__title">3. Architectural Layers</span>
+  <span class="section-card__meta">4 subsections</span>
+</a><a class="section-card" href="#4-account-and-risk-modes">
+  <span class="section-card__index">05</span>
+  <span class="section-card__title">4. Account and Risk Modes</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#5-solvency-and-safety-goals">
+  <span class="section-card__index">06</span>
+  <span class="section-card__title">5. Solvency and Safety Goals</span>
+  <span class="section-card__meta">4 subsections</span>
+</a><a class="section-card" href="#6-liquidation-and-adl">
+  <span class="section-card__index">07</span>
+  <span class="section-card__title">6. Liquidation and ADL</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#7-evm-bridge-and-delayed-actions">
+  <span class="section-card__index">08</span>
+  <span class="section-card__title">7. EVM, Bridge, and Delayed Actions</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#8-outcomes-and-special-risk-surfaces">
+  <span class="section-card__index">09</span>
+  <span class="section-card__title">8. Outcomes and Special Risk Surfaces</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#9-implementation-strategy">
+  <span class="section-card__index">10</span>
+  <span class="section-card__title">9. Implementation Strategy</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#10-current-boundaries">
+  <span class="section-card__index">11</span>
+  <span class="section-card__title">10. Current Boundaries</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#11-reading-guide">
+  <span class="section-card__index">12</span>
+  <span class="section-card__title">11. Reading Guide</span>
+  <span class="section-card__meta">Top-level section</span>
+</a></div>
+</section>
         <article class="article" data-paper-article>
-          <p class="small-note">Loading white paper…</p>
+          <p class="lead">The white paper is the system-design view of the Hyperliquid reimplementation effort. It explains what the chain is trying to do, how the major subsystems fit together, and which safety and solvency properties the implementation is meant to preserve.</p>
+<p>This repo is not an official Hyperliquid codebase. It is a reverse-engineered implementation and research environment. The right way to read this paper is:</p>
+<ul>
+<li><code>what the system is for</code></li>
+<li><code>what components exist</code></li>
+<li><code>how value and control move through the system</code></li>
+<li><code>what invariants matter</code></li>
+</ul>
+<p>For protocol-detail and field-order truth, use the <a href="../yellowpaper/index.html">Yellow Paper</a>. For the fastest compact fact surface, use the <a href="../findings/truth-register.html">Truth Register</a>. For the live HTML reference, use the <a href="../paper/index.html">Hypurrliquid Paper</a>. For the actual execution and topology flows, use the dedicated <a href="../block-lifecycle/index.html">Block Lifecycle</a>, <a href="../liquidation/index.html">Liquidation &amp; ADL</a>, <a href="../hashing/index.html">Hashing</a>, <a href="../staking/index.html">Staking &amp; Validators</a>, <a href="../bridge/index.html">Bridge2</a>, and <a href="../outcomes/index.html">Outcomes</a> pages.</p>
+<h2 id="fact-surfaces">Fact Surfaces<a class="anchor-link" href="#fact-surfaces">#</a></h2>
+<p>The narrative in this paper should be read together with the structured fact surfaces:</p>
+<ul>
+<li><a href="../findings/truth-register.html">Truth Register</a> for the compact confirmed/active/hypothesis ledger</li>
+<li><a href="../status/open-claims.html">Open Claims</a> for unresolved truth-maintenance work</li>
+<li><a href="../yellowpaper/protocol-scope-matrix.html">Protocol Scope Matrix</a> for <code>protocol</code> vs <code>testnet_impl</code> vs <code>local_impl</code></li>
+</ul>
+<h2 id="1-abstract">1. Abstract<a class="anchor-link" href="#1-abstract">#</a></h2>
+<p>Hyperliquid is a purpose-built exchange chain that combines:</p>
+<ul>
+<li>perpetual futures</li>
+<li>spot markets</li>
+<li>account abstraction and portfolio margin</li>
+<li>lending via BOLE</li>
+<li>prediction markets via HIP-4 outcomes</li>
+<li>a tightly coupled EVM execution surface</li>
+</ul>
+<p>The core engineering problem is not just matching orders. It is running a low-latency exchange state machine, a validator consensus protocol, bridge flows, and EVM-originated actions while preserving deterministic replay and app-hash parity.</p>
+<p>This repo exists to reconstruct that system from deployed binaries, snapshots, runtime artifacts, official docs, and observed network behavior.</p>
+<h2 id="2-system-model">2. System Model<a class="anchor-link" href="#2-system-model">#</a></h2>
+<p>At a high level, the system is composed of five interacting planes:</p>
+<ol>
+<li>
+<p>Consensus
+   HyperBFT orders blocks, rotates proposers, and finalizes execution.</p>
+</li>
+<li>
+<p>Exchange state machine
+   The <code>Exchange</code> object is the central L1 state surface. It owns market state, balances, books, clearinghouse logic, validator-linked trackers, delayed actions, EVM-facing state, BOLE, and more.</p>
+</li>
+<li>
+<p>Matching and clearing
+   Orders mutate books, fills mutate balances and positions, and clearing logic enforces margin and liquidation rules.</p>
+</li>
+<li>
+<p>EVM bridge surface
+   HyperEVM runs alongside the L1 state machine and re-enters L1 through CoreWriter-delayed actions and transfer queues.</p>
+</li>
+<li>
+<p>Control and governance
+   Validators, staking, bridge signatures, SetGlobal/VoteGlobal actions, and chain-level safety toggles sit above ordinary trading flow.</p>
+</li>
+</ol>
+<p>The system is easiest to understand as one deterministic execution engine with multiple ingress lanes.</p>
+<h2 id="3-architectural-layers">3. Architectural Layers<a class="anchor-link" href="#3-architectural-layers">#</a></h2>
+<h3 id="31-consensus-and-networking">3.1 Consensus and Networking<a class="anchor-link" href="#31-consensus-and-networking">#</a></h3>
+<p>The consensus layer decides block order, proposer rotation, and commitment. The networking layer carries:</p>
+<ul>
+<li>validator-to-validator consensus traffic</li>
+<li>gossip and peer sync</li>
+<li>state/bootstrap handoff for catching-up nodes</li>
+<li>runtime signals like concise hashes and validator vote surfaces</li>
+</ul>
+<p>The dedicated lifecycle reference is here:</p>
+<ul>
+<li><a href="../block-lifecycle/index.html">Block Lifecycle</a></li>
+</ul>
+<p>Current confirmed networking and consensus facts are tracked in:</p>
+<ul>
+<li><a href="../findings/truth-register.html">Truth Register</a></li>
+<li><a href="../obsidian/HyperBFT%20Protocol%20Specification.md">HyperBFT Protocol Specification</a></li>
+<li><a href="../obsidian/Gossip%20Protocol.md">Gossip Protocol</a></li>
+<li><a href="../staking/index.html">Staking &amp; Validators</a></li>
+</ul>
+<p>The current working picture is:</p>
+<ul>
+<li>users submit through a small broadcaster layer</li>
+<li>validators and sentries gate peer admission</li>
+<li>proposer rotation is stake-weighted round-robin</li>
+<li>QC/TC certificates drive the two-chain commit flow</li>
+<li>transport is split rather than flat: <code>4001</code> handles bootstrap / block streaming, while <code>4002</code> covers peer / RPC verification</li>
+</ul>
+<p>Validator control is also epoch-scoped rather than purely stake-scoped. The
+current notes support:</p>
+<ul>
+<li>time-based epochs via <code>epoch_duration_seconds</code></li>
+<li>active-set recomputation at epoch boundaries</li>
+<li>jailed-signer exclusion from proposer rotation</li>
+<li>signer validity checks against <code>epoch_states[cur_epoch]</code></li>
+<li>explicit self-jail / self-unjail surfaces rather than a vague "disabled node" model</li>
+</ul>
+<h3 id="32-exchange-execution">3.2 Exchange Execution<a class="anchor-link" href="#32-exchange-execution">#</a></h3>
+<p>The exchange execution layer is the heart of the protocol. A block generally follows this shape:</p>
+<ol>
+<li>recover / identify actors</li>
+<li>run <code>begin_block</code> hook surfaces</li>
+<li>deliver signed actions</li>
+<li>run block-finalization logic</li>
+<li>compute response hash / state hash material</li>
+<li>feed commit/vote surfaces</li>
+</ol>
+<p>The execution engine owns:</p>
+<ul>
+<li>order books</li>
+<li>balances</li>
+<li>perp positions</li>
+<li>funding trackers</li>
+<li>liquidation and ADL</li>
+<li>BOLE</li>
+<li>outcomes</li>
+<li>EVM-facing state</li>
+<li>validator-linked trackers and guards</li>
+</ul>
+<h3 id="33-product-families">3.3 Product Families<a class="anchor-link" href="#33-product-families">#</a></h3>
+<p>The protocol is not one homogeneous market engine. It contains distinct product families:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Product family</th>
+<th>Core behavior</th>
+<th>Main risk surface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Perps</td>
+<td>matched books + clearinghouse</td>
+<td>margin, liquidation, ADL</td>
+</tr>
+<tr>
+<td>Spot</td>
+<td>spot books and balances</td>
+<td>transfer routing, spot-specific bookkeeping</td>
+</tr>
+<tr>
+<td>Portfolio margin</td>
+<td>unified risk over eligible assets</td>
+<td>portfolio maintenance ratio and liquidation ordering</td>
+</tr>
+<tr>
+<td>BOLE</td>
+<td>borrow/lend pool</td>
+<td>utilization, health factor, market/partial/backstop liquidation</td>
+</tr>
+<tr>
+<td>Outcomes</td>
+<td>1x outcome markets</td>
+<td>settlement and collateral conservation</td>
+</tr>
+<tr>
+<td>EVM-originated actions</td>
+<td>delayed CoreWriter path</td>
+<td>delayed execution ordering and safety gating</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="34-universe-model">3.4 Universe Model<a class="anchor-link" href="#34-universe-model">#</a></h3>
+<p>The implementation is converging on an explicit universe model:</p>
+<ul>
+<li>core perp universe: <code>""</code></li>
+<li>singleton spot universe: <code>"spot"</code></li>
+<li>named HIP-3 perp universes: <code>dexName</code></li>
+</ul>
+<p>That matters because transfers and balances do not all live in one flat pool. A correct node has to know which universe an asset or collateral movement belongs to before it can apply it.</p>
+<h2 id="4-account-and-risk-modes">4. Account and Risk Modes<a class="anchor-link" href="#4-account-and-risk-modes">#</a></h2>
+<p>Hyperliquid separates <em>where assets live</em> from <em>how risk is computed</em>.</p>
+<p>The important account/risk modes are:</p>
+<ul>
+<li>classic</li>
+<li>dex abstraction</li>
+<li>unified account</li>
+<li>portfolio margin</li>
+</ul>
+<p>These are not separate universes. They are overlays on top of the asset/universe model. That distinction is essential for building routing and liquidation correctly.</p>
+<h2 id="5-solvency-and-safety-goals">5. Solvency and Safety Goals<a class="anchor-link" href="#5-solvency-and-safety-goals">#</a></h2>
+<p>The system has several non-negotiable safety properties:</p>
+<h3 id="51-deterministic-state-evolution">5.1 Deterministic State Evolution<a class="anchor-link" href="#51-deterministic-state-evolution">#</a></h3>
+<p>All validators must reach the same post-block state from the same ordered input stream. That means:</p>
+<ul>
+<li>same action decode</li>
+<li>same execution order</li>
+<li>same response serialization</li>
+<li>same LtHash updates</li>
+</ul>
+<p>The hashing story is now explicitly chain-scoped in the repo. Testnet and
+mainnet RespHash backends should not be treated as one undifferentiated
+serializer path, and the local code still separates "backend mode exists" from
+"full parity is closed".</p>
+<p>The final app-hash surface is also no longer treated as one monolithic digest.
+Current repo truth splits it into separate L1 and EVM halves, and the traced
+heartbeat path only exposes the EVM concise hashes. That is why the docs now
+separate live L1 hash state from stale BSS-era assumptions instead of treating
+every hash artifact as interchangeable.</p>
+<h3 id="52-margin-and-liquidation-safety">5.2 Margin and Liquidation Safety<a class="anchor-link" href="#52-margin-and-liquidation-safety">#</a></h3>
+<p>Risk-bearing products must not leave losses unaccounted for. The system therefore needs:</p>
+<ul>
+<li>correct maintenance checks</li>
+<li>deterministic liquidation triggers</li>
+<li>a consistent fallback path when liquidation is insufficient</li>
+<li>ADL where necessary</li>
+</ul>
+<h3 id="53-collateral-conservation">5.3 Collateral Conservation<a class="anchor-link" href="#53-collateral-conservation">#</a></h3>
+<p>Collateral should not be created by:</p>
+<ul>
+<li>bad transfer routing</li>
+<li>incorrect BOLE repayment accounting</li>
+<li>incorrect outcome settlement or merge logic</li>
+<li>inconsistent bridge finalization</li>
+</ul>
+<h3 id="54-controlled-evm-re-entry">5.4 Controlled EVM Re-entry<a class="anchor-link" href="#54-controlled-evm-re-entry">#</a></h3>
+<p>HyperEVM is not allowed to bypass L1 fairness or ordering constraints. The CoreWriter + ActionDelayer path exists to slow and serialize EVM-originated actions before they re-enter the main L1 state machine.</p>
+<h2 id="6-liquidation-and-adl">6. Liquidation and ADL<a class="anchor-link" href="#6-liquidation-and-adl">#</a></h2>
+<p>Perp and portfolio-margin liquidation are part of the main risk engine. BOLE liquidation is a separate family with its own health-factor and backstop semantics. Outcomes are not ordinary perp-style liquidations; they are primarily a settlement and collateral-conservation problem instead.</p>
+<p>Use the dedicated execution reference for the detailed flow:</p>
+<ul>
+<li><a href="../liquidation/index.html">Liquidation &amp; ADL</a></li>
+</ul>
+<h2 id="7-evm-bridge-and-delayed-actions">7. EVM, Bridge, and Delayed Actions<a class="anchor-link" href="#7-evm-bridge-and-delayed-actions">#</a></h2>
+<p>The EVM is tightly integrated but not sovereign over L1 state. The important bridge points are:</p>
+<ul>
+<li>L1 transfers to and from HyperEVM</li>
+<li>CoreWriter-delayed actions</li>
+<li>bridge validator signatures and finalized withdrawal state</li>
+</ul>
+<p>Bridge control is now tracked as a staged control system with separate state
+for:</p>
+<ul>
+<li>withdrawal signatures</li>
+<li>finalized-withdrawal votes</li>
+<li>validator-set signatures</li>
+<li>finalized validator-set votes</li>
+</ul>
+<p>That distinction matters because bridge solvency and operator trust are shaped
+by finalization state, dispute-period invalidation, and signer reuse, not just
+by the user-facing <code>withdraw3</code> entrypoint.</p>
+<p>Current repo truth also keeps bridge signing on validator signer keys rather
+than a detached bridge-only signer family. On the Ethereum side, that still
+coexists with hotter withdrawal-signature handling and colder validator-set
+control, so key reuse and finalization timing both matter to the threat model.</p>
+<p>Use the dedicated <a href="../bridge/index.html">Bridge2</a> page for the staged withdrawal
+and validator-set update flow.</p>
+<p>This repo now models the delayed-action queue explicitly, but the exact binary placement of matured delayed actions within the <code>begin_block</code> / execution-state wrapper is still one of the remaining ordering-closure tasks.</p>
+<p>The other EVM-adjacent lane now promoted into claims is the aligned quote token:</p>
+<ul>
+<li><code>hpt</code> tracks aligned quote token state in <code>Exchange</code></li>
+<li>validators publish SOFR-like rates through <code>validatorL1Stream</code></li>
+<li><code>update_aligned_quote_token</code> currently sits in begin-block effect 9</li>
+</ul>
+<p>Use the dedicated <a href="../hashing/index.html">Hashing</a> page for the current LtHash /
+RespHash split and app-hash boundaries.</p>
+<h2 id="8-outcomes-and-special-risk-surfaces">8. Outcomes and Special Risk Surfaces<a class="anchor-link" href="#8-outcomes-and-special-risk-surfaces">#</a></h2>
+<p>The outcomes system is one of the structurally richest parts of the protocol. It introduces:</p>
+<ul>
+<li>question-level metadata</li>
+<li>named outcomes</li>
+<li>fallback outcomes</li>
+<li>settlement transitions</li>
+<li>merge/split/negation-like token mechanics</li>
+</ul>
+<p>The confirmed baseline is now:</p>
+<ul>
+<li>1x isolated-only treatment</li>
+<li>no funding</li>
+<li>explicit settlement authority via <code>oracleUpdater</code></li>
+<li>question metadata with <code>fallbackOutcome</code>, <code>namedOutcomes</code>, and <code>settledNamedOutcomes</code></li>
+<li>settlement-triggered order cancellation/rejection rather than perp-style liquidation</li>
+</ul>
+<p>The current leading open risk remains above that baseline: question-level
+reconciliation, especially around <code>MergeQuestion</code>, fallback legs, and settled
+named outcomes.</p>
+<p>Use the dedicated <a href="../outcomes/index.html">Outcomes</a> page for the confirmed
+market baseline versus the still-open solvency hypothesis.</p>
+<p>The current leading safety hypothesis in this repo is that the hardest outcome risk sits in question-level reconciliation, especially around fallback and settled named outcomes, not in the simplest binary pair mechanics alone.</p>
+<h2 id="9-implementation-strategy">9. Implementation Strategy<a class="anchor-link" href="#9-implementation-strategy">#</a></h2>
+<p>This project is not trying to write “a similar exchange.” It is trying to reach protocol truth in a controlled way.</p>
+<p>The working method is:</p>
+<ol>
+<li>ingest evidence</li>
+<li>promote evidence into claims</li>
+<li>implement only confirmed or chain-scoped truths</li>
+<li>add regressions</li>
+<li>run crate tests and replay/parity checks</li>
+<li>sync docs and claims when repo truth moves</li>
+</ol>
+<p>The docs system mirrors that:</p>
+<ul>
+<li><a href="../findings/index.md">Findings</a></li>
+<li><a href="../status/index.md">Status</a></li>
+<li><a href="../yellowpaper/protocol-scope-matrix.html">Protocol Scope Matrix</a></li>
+</ul>
+<h2 id="10-current-boundaries">10. Current Boundaries<a class="anchor-link" href="#10-current-boundaries">#</a></h2>
+<p>The repo has made major progress, but some of the hardest parity surfaces are still open:</p>
+<ul>
+<li>exact response hashing parity across mainnet and testnet paths</li>
+<li>deeper <code>begin_block</code> per-effect semantics</li>
+<li>some bridge and staking transition details</li>
+<li>deeper outcome reconciliation logic</li>
+<li>ADL and liquidation edge semantics</li>
+</ul>
+<p>Those open edges do not change the architectural picture. They define where the remaining engineering effort is concentrated.</p>
+<h2 id="11-reading-guide">11. Reading Guide<a class="anchor-link" href="#11-reading-guide">#</a></h2>
+<p>Use the docs in this order:</p>
+<ol>
+<li><a href="../paper/index.html">Paper</a> for the broad RE reference</li>
+<li><a href="index.html">White Paper</a> for the system-design narrative</li>
+<li><a href="../yellowpaper/index.html">Yellow Paper</a> for protocol-truth and execution details</li>
+<li><a href="../liquidation/index.html">Liquidation &amp; ADL</a> for risk execution</li>
+<li><a href="../block-lifecycle/index.html">Block Lifecycle</a> for block flow and topology</li>
+<li><a href="../findings/index.md">Findings</a> and <a href="../status/index.md">Status</a> for active truth maintenance</li>
+</ol>
         </article>
       </section>
     </main>

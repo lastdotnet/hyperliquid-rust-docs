@@ -4,41 +4,675 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hypurrliquid Action Inventory</title>
+<meta name="description" content="Dedicated action-surface companion to the yellow paper. Use this when you need the dispatch families, sub-variant tables, and high-volume action share map without digging through the larger reverse-engineering paper.">
 <link rel="stylesheet" href="../assets/markdown-paper.css">
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script defer src="../assets/render-markdown-paper.js"></script>
+<script defer src="../assets/paper-nav.js"></script>
 </head>
 <body>
-  <div class="layout" data-markdown-source="./action-inventory.md">
+  <div class="reader-progress" aria-hidden="true">
+    <div class="reader-progress__bar" data-reader-progress-bar></div>
+  </div>
+  <div class="layout">
     <aside class="sidebar">
       <div class="eyebrow">Action Surface</div>
-      <h1 data-paper-title>Action Inventory</h1>
+      <h1>Action Inventory</h1>
       <p>Action families, sub-variants, and high-frequency surfaces pulled out into a dedicated reference page.</p>
-      <div class="link-stack">
-        <a href="../index.html">Docs Hub</a>
-        <a href="./index.html">Yellow Paper</a>
-        <a href="../paper/index.html">Hypurrliquid Paper</a>
-        <a href="./action-inventory.md">Markdown Source</a>
-      </div>
-      <nav class="toc" data-paper-toc></nav>
+      <div class="link-stack"><a href="../index.html">Docs Hub</a><a href="./index.html">Yellow Paper</a><a href="./protocol-scope-matrix.html">Scope Matrix</a><a href="../findings/claims-index.html">Claims Index</a><a href="./action-inventory.md">Markdown Source</a></div>
+      <nav class="toc" data-paper-toc>
+        <h2>Contents</h2><a class="depth-2" href="#1-high-frequency-action-surface">1. High-Frequency Action Surface</a><a class="depth-2" href="#2-top-level-action-families">2. Top-Level Action Families</a><a class="depth-3" href="#21-trading">2.1 Trading</a><a class="depth-3" href="#22-account-and-user-controls">2.2 Account and User Controls</a><a class="depth-3" href="#23-transfers">2.3 Transfers</a><a class="depth-3" href="#24-vaults">2.4 Vaults</a><a class="depth-3" href="#25-staking-and-validator">2.5 Staking and Validator</a><a class="depth-3" href="#26-governance-and-control">2.6 Governance and Control</a><a class="depth-3" href="#27-bridge-and-evm">2.7 Bridge and EVM</a><a class="depth-3" href="#28-special-system">2.8 Special / System</a><a class="depth-2" href="#3-important-sub-variant-enums">3. Important Sub-Variant Enums</a><a class="depth-3" href="#31-voteglobalaction">3.1 VoteGlobalAction</a><a class="depth-3" href="#32-spotdeployaction">3.2 SpotDeployAction</a><a class="depth-3" href="#33-hip3deployaction-perpdeploy">3.3 Hip3DeployAction / PerpDeploy</a><a class="depth-3" href="#34-outcomedeploy">3.4 OutcomeDeploy</a><a class="depth-3" href="#35-setbole">3.5 SetBole</a><a class="depth-3" href="#36-cvalidatoraction">3.6 CValidatorAction</a><a class="depth-2" href="#4-binary-expansion-since-the-2026-04-03-testnet-pass">4. Binary Expansion Since the 2026-04-03 Testnet Pass</a><a class="depth-2" href="#5-practical-reading-order">5. Practical Reading Order</a>
+      </nav>
     </aside>
     <main class="main">
       <section class="hero">
         <div class="label">Action Surface</div>
         <h1>Action Inventory</h1>
-        <p>
-          Dedicated action-surface companion to the yellow paper. Use this when you need the
-          dispatch families, sub-variant tables, and high-volume action share map without digging
-          through the larger RE paper.
-        </p>
-        <div class="hero-links">
-          <a href="./index.html">Back to Yellow Paper</a>
-          <a href="../paper/index.html">Full RE Paper</a>
-        </div>
+        <p>Dedicated action-surface companion to the yellow paper. Use this when you need the dispatch families, sub-variant tables, and high-volume action share map without digging through the larger reverse-engineering paper.</p>
+        <div class="hero-links"><a href="./index.html">Back to Yellow Paper</a><a href="./yellowpaper.pdf">Download Yellow PDF</a><a href="../findings/claims-index.html">Claims Index</a><a href="../paper/index.html">Full RE Paper</a></div>
+        <div class="paper-stats"><div class="paper-stats__card">
+  <span class="paper-stats__label">Sections</span>
+  <span class="paper-stats__value">5</span>
+  <span class="paper-stats__subtext">Top-level chapters</span>
+</div><div class="paper-stats__card">
+  <span class="paper-stats__label">Tables</span>
+  <span class="paper-stats__value">9</span>
+  <span class="paper-stats__subtext">Reference tables</span>
+</div><div class="paper-stats__card">
+  <span class="paper-stats__label">Read Time</span>
+  <span class="paper-stats__value">4 min</span>
+  <span class="paper-stats__subtext">~947 words</span>
+</div></div>
       </section>
       <section class="article-wrap">
+        <section class="section-overview">
+  <div class="section-overview__eyebrow">Document Map</div>
+  <h2>Jump To The Major Sections</h2>
+  <div class="section-overview__grid"><a class="section-card" href="#1-high-frequency-action-surface">
+  <span class="section-card__index">01</span>
+  <span class="section-card__title">1. High-Frequency Action Surface</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#2-top-level-action-families">
+  <span class="section-card__index">02</span>
+  <span class="section-card__title">2. Top-Level Action Families</span>
+  <span class="section-card__meta">8 subsections</span>
+</a><a class="section-card" href="#3-important-sub-variant-enums">
+  <span class="section-card__index">03</span>
+  <span class="section-card__title">3. Important Sub-Variant Enums</span>
+  <span class="section-card__meta">6 subsections</span>
+</a><a class="section-card" href="#4-binary-expansion-since-the-2026-04-03-testnet-pass">
+  <span class="section-card__index">04</span>
+  <span class="section-card__title">4. Binary Expansion Since the 2026-04-03 Testnet Pass</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#5-practical-reading-order">
+  <span class="section-card__index">05</span>
+  <span class="section-card__title">5. Practical Reading Order</span>
+  <span class="section-card__meta">Top-level section</span>
+</a></div>
+</section>
         <article class="article" data-paper-article>
-          <p class="small-note">Loading action inventory…</p>
+          <p class="lead">This page is the action-surface companion to the <a href="index.html">Yellow Paper</a>. It collects the current repo truth on:</p>
+<ul>
+<li>top-level action families</li>
+<li>high-frequency wire actions</li>
+<li>important sub-variant enums discovered from the binary</li>
+<li>which parts of the system each family primarily touches</li>
+</ul>
+<p>Primary supporting notes:</p>
+<ul>
+<li><a href="../obsidian/Action%20Types.md">Action Types</a></li>
+<li><a href="../paper/index.html#actions">Hypurrliquid Paper action chapter</a></li>
+<li><a href="../block-lifecycle/index.html">Block Lifecycle</a></li>
+</ul>
+<h2 id="1-high-frequency-action-surface">1. High-Frequency Action Surface<a class="anchor-link" href="#1-high-frequency-action-surface">#</a></h2>
+<p>From the current 2.3-hour mainnet sample in the notes:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Action</th>
+<th style="text-align: right;">Count</th>
+<th style="text-align: right;">Share</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>order</code></td>
+<td style="text-align: right;">1,422,571</td>
+<td style="text-align: right;">68.2%</td>
+</tr>
+<tr>
+<td><code>cancelByCloid</code></td>
+<td style="text-align: right;">348,407</td>
+<td style="text-align: right;">16.7%</td>
+</tr>
+<tr>
+<td><code>cancel</code></td>
+<td style="text-align: right;">219,274</td>
+<td style="text-align: right;">10.5%</td>
+</tr>
+<tr>
+<td><code>evmRawTx</code></td>
+<td style="text-align: right;">36,189</td>
+<td style="text-align: right;">1.7%</td>
+</tr>
+<tr>
+<td><code>noop</code></td>
+<td style="text-align: right;">23,817</td>
+<td style="text-align: right;">1.1%</td>
+</tr>
+<tr>
+<td><code>batchModify</code></td>
+<td style="text-align: right;">18,728</td>
+<td style="text-align: right;">0.9%</td>
+</tr>
+<tr>
+<td><code>scheduleCancel</code></td>
+<td style="text-align: right;">5,216</td>
+<td style="text-align: right;">0.3%</td>
+</tr>
+<tr>
+<td><code>updateLeverage</code></td>
+<td style="text-align: right;">2,952</td>
+<td style="text-align: right;">0.1%</td>
+</tr>
+<tr>
+<td><code>SetGlobalAction</code></td>
+<td style="text-align: right;">1,271</td>
+<td style="text-align: right;">0.1%</td>
+</tr>
+<tr>
+<td><code>ValidatorSignWithdrawal</code></td>
+<td style="text-align: right;">1,177</td>
+<td style="text-align: right;">0.1%</td>
+</tr>
+</tbody>
+</table>
+</div><p>Practical implication: a working node lives or dies first on trading, cancels, and the surrounding execution pipeline, even though the protocol surface is much broader.</p>
+<h2 id="2-top-level-action-families">2. Top-Level Action Families<a class="anchor-link" href="#2-top-level-action-families">#</a></h2>
+<h3 id="21-trading">2.1 Trading<a class="anchor-link" href="#21-trading">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Wire name</th>
+<th>Purpose</th>
+<th>Main state touched</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>order</code></td>
+<td>place order</td>
+<td>books, balances, positions</td>
+</tr>
+<tr>
+<td><code>cancel</code></td>
+<td>cancel by asset/order id pairs</td>
+<td>books, open-order indices</td>
+</tr>
+<tr>
+<td><code>cancelByCloid</code></td>
+<td>cancel by client order id</td>
+<td>cloid routing, books</td>
+</tr>
+<tr>
+<td><code>modify</code></td>
+<td>cancel + replace</td>
+<td>books, order identity</td>
+</tr>
+<tr>
+<td><code>batchModify</code></td>
+<td>multi-leg modify</td>
+<td>books</td>
+</tr>
+<tr>
+<td><code>scheduleCancel</code></td>
+<td>delayed or condition-based cancel surface</td>
+<td>user cancel scheduling</td>
+</tr>
+<tr>
+<td><code>twapOrder</code></td>
+<td>create TWAP</td>
+<td>TWAP tracker</td>
+</tr>
+<tr>
+<td><code>twapCancel</code></td>
+<td>cancel TWAP</td>
+<td>TWAP tracker</td>
+</tr>
+<tr>
+<td><code>liquidate</code></td>
+<td>explicit liquidation entry</td>
+<td>clearinghouse / liquidation</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="22-account-and-user-controls">2.2 Account and User Controls<a class="anchor-link" href="#22-account-and-user-controls">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Wire name</th>
+<th>Purpose</th>
+<th>Main state touched</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>updateLeverage</code></td>
+<td>change leverage</td>
+<td>user margin config</td>
+</tr>
+<tr>
+<td><code>updateIsolatedMargin</code></td>
+<td>adjust isolated margin</td>
+<td>isolated state</td>
+</tr>
+<tr>
+<td><code>topUpStrictIsolatedMargin</code></td>
+<td>top up strict isolated mode</td>
+<td>isolated state</td>
+</tr>
+<tr>
+<td><code>approveAgent</code></td>
+<td>approve API/agent signer</td>
+<td>agent tracker</td>
+</tr>
+<tr>
+<td><code>approveBuilderFee</code></td>
+<td>builder fee approval</td>
+<td>builder-fee state</td>
+</tr>
+<tr>
+<td><code>setReferrer</code></td>
+<td>set referral state</td>
+<td>referral state</td>
+</tr>
+<tr>
+<td><code>setDisplayName</code></td>
+<td>set display name</td>
+<td>display-name map</td>
+</tr>
+<tr>
+<td><code>userPortfolioMargin</code></td>
+<td>opt into PM mode</td>
+<td>user mode state</td>
+</tr>
+<tr>
+<td><code>userDexAbstraction</code></td>
+<td>user abstraction config</td>
+<td>routing / mode state</td>
+</tr>
+<tr>
+<td><code>userSetAbstraction</code></td>
+<td>user abstraction mode</td>
+<td>routing / mode state</td>
+</tr>
+<tr>
+<td><code>agentSetAbstraction</code></td>
+<td>agent abstraction config</td>
+<td>routing / mode state</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="23-transfers">2.3 Transfers<a class="anchor-link" href="#23-transfers">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Wire name</th>
+<th>Purpose</th>
+<th>Main state touched</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>usdSend</code></td>
+<td>USDC transfer</td>
+<td>balances</td>
+</tr>
+<tr>
+<td><code>usdClassTransfer</code></td>
+<td>USD-class transfer</td>
+<td>balances / class routing</td>
+</tr>
+<tr>
+<td><code>spotSend</code></td>
+<td>spot token transfer</td>
+<td>spot balances</td>
+</tr>
+<tr>
+<td><code>sendAsset</code></td>
+<td>cross-universe/general asset transfer</td>
+<td>routing + balances</td>
+</tr>
+<tr>
+<td><code>withdraw3</code></td>
+<td>withdrawal v3</td>
+<td>bridge / balances</td>
+</tr>
+<tr>
+<td><code>subAccountTransfer</code></td>
+<td>sub-account value transfer</td>
+<td>sub-account tracker</td>
+</tr>
+<tr>
+<td><code>subAccountSpotTransfer</code></td>
+<td>sub-account spot transfer</td>
+<td>sub-account tracker + spot</td>
+</tr>
+<tr>
+<td><code>sendToEvmWithData</code></td>
+<td>L1 -&gt; EVM transfer with calldata</td>
+<td>EVM bridge surface</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="24-vaults">2.4 Vaults<a class="anchor-link" href="#24-vaults">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Wire name</th>
+<th>Purpose</th>
+<th>Main state touched</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>createVault</code></td>
+<td>create vault</td>
+<td>vault registry</td>
+</tr>
+<tr>
+<td><code>vaultTransfer</code></td>
+<td>deposit/withdraw</td>
+<td>vault balances</td>
+</tr>
+<tr>
+<td><code>vaultDistribute</code></td>
+<td>distribute vault funds</td>
+<td>vault accounting</td>
+</tr>
+<tr>
+<td><code>vaultModify</code></td>
+<td>modify vault params</td>
+<td>vault config</td>
+</tr>
+<tr>
+<td><code>netChildVaultPositions</code></td>
+<td>reconcile child vault positions</td>
+<td>vault children</td>
+</tr>
+<tr>
+<td><code>setVaultDisplayName</code></td>
+<td>label vault</td>
+<td>vault metadata</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="25-staking-and-validator">2.5 Staking and Validator<a class="anchor-link" href="#25-staking-and-validator">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Wire name</th>
+<th>Purpose</th>
+<th>Main state touched</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tokenDelegate</code></td>
+<td>delegate / undelegate</td>
+<td>staking</td>
+</tr>
+<tr>
+<td><code>claimRewards</code></td>
+<td>claim rewards</td>
+<td>staking</td>
+</tr>
+<tr>
+<td><code>linkStakingUser</code></td>
+<td>link staking identity</td>
+<td>staking link tracker</td>
+</tr>
+<tr>
+<td><code>registerValidator</code></td>
+<td>validator registration</td>
+<td>validator profile/state</td>
+</tr>
+<tr>
+<td><code>extendLongTermStaking</code></td>
+<td>extend lock</td>
+<td>staking</td>
+</tr>
+<tr>
+<td><code>CValidator</code></td>
+<td>validator profile/admin actions</td>
+<td><code>c_staking</code></td>
+</tr>
+<tr>
+<td><code>CSigner</code></td>
+<td>signer control / jailing lane</td>
+<td><code>c_staking</code></td>
+</tr>
+<tr>
+<td><code>validatorL1Vote</code></td>
+<td>oracle vote</td>
+<td>validator vote tracker</td>
+</tr>
+<tr>
+<td><code>validatorL1Stream</code></td>
+<td>stream / rate vote</td>
+<td>validator stream tracker</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="26-governance-and-control">2.6 Governance and Control<a class="anchor-link" href="#26-governance-and-control">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Wire name</th>
+<th>Purpose</th>
+<th>Main state touched</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SetGlobalAction</code></td>
+<td>broadcaster global state update</td>
+<td>oracle / config / prices</td>
+</tr>
+<tr>
+<td><code>govPropose</code></td>
+<td>governance proposal</td>
+<td>governance state</td>
+</tr>
+<tr>
+<td><code>govVote</code></td>
+<td>governance vote</td>
+<td>governance state</td>
+</tr>
+<tr>
+<td><code>voteAppHash</code></td>
+<td>validator app-hash vote</td>
+<td>app-hash vote tracker</td>
+</tr>
+<tr>
+<td><code>ForceIncreaseEpoch</code></td>
+<td>force epoch advance</td>
+<td>staking epoch state</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="27-bridge-and-evm">2.7 Bridge and EVM<a class="anchor-link" href="#27-bridge-and-evm">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Wire name</th>
+<th>Purpose</th>
+<th>Main state touched</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>evmRawTx</code></td>
+<td>raw EVM transaction</td>
+<td>HyperEVM + CoreWriter</td>
+</tr>
+<tr>
+<td><code>VoteEthDeposit</code></td>
+<td>vote ETH deposit</td>
+<td>bridge vote tracker</td>
+</tr>
+<tr>
+<td><code>ValidatorSignWithdrawal</code></td>
+<td>sign bridge withdrawal</td>
+<td>bridge vote tracker</td>
+</tr>
+<tr>
+<td><code>VoteEthFinalizedWithdrawal</code></td>
+<td>finalize withdrawal</td>
+<td>bridge vote tracker</td>
+</tr>
+<tr>
+<td><code>VoteEthFinalizedValidatorSetUpdate</code></td>
+<td>finalize validator-set update</td>
+<td>bridge vote tracker</td>
+</tr>
+<tr>
+<td><code>signValidatorSetUpdate</code></td>
+<td>sign bridge validator-set update</td>
+<td>bridge vote tracker</td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="28-special-system">2.8 Special / System<a class="anchor-link" href="#28-special-system">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Wire name</th>
+<th>Purpose</th>
+<th>Main state touched</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>noop</code></td>
+<td>no-op / heartbeat</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>multiSig</code></td>
+<td>wrapper / redispatch</td>
+<td>multisig tracker</td>
+</tr>
+<tr>
+<td><code>convertToMultiSigUser</code></td>
+<td>promote user to multisig</td>
+<td>multisig tracker</td>
+</tr>
+<tr>
+<td><code>borrowLend</code></td>
+<td>BOLE operations</td>
+<td>BOLE</td>
+</tr>
+<tr>
+<td><code>userOutcome</code></td>
+<td>outcome user ops</td>
+<td>outcomes</td>
+</tr>
+<tr>
+<td><code>spotDeploy</code></td>
+<td>spot deploy surface</td>
+<td>spot config</td>
+</tr>
+<tr>
+<td><code>perpDeploy</code></td>
+<td>HIP-3/HIP-4 deploy surface</td>
+<td>perp deploy / outcomes</td>
+</tr>
+<tr>
+<td><code>ReassessFees</code></td>
+<td>fee tier reassessment</td>
+<td>fee tracker</td>
+</tr>
+<tr>
+<td><code>ReserveRequestWeight</code></td>
+<td>BOLE reserve request weighting</td>
+<td>BOLE</td>
+</tr>
+<tr>
+<td><code>FinalizeEvmContract</code></td>
+<td>finalize EVM contract</td>
+<td>HyperEVM</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="3-important-sub-variant-enums">3. Important Sub-Variant Enums<a class="anchor-link" href="#3-important-sub-variant-enums">#</a></h2>
+<h3 id="31-voteglobalaction">3.1 VoteGlobalAction<a class="anchor-link" href="#31-voteglobalaction">#</a></h3>
+<p>Current binary-derived sub-variants include:</p>
+<ul>
+<li><code>SetPerpDexDailyPxRange</code></li>
+<li><code>SetReserveAccumulator</code></li>
+<li><code>SetOutcomeFeeScale</code></li>
+<li><code>ModifyCStakingPeriods</code></li>
+<li><code>SetPerpDexMaxNUsersWithPositions</code></li>
+<li><code>UserIsUnrewarded</code></li>
+<li><code>SetPerpDexTransferLimits</code></li>
+<li><code>SetPerpDexOpenInterestCap</code></li>
+<li><code>HaltPerpTrading</code></li>
+<li><code>ModifyReferrer</code></li>
+<li><code>UnjailSigner</code></li>
+<li><code>DisableCValidator</code></li>
+<li><code>UserCanLiquidate</code></li>
+<li><code>ModifyNonCirculatingSupply</code></li>
+<li><code>CancelUserOrders</code></li>
+<li><code>DisableNodeIp</code></li>
+<li><code>SetMaxOiPerSecond</code></li>
+<li><code>QuarantineUser</code></li>
+<li><code>ResetHip3PxAlert</code></li>
+<li><code>SetEvmBlockDuration</code></li>
+<li><code>SetEvmPrecompileEnabled</code></li>
+<li><code>SetHip3BackstopLiquidatorParams</code></li>
+<li><code>DeployGasAuctionChange</code></li>
+<li><code>CValidator</code></li>
+<li><code>SetCoreWriterActionEnabled</code></li>
+<li><code>ModifyBroadcaster</code></li>
+</ul>
+<h3 id="32-spotdeployaction">3.2 SpotDeployAction<a class="anchor-link" href="#32-spotdeployaction">#</a></h3>
+<ul>
+<li><code>RegisterHyperliquidity</code></li>
+<li><code>RegisterSpot</code></li>
+<li><code>SetFullName</code></li>
+<li><code>UserGenesis</code></li>
+<li><code>RegisterToken2</code></li>
+<li><code>SetDeployerTradingFeeShare</code></li>
+<li><code>RevokeFreezePrivilege</code></li>
+<li><code>FreezeUser</code></li>
+<li><code>RequestEvmContract</code></li>
+<li><code>Genesis</code></li>
+<li><code>EnableFreezePrivilege</code></li>
+<li><code>EnableAlignedQuoteToken</code></li>
+<li><code>EnableQuoteToken</code></li>
+</ul>
+<h3 id="33-hip3deployaction-perpdeploy">3.3 Hip3DeployAction / PerpDeploy<a class="anchor-link" href="#33-hip3deployaction-perpdeploy">#</a></h3>
+<ul>
+<li><code>registerAsset</code></li>
+<li><code>registerAsset2</code></li>
+<li><code>setOracle</code></li>
+<li><code>setSubDeployers</code></li>
+<li><code>setPerpAnnotation</code></li>
+<li><code>setFeeScale</code></li>
+<li><code>setFeeRecipient</code></li>
+<li><code>haltTrading</code></li>
+<li><code>insertMarginTable</code></li>
+<li>nested <code>OutcomeDeploy</code></li>
+</ul>
+<h3 id="34-outcomedeploy">3.4 OutcomeDeploy<a class="anchor-link" href="#34-outcomedeploy">#</a></h3>
+<ul>
+<li><code>RegisterQuestion</code></li>
+<li><code>RegisterOutcome</code></li>
+<li><code>RegisterNamedOutcome</code></li>
+<li><code>ChangeOutcomeDescription</code></li>
+<li><code>SettleOutcome</code></li>
+<li><code>ChangeQuestionDescription</code></li>
+<li><code>RegisterOutcomeToken</code></li>
+<li><code>RegisterTokensAndStandaloneOutcome</code></li>
+</ul>
+<h3 id="35-setbole">3.5 SetBole<a class="anchor-link" href="#35-setbole">#</a></h3>
+<ul>
+<li><code>BackstopLiquidatorTokenParams</code></li>
+<li><code>Adl</code></li>
+<li><code>TestnetAction</code></li>
+<li><code>RateLimit</code></li>
+<li><code>ResetIndex</code></li>
+<li><code>Reserve</code></li>
+</ul>
+<h3 id="36-cvalidatoraction">3.6 CValidatorAction<a class="anchor-link" href="#36-cvalidatoraction">#</a></h3>
+<ul>
+<li><code>Register</code></li>
+<li><code>ChangeProfile</code></li>
+</ul>
+<h2 id="4-binary-expansion-since-the-2026-04-03-testnet-pass">4. Binary Expansion Since the 2026-04-03 Testnet Pass<a class="anchor-link" href="#4-binary-expansion-since-the-2026-04-03-testnet-pass">#</a></h2>
+<p>The current testnet binary surfaced additional actions beyond the older top-level count. Notable newly surfaced names include:</p>
+<ul>
+<li><code>GossipPriorityBidAction</code></li>
+<li><code>ReserveRequestWeightAction</code></li>
+<li><code>SystemAlignedQuoteSupplyDeltaAction</code></li>
+<li><code>DeployerSendToEvmForFrozenUserAction</code></li>
+<li><code>SystemUsdClassTransferAction</code></li>
+<li><code>FinalizeEvmContractAction</code></li>
+<li><code>SubAccountSpotTransferAction</code></li>
+</ul>
+<p>This is one reason the repo separates:</p>
+<ul>
+<li>protocol truth</li>
+<li>chain-specific implementation truth</li>
+<li>local implementation coverage</li>
+</ul>
+<h2 id="5-practical-reading-order">5. Practical Reading Order<a class="anchor-link" href="#5-practical-reading-order">#</a></h2>
+<p>If you are trying to implement or review execution:</p>
+<ol>
+<li>read <a href="../block-lifecycle/index.html">Block Lifecycle</a></li>
+<li>read <a href="../liquidation/index.html">Liquidation &amp; ADL</a></li>
+<li>use <a href="../obsidian/Action%20Types.md">Action Types</a> for the broader catalog</li>
+<li>use <a href="../findings/claims-index.html">Claims Index</a> and <a href="../status/open-claims.html">Open Claims</a> for unresolved edges</li>
+</ol>
         </article>
       </section>
     </main>

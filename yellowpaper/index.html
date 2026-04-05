@@ -4,44 +4,993 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hypurrliquid Yellow Paper</title>
+<meta name="description" content="The yellow paper tracks the closest thing this repo has to a technical specification: begin-block ordering, exchange state, action surfaces, hashing, routing, liquidation, and which claims are confirmed versus merely observed or inferred.">
 <link rel="stylesheet" href="../assets/markdown-paper.css">
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script defer src="../assets/render-markdown-paper.js"></script>
+<script defer src="../assets/paper-nav.js"></script>
 </head>
 <body>
-  <div class="layout" data-markdown-source="./index.md">
+  <div class="reader-progress" aria-hidden="true">
+    <div class="reader-progress__bar" data-reader-progress-bar></div>
+  </div>
+  <div class="layout">
     <aside class="sidebar">
       <div class="eyebrow">Protocol Reference</div>
-      <h1 data-paper-title>Yellow Paper</h1>
+      <h1>Yellow Paper</h1>
       <p>Protocol-truth surface for execution order, state layout, action families, and boundaries.</p>
-      <div class="link-stack">
-        <a href="../index.html">Docs Hub</a>
-        <a href="../paper/index.html">Hypurrliquid Paper</a>
-        <a href="../whitepaper/index.html">White Paper</a>
-        <a href="./action-inventory.html">Action Inventory</a>
-        <a href="./index.md">Markdown Source</a>
-      </div>
-      <nav class="toc" data-paper-toc></nav>
+      <div class="link-stack"><a href="../index.html">Docs Hub</a><a href="../paper/index.html">Hypurrliquid Paper</a><a href="../whitepaper/index.html">White Paper</a><a href="./yellowpaper.pdf">Download PDF</a><a href="./action-inventory.html">Action Inventory</a><a href="./protocol-scope-matrix.html">Scope Matrix</a><a href="./index.md">Markdown Source</a></div>
+      <nav class="toc" data-paper-toc>
+        <h2>Contents</h2><a class="depth-2" href="#0-truth-surfaces">0. Truth Surfaces</a><a class="depth-2" href="#1-block-lifecycle-46-hook-points">1. Block Lifecycle (46 Hook Points)</a><a class="depth-3" href="#11-pipeline">1.1 Pipeline</a><a class="depth-3" href="#12-beginblock-9-named-effects">1.2 BeginBlock — 9 Named Effects</a><a class="depth-3" href="#13-supplementary-effects">1.3 Supplementary Effects</a><a class="depth-3" href="#14-endblock">1.4 EndBlock</a><a class="depth-3" href="#15-voteapphash">1.5 VoteAppHash</a><a class="depth-3" href="#16-consensus-topology-surface">1.6 Consensus / Topology Surface</a><a class="depth-3" href="#17-validator-lifecycle-jail-surface">1.7 Validator Lifecycle / Jail Surface</a><a class="depth-2" href="#2-exchange-state-57-fields">2. Exchange State (57 Fields)</a><a class="depth-2" href="#3-action-surface-97-variants-126-sub-types">3. Action Surface (97 Variants, 126 Sub-Types)</a><a class="depth-2" href="#4-funding-rate">4. Funding Rate</a><a class="depth-2" href="#5-liquidation-adl">5. Liquidation &amp; ADL</a><a class="depth-2" href="#6-state-hashing">6. State Hashing</a><a class="depth-3" href="#61-apphash-split">6.1 AppHash Split</a><a class="depth-3" href="#62-resphash-backend-split">6.2 RespHash Backend Split</a><a class="depth-2" href="#7-corewriter-evm-l1">7. CoreWriter (EVM → L1)</a><a class="depth-2" href="#8-bridge-finalization-and-validator-set-updates">8. Bridge Finalization and Validator-Set Updates</a><a class="depth-2" href="#9-aligned-quote-token-hpt">9. Aligned Quote Token (HPT)</a><a class="depth-2" href="#10-outcomes-and-settlement-surface">10. Outcomes and Settlement Surface</a><a class="depth-2" href="#11-gossip-protocol">11. Gossip Protocol</a><a class="depth-2" href="#12-guard-system">12. Guard System</a><a class="depth-2" href="#13-implementation-status">13. Implementation Status</a>
+      </nav>
     </aside>
     <main class="main">
       <section class="hero">
         <div class="label">Protocol Truth</div>
         <h1>Hypurrliquid Yellow Paper</h1>
-        <p>
-          The yellow paper tracks the closest thing this repo has to a technical specification:
-          begin-block ordering, exchange state, action surfaces, hashing, routing, liquidation,
-          and which claims are confirmed versus merely observed or inferred.
-        </p>
-        <div class="hero-links">
-          <a href="./action-inventory.html">Action Inventory</a>
-          <a href="../findings/truth-register.html">Truth Register</a>
-          <a href="../status/open-claims.html">Open Claims</a>
-          <a href="../paper/index.html">Full RE Paper</a>
-        </div>
+        <p>The yellow paper tracks the closest thing this repo has to a technical specification: begin-block ordering, exchange state, action surfaces, hashing, routing, liquidation, and which claims are confirmed versus merely observed or inferred.</p>
+        <div class="hero-links"><a href="./yellowpaper.pdf">Download PDF</a><a href="./action-inventory.html">Action Inventory</a><a href="./protocol-scope-matrix.html">Scope Matrix</a><a href="../findings/truth-register.html">Truth Register</a><a href="../status/open-claims.html">Open Claims</a><a href="../paper/index.html">Full RE Paper</a></div>
+        <div class="paper-stats"><div class="paper-stats__card">
+  <span class="paper-stats__label">Sections</span>
+  <span class="paper-stats__value">14</span>
+  <span class="paper-stats__subtext">Top-level chapters</span>
+</div><div class="paper-stats__card">
+  <span class="paper-stats__label">Tables</span>
+  <span class="paper-stats__value">6</span>
+  <span class="paper-stats__subtext">Reference tables</span>
+</div><div class="paper-stats__card">
+  <span class="paper-stats__label">Read Time</span>
+  <span class="paper-stats__value">9 min</span>
+  <span class="paper-stats__subtext">~1,972 words</span>
+</div></div>
       </section>
       <section class="article-wrap">
+        <section class="section-overview">
+  <div class="section-overview__eyebrow">Document Map</div>
+  <h2>Jump To The Major Sections</h2>
+  <div class="section-overview__grid"><a class="section-card" href="#0-truth-surfaces">
+  <span class="section-card__index">01</span>
+  <span class="section-card__title">0. Truth Surfaces</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#1-block-lifecycle-46-hook-points">
+  <span class="section-card__index">02</span>
+  <span class="section-card__title">1. Block Lifecycle (46 Hook Points)</span>
+  <span class="section-card__meta">7 subsections</span>
+</a><a class="section-card" href="#2-exchange-state-57-fields">
+  <span class="section-card__index">03</span>
+  <span class="section-card__title">2. Exchange State (57 Fields)</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#3-action-surface-97-variants-126-sub-types">
+  <span class="section-card__index">04</span>
+  <span class="section-card__title">3. Action Surface (97 Variants, 126 Sub-Types)</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#4-funding-rate">
+  <span class="section-card__index">05</span>
+  <span class="section-card__title">4. Funding Rate</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#5-liquidation-adl">
+  <span class="section-card__index">06</span>
+  <span class="section-card__title">5. Liquidation &amp; ADL</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#6-state-hashing">
+  <span class="section-card__index">07</span>
+  <span class="section-card__title">6. State Hashing</span>
+  <span class="section-card__meta">2 subsections</span>
+</a><a class="section-card" href="#7-corewriter-evm-l1">
+  <span class="section-card__index">08</span>
+  <span class="section-card__title">7. CoreWriter (EVM → L1)</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#8-bridge-finalization-and-validator-set-updates">
+  <span class="section-card__index">09</span>
+  <span class="section-card__title">8. Bridge Finalization and Validator-Set Updates</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#9-aligned-quote-token-hpt">
+  <span class="section-card__index">10</span>
+  <span class="section-card__title">9. Aligned Quote Token (HPT)</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#10-outcomes-and-settlement-surface">
+  <span class="section-card__index">11</span>
+  <span class="section-card__title">10. Outcomes and Settlement Surface</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#11-gossip-protocol">
+  <span class="section-card__index">12</span>
+  <span class="section-card__title">11. Gossip Protocol</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#12-guard-system">
+  <span class="section-card__index">13</span>
+  <span class="section-card__title">12. Guard System</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#13-implementation-status">
+  <span class="section-card__index">14</span>
+  <span class="section-card__title">13. Implementation Status</span>
+  <span class="section-card__meta">Top-level section</span>
+</a></div>
+</section>
         <article class="article" data-paper-article>
-          <p class="small-note">Loading yellow paper…</p>
+          <p class="lead">The protocol-truth reference for the Hyperliquid L1 reimplementation. Every claim here is tagged with its evidence level.</p>
+<p><strong>Evidence levels</strong>: <code>CONFIRMED</code> = verified from binary RE or official docs. <code>OBSERVED</code> = seen in runtime/snapshots. <code>IMPLEMENTED</code> = coded in hlx. <code>INFERRED</code> = deduced from behavior.</p>
+<p>Use the <a href="../whitepaper/index.html">White Paper</a> for narrative architecture. Use the <a href="../paper/index.html">Hypurrliquid Paper</a> for the full RE reference with Mermaid diagrams. Use the <a href="action-inventory.html">Action Inventory</a> for the current action-family and sub-variant tables. Use the <a href="../findings/truth-register.html">Truth Register</a> when you want the compact fact ledger instead of the full chapter narrative. For the denser subsystem splits, use <a href="../hashing/index.html">Hashing</a>, <a href="../staking/index.html">Staking &amp; Validators</a>, <a href="../bridge/index.html">Bridge2</a>, and <a href="../outcomes/index.html">Outcomes</a>.</p>
+<hr>
+<h2 id="0-truth-surfaces">0. Truth Surfaces<a class="anchor-link" href="#0-truth-surfaces">#</a></h2>
+<p>This paper is the technical narrative, not the only truth surface. Read it together with:</p>
+<ul>
+<li><a href="../findings/truth-register.html">Truth Register</a> for the compact confirmed/active fact ledger</li>
+<li><a href="../status/open-claims.html">Open Claims</a> for unresolved work</li>
+<li><a href="protocol-scope-matrix.html">Protocol Scope Matrix</a> for <code>protocol</code> vs <code>testnet_impl</code> vs <code>local_impl</code></li>
+<li><a href="action-inventory.html">Action Inventory</a> for action-family and sub-variant tables</li>
+</ul>
+<h2 id="1-block-lifecycle-46-hook-points">1. Block Lifecycle (46 Hook Points)<a class="anchor-link" href="#1-block-lifecycle-46-hook-points">#</a></h2>
+<p><code>CONFIRMED</code> from binary VA 0x01e748e0 and string at 0x539f8a.</p>
+<h3 id="11-pipeline">1.1 Pipeline<a class="anchor-link" href="#11-pipeline">#</a></h3>
+<pre><code>RecoverUsers → BeginBlock (9+5 effects) → DeliverSignedActions (97 types)
+→ ProcessFills → EVM Block → EndBlock → Commit → VoteAppHash
+</code></pre>
+<h3 id="12-beginblock-9-named-effects">1.2 BeginBlock — 9 Named Effects<a class="anchor-link" href="#12-beginblock-9-named-effects">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Effect</th>
+<th>Guard Interval</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>update_oracle</code></td>
+<td>—</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>distribute_funding</code></td>
+<td>8000ms</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>apply_bole_liquidations</code></td>
+<td>—</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>update_funding_rates</code></td>
+<td>8000ms</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>refresh_hip3_stale_mark_pxs</code></td>
+<td>from snapshot</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>prune_book_empty_user_states</code></td>
+<td>60000ms</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>update_staking_rewards</code></td>
+<td>—</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>update_action_delayer</code></td>
+<td>—</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>update_aligned_quote_token</code></td>
+<td>—</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+</tbody>
+</table>
+</div><h3 id="13-supplementary-effects">1.3 Supplementary Effects<a class="anchor-link" href="#13-supplementary-effects">#</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Effect</th>
+<th>Guard</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>check_trigger_orders</code></td>
+<td>—</td>
+<td><code>IMPLEMENTED</code></td>
+</tr>
+<tr>
+<td><code>cancel_aggressive_orders_at_oi_cap</code></td>
+<td>1000ms</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td><code>validator_l1_vote_tracker_prune_expired</code></td>
+<td>60000ms</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td><code>reset_recent_ois</code></td>
+<td>1000ms</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td><code>update_stale_mark_guards</code></td>
+<td>per-book</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+</tbody>
+</table>
+</div><p>Current local <code>main</code> matches the widened 9-effect note on this ordering. What remains open on ActionDelayer is control semantics (<code>enabled</code>, <code>delayer_mode</code>, <code>status_guard</code>, <code>vty_trackers</code>), not the named drain slot.</p>
+<h3 id="14-endblock">1.4 EndBlock<a class="anchor-link" href="#14-endblock">#</a></h3>
+<p>Mark prices updated from book mid-prices: <code>mark_prices[asset] = book.mid_price()</code>.</p>
+<h3 id="15-voteapphash">1.5 VoteAppHash<a class="anchor-link" href="#15-voteapphash">#</a></h3>
+<p>Every 2000 blocks. Quorum at 2/3+ stake. Final <code>app_hash</code> is <code>first_16(SHA-256(L1_combined)) || first_16(SHA-256(EVM_combined))</code>, where each half comes from the <code>rmp_serde → blake3 XOF (2048B) → paddw u16</code> LtHash pipeline rather than one flat 14-category digest.</p>
+<h3 id="16-consensus-topology-surface">1.6 Consensus / Topology Surface<a class="anchor-link" href="#16-consensus-topology-surface">#</a></h3>
+<p>Current confirmed testnet-facing networking and consensus facts:</p>
+<ul>
+<li>ingress is concentrated through a broadcaster layer</li>
+<li>proposer rotation uses stake-weighted <code>RoundRobinTtl</code></li>
+<li>QC and TC certificates drive the two-chain commit rule</li>
+<li>validator/sentry admission checks gate the transport layer</li>
+<li>ports <code>4001</code> and <code>4002</code> split block-streaming and peer/RPC verification traffic</li>
+</ul>
+<p>Treat the exact operator deployment shape as still chain-scoped, but keep these surfaces aligned across lifecycle, gossip, and consensus notes.</p>
+<h3 id="17-validator-lifecycle-jail-surface">1.7 Validator Lifecycle / Jail Surface<a class="anchor-link" href="#17-validator-lifecycle-jail-surface">#</a></h3>
+<p>Current confirmed validator-control facts:</p>
+<ul>
+<li>epochs are time-based via <code>epoch_duration_seconds</code></li>
+<li>active validators are recomputed at epoch boundaries</li>
+<li>signer admission checks search <code>epoch_states[cur_epoch]</code></li>
+<li>jailed signers are excluded from normal proposer / signing flow</li>
+<li><code>CSignerAction</code> currently has <code>unjailSelf</code>, <code>jailSelf</code>, and <code>jailSelfIsolated</code></li>
+<li>manual unjail is rate-limited by <code>signer_to_last_manual_unjail_time</code></li>
+</ul>
+<p>What remains open on this lane is threshold/trigger detail, not the existence of
+the lifecycle surface.</p>
+<hr>
+<h2 id="2-exchange-state-57-fields">2. Exchange State (57 Fields)<a class="anchor-link" href="#2-exchange-state-57-fields">#</a></h2>
+<p><code>CONFIRMED</code> from serde struct chain at <code>.rodata</code> offset <code>0x543428</code> in testnet binary <code>331bef9b</code> (2026-04-03).</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Field</th>
+<th>Type</th>
+<th>Parsed</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>locus</code></td>
+<td>Locus(15)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>perp_dexs</code></td>
+<td>Vec\&lt;PerpDex&gt;</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>spot_books</code></td>
+<td>Vec\&lt;SpotBook&gt;</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>agent_tracker</code></td>
+<td>AgentTracker(5)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>funding_distribute_guard</code></td>
+<td>BucketGuard</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>funding_update_guard</code></td>
+<td>BucketGuard</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>sub_account_tracker</code></td>
+<td>SubAccountTracker(2)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>allowed_liquidators</code></td>
+<td>Vec\&lt;Address&gt;</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>bridge2</code></td>
+<td>Bridge2(10)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>staking</code></td>
+<td>Staking(6)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>c_staking</code></td>
+<td>CStaking(23)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>funding_err_dur_guard</code></td>
+<td>BucketGuard</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>max_order_distance_from_anchor</code></td>
+<td>f64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>scheduled_freeze_height</code></td>
+<td>u64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>simulate_crash_height</code></td>
+<td>u64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>validator_power_updates</code></td>
+<td>Vec</td>
+<td>Skip</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>cancel_oi_cap_guard</code></td>
+<td>BucketGuard</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>last_hlp_cancel_time</code></td>
+<td>f64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>post_only_until_time</code></td>
+<td>f64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>post_only_until_height</code></td>
+<td>u64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>spot_twap_tracker</code></td>
+<td>JSON</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>user_to_display_name</code></td>
+<td>HashMap</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>book_empty_user_states_pruning_guard</code></td>
+<td>BucketGuard</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>23</td>
+<td><code>user_to_scheduled_cancel</code></td>
+<td>HashMap</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>24</td>
+<td><code>hyperliquidity</code></td>
+<td>2 fields</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>25</td>
+<td><code>spot_disabled</code></td>
+<td>bool</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>26</td>
+<td><code>prune_agent_idx</code></td>
+<td>u64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>27</td>
+<td><code>max_hlp_withdraw_fraction_per_day</code></td>
+<td>f64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>28</td>
+<td><code>hlp_start_of_day_account_value</code></td>
+<td>f64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>29</td>
+<td><code>register_token_gas_auction</code></td>
+<td>GasAuction(4)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>30</td>
+<td><code>perp_deploy_gas_auction</code></td>
+<td>GasAuction(4)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>31</td>
+<td><code>spot_pair_deploy_gas_auction</code></td>
+<td>GasAuction(4)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>32</td>
+<td><code>hyper_evm</code></td>
+<td>HyperEvmState(13)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>33</td>
+<td><code>vtg</code></td>
+<td>JSON</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>34</td>
+<td><code>app_hash_vote_tracker</code></td>
+<td>3 fields</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>35</td>
+<td><code>begin_block_logic_guard</code></td>
+<td>BucketGuard</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>36</td>
+<td><code>user_to_evm_state</code></td>
+<td>HashMap (778K)</td>
+<td>Skip</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>37</td>
+<td><code>multi_sig_tracker</code></td>
+<td>1 field</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>38</td>
+<td><code>reserve_accumulators</code></td>
+<td>JSON</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>39</td>
+<td><code>partial_liquidation_cooldown</code></td>
+<td>f64 (30.0)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>40</td>
+<td><code>evm_enabled</code></td>
+<td>bool</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>41</td>
+<td><code>validator_l1_vote_tracker</code></td>
+<td>3 fields</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>42</td>
+<td><code>staking_link_tracker</code></td>
+<td>JSON</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>43</td>
+<td><code>action_delayer</code></td>
+<td>ActionDelayer(9)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>44</td>
+<td><code>default_hip3_limits</code></td>
+<td>JSON</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>45</td>
+<td><code>hip3_stale_mark_px_guard</code></td>
+<td>BucketGuard</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>46</td>
+<td><code>disabled_precompiles</code></td>
+<td>Vec</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>47</td>
+<td><code>lv</code></td>
+<td>JSON</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>48</td>
+<td><code>hip3_no_cross</code></td>
+<td>bool</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>49</td>
+<td><code>initial_usdc_evm_system_balance</code></td>
+<td>f64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>50</td>
+<td><code>validator_l1_stream_tracker</code></td>
+<td>JSON</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>51</td>
+<td><code>last_aligned_quote_token_sample_time</code></td>
+<td>f64</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>52</td>
+<td><code>user_to_evm_to_l1_wei_remaining</code></td>
+<td>HashMap</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>53</td>
+<td><code>dex_abstraction_enabled</code></td>
+<td>bool</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>54</td>
+<td><code>hilo</code></td>
+<td>HyperliquidityImpactLimiter(3)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>55</td>
+<td><code>oh</code></td>
+<td>Vec\&lt;OracleSnapshot&gt;(100)</td>
+<td>Yes</td>
+<td><code>CONFIRMED</code></td>
+</tr>
+<tr>
+<td>56</td>
+<td><code>hpt</code></td>
+<td>AlignedQuoteTokenTracker</td>
+<td>Yes</td>
+<td><code>DISCOVERED</code></td>
+</tr>
+</tbody>
+</table>
+</div><p><strong>57/57 fields declared. 55/57 deeply parsed from snapshots. 2 skipped (user_to_evm_state, validator_power_updates).</strong></p>
+<hr>
+<h2 id="3-action-surface-97-variants-126-sub-types">3. Action Surface (97 Variants, 126 Sub-Types)<a class="anchor-link" href="#3-action-surface-97-variants-126-sub-types">#</a></h2>
+<p><code>CONFIRMED</code> from binary dispatcher at VA 0x0272a320. 90 mainnet + 7 testnet.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Count</th>
+<th>Key Types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Trading</td>
+<td>9</td>
+<td>order, cancel, cancelByCloid, modify, batchModify, TWAP, liquidate</td>
+</tr>
+<tr>
+<td>Margin</td>
+<td>3</td>
+<td>updateLeverage, updateIsolatedMargin, topUpIsolatedOnlyMargin</td>
+</tr>
+<tr>
+<td>Transfers</td>
+<td>6</td>
+<td>usdSend, spotSend, sendAsset, withdraw3, sendToEvmWithData</td>
+</tr>
+<tr>
+<td>Sub-Accounts</td>
+<td>3</td>
+<td>createSubAccount, subAccountTransfer, subAccountSpotTransfer</td>
+</tr>
+<tr>
+<td>Vaults</td>
+<td>6</td>
+<td>createVault, vaultTransfer, vaultDistribute, vaultModify, netChildVaultPositions, setVaultDisplayName</td>
+</tr>
+<tr>
+<td>Staking</td>
+<td>5</td>
+<td>tokenDelegate, claimRewards, linkStakingUser, registerValidator, extendLongTermStaking</td>
+</tr>
+<tr>
+<td>Account</td>
+<td>7</td>
+<td>approveAgent, setDisplayName, setReferrer, convertToMultiSigUser, approveBuilderFee, startFeeTrial, userPortfolioMargin</td>
+</tr>
+<tr>
+<td>DeFi</td>
+<td>5</td>
+<td>borrowLend, userDexAbstraction, userSetAbstraction, agentSetAbstraction, agentEnableDexAbstraction</td>
+</tr>
+<tr>
+<td>Governance</td>
+<td>3</td>
+<td>govPropose, govVote, voteGlobal (22 sub-types)</td>
+</tr>
+<tr>
+<td>HIP-3/4</td>
+<td>3</td>
+<td>SetGlobal (6 sub), perpDeploy (8 sub), spotDeploy</td>
+</tr>
+<tr>
+<td>Validator</td>
+<td>9</td>
+<td>CValidator, CSigner, validatorL1Vote, validatorL1Stream, bridge votes (5)</td>
+</tr>
+<tr>
+<td>System</td>
+<td>11</td>
+<td>SystemBole, SystemSpotSend, CWithdraw, CUserModify, EvmUserModify, etc.</td>
+</tr>
+<tr>
+<td>Special</td>
+<td>7</td>
+<td>evmRawTx, multiSig, noop, VoteAppHash, ForceIncreaseEpoch, userOutcome (4 sub), settleFraction</td>
+</tr>
+<tr>
+<td>Additional</td>
+<td>8</td>
+<td>priorityBid, registerSpot, disableDex, cancelAllOrders, quarantineUser, etc.</td>
+</tr>
+</tbody>
+</table>
+</div><p>Current testnet notes widen the action surface to 97 variants. The local engine has broad typed coverage, but parity work remains active and this page should not be read as a blanket “zero gaps” claim.</p>
+<hr>
+<h2 id="4-funding-rate">4. Funding Rate<a class="anchor-link" href="#4-funding-rate">#</a></h2>
+<p><code>CONFIRMED</code> from binary assertions.</p>
+<ul>
+<li><strong>EMA</strong>: DeterministicEma with fraction-based accumulation (num/denom). <code>assert!(decay &lt;= 1.)</code>, <code>assert!(self.denom &gt; 0.)</code>.</li>
+<li><strong>Funding payment</strong>: <code>payment = szi × oracle_px × (cum_funding_global - pos.cum_funding_entry)</code></li>
+<li><strong>Direction</strong>: Positive rate = longs pay shorts.</li>
+<li><strong>Guard interval</strong>: 8000ms for both distribute and update.</li>
+<li><strong>Per-asset multiplier</strong>: Set via <code>SetFundingMultiplier</code> VoteGlobal.</li>
+</ul>
+<hr>
+<h2 id="5-liquidation-adl">5. Liquidation &amp; ADL<a class="anchor-link" href="#5-liquidation-adl">#</a></h2>
+<p><code>CONFIRMED</code> from binary constants and docs.</p>
+<ul>
+<li><strong>Margin check</strong>: <code>margin_available = account_value - initial_margin_required</code>. Liquidatable when &lt; 0.</li>
+<li><strong>Isolated</strong>: Per-position check with allocated margin.</li>
+<li><strong>BOLE liquidation threshold</strong>: Health factor &lt; 0.8.</li>
+<li><strong>BOLE cooldown</strong>: 30 seconds for partial liquidations.</li>
+<li><strong>BOLE types</strong>: Partial (50% seize), Market (full repay), Backstop (default liquidator).</li>
+<li><strong>ADL</strong>: Triggered when shortfall persists after liquidation. Counterparties ranked by ROE (highest first). Position reduced proportionally.</li>
+<li><strong>ADL priority</strong>: <code>ROE = unrealized_pnl / margin_allocated</code>.</li>
+</ul>
+<hr>
+<h2 id="6-state-hashing">6. State Hashing<a class="anchor-link" href="#6-state-hashing">#</a></h2>
+<p><code>CONFIRMED</code> algorithm: <code>rmp_serde → blake3 XOF (2048B) → paddw u16 (LtHash16) → SHA-256 (32B)</code>.</p>
+<ul>
+<li><strong>11 L1 categories</strong> + <strong>3 EVM categories</strong> = 14 accumulators.</li>
+<li><strong>L1 accumulators</strong>: Running sums from genesis maintained in live state, not the stale BSS cache that earlier notes treated as canonical.</li>
+<li><strong>EVM accumulators</strong>: accounts_hash, contracts_hash, storage_hash.</li>
+<li><strong>Heartbeat <code>concise_lt_hashes</code></strong>: EVM only. The traced heartbeat surface does not carry the full L1 accumulator state.</li>
+</ul>
+<h3 id="61-apphash-split">6.1 AppHash Split<a class="anchor-link" href="#61-apphash-split">#</a></h3>
+<p>Current repo truth is that the final <code>app_hash</code> is <code>first_16(SHA-256(L1_combined)) || first_16(SHA-256(EVM_combined))</code>, not a single SHA-256 over one merged 14-accumulator buffer.</p>
+<h3 id="62-resphash-backend-split">6.2 RespHash Backend Split<a class="anchor-link" href="#62-resphash-backend-split">#</a></h3>
+<p>Current repo truth is intentionally narrower than "hashing is solved":</p>
+<ul>
+<li>the code explicitly tracks <code>Mainnet</code> versus <code>Testnet</code> RespHash backends</li>
+<li>the backend split is real and should remain chain-scoped in docs and replay work</li>
+<li>the local implementation does <strong>not</strong> yet claim full mainnet serializer parity across all response families</li>
+</ul>
+<p>Treat <code>RespHashMode::Mainnet</code> as backend selection, not as proof that every
+mainnet response serializer is already closed.</p>
+<hr>
+<h2 id="7-corewriter-evm-l1">7. CoreWriter (EVM → L1)<a class="anchor-link" href="#7-corewriter-evm-l1">#</a></h2>
+<p><code>CONFIRMED</code> from binary and official docs.</p>
+<ul>
+<li><strong>Precompile address</strong>: <code>0x3333333333333333333333333333333333333333</code></li>
+<li><strong>Function</strong>: <code>sendRawAction(bytes)</code> selector <code>0x17938e13</code></li>
+<li><strong>Encoding</strong>: <code>abi.encodePacked(uint8(1), uint24(actionId), abi.encode(params...))</code></li>
+<li><strong>15 action types</strong>: LimitOrder, VaultTransfer, TokenDelegate, StakingDeposit, StakingWithdraw, SpotSend, UsdClassTransfer, FinalizeEvmContract, AddApiWallet, CancelByOid, CancelByCloid, ApproveBuilderFee, SendAsset, ReflectEvmSupplyChange, BorrowLend.</li>
+<li><strong>Delay</strong>: <code>delay_scale × 3000ms</code> (configurable). Actions fire in next block's begin_block Effect 8.</li>
+<li><strong>In replay mode</strong>: Raw tx calldata scanned via RLP parser without EVM execution.</li>
+</ul>
+<hr>
+<h2 id="8-bridge-finalization-and-validator-set-updates">8. Bridge Finalization and Validator-Set Updates<a class="anchor-link" href="#8-bridge-finalization-and-validator-set-updates">#</a></h2>
+<p><code>CONFIRMED</code> from Bridge2 state naming, bridge action inventory, and the current
+control-plane notes.</p>
+<ul>
+<li><strong>Bridge2 state</strong> includes <code>withdrawal_signatures</code>,
+  <code>withdrawal_finalized_votes</code>, <code>finished_withdrawal_to_time</code>,
+  <code>validator_set_signatures</code>, <code>validator_set_finalized_votes</code>, <code>bal</code>,
+  <code>last_pruned_deposit_block_number</code>, and <code>oaw</code> (<code>bool</code>).</li>
+<li><strong>Withdrawal entrypoint</strong>: <code>withdraw3</code>.</li>
+<li><strong>Bridge signing action</strong>: <code>ValidatorSignWithdrawal</code>.</li>
+<li><strong>Finalize actions</strong>: <code>VoteEthFinalizedWithdrawal</code> and
+  <code>VoteEthFinalizedValidatorSetUpdate</code>.</li>
+<li><strong>Validator-set update signing</strong>: <code>SignValidatorSetUpdate</code>.</li>
+<li><strong>Signer model</strong>: current repo truth keeps bridge signing on validator signer
+  keys, not an unrelated bridge-only signer family.</li>
+</ul>
+<p>What remains open is exact dispute-period closure and some Ethereum-side
+operational details, not whether bridge finalization is a first-class staged
+state machine.</p>
+<hr>
+<h2 id="9-aligned-quote-token-hpt">9. Aligned Quote Token (HPT)<a class="anchor-link" href="#9-aligned-quote-token-hpt">#</a></h2>
+<p><code>DISCOVERED</code> from Hyperliquid docs + API.</p>
+<ul>
+<li><strong>Exchange field [56]</strong> <code>hpt</code> = AlignedQuoteTokenTracker.</li>
+<li><strong>Per-token state</strong>: isAligned, firstAlignedTime, evmMintedSupply, dailyAmountOwed, predictedRate.</li>
+<li><strong>Validator sidecar</strong>: <code>aqa-publisher</code> (<a href="https://github.com/native-markets/aqa-publisher">github.com/native-markets/aqa-publisher</a>).</li>
+<li><strong>Rate source</strong>: 30-day SOFR average from NY Fed, FRED, OFR (median of 3 sources).</li>
+<li><strong>Submission</strong>: <code>validatorL1Stream</code> action with <code>riskFreeRate</code> field, daily at 22:00 UTC.</li>
+<li><strong>Protocol rate</strong>: Stake-weighted median of all active validator votes.</li>
+<li><strong>Fee benefits</strong>: 20% lower taker, 50% better maker rebate for aligned stablecoins.</li>
+</ul>
+<p>This is also a begin-block surface: <code>update_aligned_quote_token</code> is the current effect-9 lane in the widened testnet note.</p>
+<hr>
+<h2 id="10-outcomes-and-settlement-surface">10. Outcomes and Settlement Surface<a class="anchor-link" href="#10-outcomes-and-settlement-surface">#</a></h2>
+<p><code>CONFIRMED</code> for the baseline market model; <code>HYPOTHESIS</code> for the leading
+solvency-risk lane.</p>
+<ul>
+<li><strong>Risk mode</strong>: 1x isolated-only, no leverage, no funding.</li>
+<li><strong>Settlement authority</strong>: <code>oracleUpdater</code> posts final outcome via
+  <code>SettleOutcome</code>.</li>
+<li><strong>Post-settlement behavior</strong>: open orders auto-cancel via
+  <code>outcomeSettledCanceled</code>; new orders reject via <code>outcomeSettledRejected</code>.</li>
+<li><strong>Question metadata</strong>: <code>fallbackOutcome</code>, <code>namedOutcomes</code>,
+  <code>settledNamedOutcomes</code>.</li>
+<li><strong>User token operations</strong>: <code>SplitOutcome</code>, <code>MergeOutcome</code>, <code>MergeQuestion</code>,
+  <code>NegateOutcome</code>.</li>
+</ul>
+<p>Current open risk lane:</p>
+<ul>
+<li><code>MergeQuestion</code> / fallback reconciliation is still the leading higher-order
+  solvency hypothesis.</li>
+<li>The repo should treat question-level accounting as riskier than the simpler
+  YES/NO pair mechanics until the binary path is closed.</li>
+</ul>
+<hr>
+<h2 id="11-gossip-protocol">11. Gossip Protocol<a class="anchor-link" href="#11-gossip-protocol">#</a></h2>
+<p><code>CONFIRMED</code> from binary RE.</p>
+<ul>
+<li><strong>Frame format</strong>: <code>[u32 BE len][u8 kind][body]</code>. Traced data frames often use LZ4 with <code>kind=0x01</code>, while greetings use <code>kind=0x00</code>.</li>
+<li><strong>Port 4001 greeting</strong>: bincode-fork <code>TcpGreeting</code> with chain-based variant index. Current live observations are testnet variant <code>3</code> (8 bytes total) and mainnet variant <code>2</code> (7 bytes total).</li>
+<li><strong>Broader chain enum</strong>: the ABCI-stream chain mapping still tracks <code>Local=0</code>, <code>Sandbox=1</code>, <code>Testnet=2</code>, <code>Mainnet=3</code>; do not conflate that with the observed 4001 <code>TcpGreeting</code> variant index.</li>
+<li><strong>Port 4003 authenticated greeting</strong>: <code>keccak256("Hyperliquid Consensus Payload" + 0x00 + bincode(content))</code>; content is bincode, not msgpack.</li>
+<li><strong>Connection</strong>: Server-side <code>connection_checks</code> — unknown peers rejected after 5s timeout.</li>
+<li><strong>Loopback</strong>: Dominated by <code>MsgConcise</code>/<code>OutMsgConcise</code> (tag 27/28).</li>
+</ul>
+<hr>
+<h2 id="12-guard-system">12. Guard System<a class="anchor-link" href="#12-guard-system">#</a></h2>
+<p>All rate-limited effects use <code>BucketGuard</code>:</p>
+<pre><code>struct BucketGuard {
+    last_time: Option&lt;u64&gt;,   // ms
+    interval_ms: u64,
+}
+</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Guard</th>
+<th>Interval</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>funding_distribute_guard</code></td>
+<td>8000ms</td>
+<td>Funding settlement</td>
+</tr>
+<tr>
+<td><code>funding_update_guard</code></td>
+<td>8000ms</td>
+<td>Premium sampling</td>
+</tr>
+<tr>
+<td><code>cancel_oi_cap_guard</code></td>
+<td>1000ms</td>
+<td>OI cap order cancellation</td>
+</tr>
+<tr>
+<td><code>book_empty_user_states_pruning_guard</code></td>
+<td>60000ms</td>
+<td>Book cleanup</td>
+</tr>
+<tr>
+<td><code>reset_recent_oi_guard</code></td>
+<td>1000ms</td>
+<td>HIP-3 OI reset</td>
+</tr>
+<tr>
+<td><code>hip3_stale_mark_px_guard</code></td>
+<td>From snapshot</td>
+<td>Stale mark refresh</td>
+</tr>
+<tr>
+<td><code>begin_block_logic_guard</code></td>
+<td>1000ms</td>
+<td>Reentrancy protection</td>
+</tr>
+<tr>
+<td><code>funding_err_dur_guard</code></td>
+<td>60000ms</td>
+<td>Funding error duration</td>
+</tr>
+</tbody>
+</table>
+</div><hr>
+<h2 id="13-implementation-status">13. Implementation Status<a class="anchor-link" href="#13-implementation-status">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Status</th>
+<th>Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Action handlers (97)</td>
+<td>All implemented</td>
+<td>330+</td>
+</tr>
+<tr>
+<td>Begin-block (9 + 5)</td>
+<td>All implemented</td>
+<td>Tested</td>
+</tr>
+<tr>
+<td>Bootstrap (57 fields)</td>
+<td>55/57 parsed</td>
+<td>Bootstrap test</td>
+</tr>
+<tr>
+<td>CoreWriter decoder</td>
+<td>15 actions + RLP scanner</td>
+<td>7 tests</td>
+</tr>
+<tr>
+<td>ADL + BOLE liquidation</td>
+<td>Execution implemented</td>
+<td>ADL plan + candidates tests</td>
+</tr>
+<tr>
+<td>Pipeline stages</td>
+<td>6 stages with real logic</td>
+<td>4 tests</td>
+</tr>
+<tr>
+<td>RPC (30+ endpoints)</td>
+<td>Consolidated in hl-rpc</td>
+<td>Info tests</td>
+</tr>
+<tr>
+<td>Integration tests</td>
+<td>18 E2E devnet tests</td>
+<td>All pass</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>482 tests, 0 failures</strong></td>
+<td><strong>Release: 11MB</strong></td>
+</tr>
+</tbody>
+</table></div>
         </article>
       </section>
     </main>

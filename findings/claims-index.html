@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypurrliquid Claims Index</title>
+<meta name="description" content="This is the compiled subsystem index of the normalized claims layer. Use it to jump from a topic to the current governing claim without scanning the entire research tree.">
+<link rel="stylesheet" href="../assets/markdown-paper.css">
+<script defer src="../assets/paper-nav.js"></script>
+</head>
+<body>
+  <div class="reader-progress" aria-hidden="true">
+    <div class="reader-progress__bar" data-reader-progress-bar></div>
+  </div>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="eyebrow">Claims Layer</div>
+      <h1>Claims Index</h1>
+      <p>Subsystem-organized claim inventory generated from the structured claims layer.</p>
+      <div class="link-stack"><a href="../index.html">Docs Hub</a><a href="./truth-register.html">Truth Register</a><a href="../yellowpaper/index.html">Yellow Paper</a><a href="../status/open-claims.html">Open Claims</a><a href="./claims-index.md">Markdown Source</a></div>
+      <nav class="toc" data-paper-toc>
+        <h2>Contents</h2><a class="depth-2" href="#bridge">bridge</a><a class="depth-2" href="#consensus">consensus</a><a class="depth-2" href="#execution">execution</a><a class="depth-2" href="#hashing">hashing</a><a class="depth-2" href="#liquidation">liquidation</a><a class="depth-2" href="#outcomes">outcomes</a><a class="depth-2" href="#state">state</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div class="label">Claims Layer</div>
+        <h1>Claims Index</h1>
+        <p>This is the compiled subsystem index of the normalized claims layer. Use it to jump from a topic to the current governing claim without scanning the entire research tree.</p>
+        <div class="hero-links"><a href="./truth-register.html">Truth Register</a><a href="../status/open-claims.html">Open Claims</a><a href="../yellowpaper/index.html">Yellow Paper</a><a href="../paper/index.html">Full RE Paper</a></div>
+        <div class="paper-stats"><div class="paper-stats__card">
+  <span class="paper-stats__label">Sections</span>
+  <span class="paper-stats__value">7</span>
+  <span class="paper-stats__subtext">Top-level chapters</span>
+</div><div class="paper-stats__card">
+  <span class="paper-stats__label">Entries</span>
+  <span class="paper-stats__value">32</span>
+  <span class="paper-stats__subtext">List items and bullets</span>
+</div><div class="paper-stats__card">
+  <span class="paper-stats__label">Read Time</span>
+  <span class="paper-stats__value">2 min</span>
+  <span class="paper-stats__subtext">~401 words</span>
+</div></div>
+      </section>
+      <section class="article-wrap">
+        <section class="section-overview">
+  <div class="section-overview__eyebrow">Document Map</div>
+  <h2>Jump To The Major Sections</h2>
+  <div class="section-overview__grid"><a class="section-card" href="#bridge">
+  <span class="section-card__index">01</span>
+  <span class="section-card__title">bridge</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#consensus">
+  <span class="section-card__index">02</span>
+  <span class="section-card__title">consensus</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#execution">
+  <span class="section-card__index">03</span>
+  <span class="section-card__title">execution</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#hashing">
+  <span class="section-card__index">04</span>
+  <span class="section-card__title">hashing</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#liquidation">
+  <span class="section-card__index">05</span>
+  <span class="section-card__title">liquidation</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#outcomes">
+  <span class="section-card__index">06</span>
+  <span class="section-card__title">outcomes</span>
+  <span class="section-card__meta">Top-level section</span>
+</a><a class="section-card" href="#state">
+  <span class="section-card__index">07</span>
+  <span class="section-card__title">state</span>
+  <span class="section-card__meta">Top-level section</span>
+</a></div>
+</section>
+        <article class="article" data-paper-article>
+          <p class="lead">Generated from <code>knowledge/claims</code> by <code>tools/compile_knowledge_docs.py</code>.</p>
+<h2 id="bridge">bridge<a class="anchor-link" href="#bridge">#</a></h2>
+<ul>
+<li><code>claim.bridge_finalization_and_validator_set_flow</code> - Bridge2 stages withdrawals and validator-set updates through signatures plus finalized-vote state (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/bridge-finalization-and-validator-set-flow.md</code></li>
+</ul>
+<h2 id="consensus">consensus<a class="anchor-link" href="#consensus">#</a></h2>
+<ul>
+<li><code>claim.hyperbft_topology_and_rotation</code> - HyperBFT uses broadcaster ingress, validator/sentry admission checks, and RoundRobinTtl proposer rotation (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/hyperbft-topology-and-rotation.md</code></li>
+<li><code>claim.validator_lifecycle_and_jail_flow</code> - Validator lifecycle is time-epoch gated, jail-aware, and signer-checked against current epoch state (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/validator-lifecycle-and-jail-flow.md</code></li>
+</ul>
+<h2 id="execution">execution<a class="anchor-link" href="#execution">#</a></h2>
+<ul>
+<li><code>claim.action_delayer_maturity_surface</code> - ActionDelayer drain is a named begin-block lane, while mode semantics remain partly open (<code>implemented</code>, <code>confirmed</code>, <code>local_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/action-delayer-maturity-surface.md</code></li>
+<li><code>claim.aligned_quote_token_sampling</code> - Aligned quote token state samples validator risk-free-rate votes in begin-block effect 9 (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/aligned-quote-token-sampling.md</code></li>
+<li><code>claim.begin_block_ordering_surface</code> - Begin-block ordering is 9 named effects with BOLE at #3 and ActionDelayer at #8 (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>closed</code>)</li>
+<li>Source file: <code>knowledge/claims/begin-block-ordering-surface.md</code></li>
+<li><code>claim.corewriter_delayed_action_surface</code> - CoreWriter re-enters L1 through a delayed action lane with 15 known action types (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/corewriter-delayed-action-surface.md</code></li>
+<li><code>claim.action_surface_testnet</code> - Current widened testnet action surface is 97 variants with 126 sub-types (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/action-surface-testnet.md</code></li>
+<li><code>claim.begin_block_bole_ordering_conflict</code> - Stale BOLE begin-block ordering conflict is resolved (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>closed</code>)</li>
+<li>Source file: <code>knowledge/claims/begin-block-bole-ordering-conflict.md</code></li>
+<li><code>claim.block_lifecycle_phase_map</code> - The repo now uses one explicit block lifecycle phase map and hook surface (<code>confirmed</code>, <code>confirmed</code>, <code>local_impl</code>, <code>open</code>)</li>
+<li>Source file: <code>knowledge/claims/block-lifecycle-phase-map.md</code></li>
+</ul>
+<h2 id="hashing">hashing<a class="anchor-link" href="#hashing">#</a></h2>
+<ul>
+<li><code>claim.resphash_backend_split</code> - RespHash backends are chain-scoped, but mainnet serialization is not fully wired (<code>confirmed</code>, <code>confirmed</code>, <code>local_impl</code>, <code>open</code>)</li>
+<li>Source file: <code>knowledge/claims/resphash-backend-split.md</code></li>
+</ul>
+<h2 id="liquidation">liquidation<a class="anchor-link" href="#liquidation">#</a></h2>
+<ul>
+<li><code>claim.liquidation_scope_boundaries</code> - Liquidation family boundaries are now explicit across perps, PM, BOLE, spot, and outcomes (<code>confirmed</code>, <code>confirmed</code>, <code>local_impl</code>, <code>open</code>)</li>
+<li>Source file: <code>knowledge/claims/liquidation-scope-boundaries.md</code></li>
+<li><code>claim.portfolio_margin_liquidation_mode</code> - Portfolio margin liquidates as a generalized cross-margin account (<code>confirmed</code>, <code>confirmed</code>, <code>protocol</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/portfolio-margin-liquidation-mode.md</code></li>
+</ul>
+<h2 id="outcomes">outcomes<a class="anchor-link" href="#outcomes">#</a></h2>
+<ul>
+<li><code>claim.outcome_merge_question_fallback_risk</code> - Multi-outcome MergeQuestion fallback reconciliation is the leading outcome solvency risk (<code>observed</code>, <code>hypothesis</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/outcome-merge-question-fallback-risk.md</code></li>
+<li><code>claim.outcome_settlement_and_question_surface</code> - Outcomes are 1x isolated settlement markets with explicit question and fallback metadata (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>active</code>)</li>
+<li>Source file: <code>knowledge/claims/outcome-settlement-and-question-surface.md</code></li>
+</ul>
+<h2 id="state">state<a class="anchor-link" href="#state">#</a></h2>
+<ul>
+<li><code>claim.exchange_struct_cardinality</code> - Exchange struct cardinality is currently 57 fields (<code>confirmed</code>, <code>confirmed</code>, <code>testnet_impl</code>, <code>open</code>)</li>
+<li>Source file: <code>knowledge/claims/exchange-struct-cardinality.md</code></li>
+</ul>
+        </article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
