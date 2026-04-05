@@ -663,11 +663,50 @@ From live mainnet data:
 - Peak second: 7,746 actions/second
 - 200K+ operations/second (including internal matching)
 
-## Our Implementation
+## Implementation — CONFIRMED 2026-04-04
+
 `hl-engine/src/book.rs` + `hl-engine/src/matching.rs`:
-- BTreeMap + VecDeque per price level (matches upstream Half + levels design)
-- HashMap OID index for O(1) cancel (matches oid_to_key)
-- 93 blocks/sec with 500K+ resting orders
+
+### Data Structure
+```
+OrderBook:
+  bid_levels: BTreeMap<-price, PriceLevel>  // negative key = best bid first
+  ask_levels: BTreeMap<+price, PriceLevel>  // positive key = best ask first
+  oid_index: HashMap<u64, (Side, PriceKey)> // O(1) cancel by OID
+
+PriceLevel:
+  orders: VecDeque<Order>  // FIFO: front = oldest = highest time priority
+  total_size: f64          // aggregate size at this price level
+```
+
+### Algorithm Flow
+```
+1. ALO check: if post-only and would cross → REJECT (no matching attempted)
+2. Walk opposing price levels in best-price order:
+   - Buy: walk asks ascending (BTreeMap natural order)
+   - Sell: walk bids descending (BTreeMap with negated keys)
+3. At each level, match FIFO against resting orders:
+   a. Self-trade? → cancel resting maker, continue to next order
+   b. Fill size = min(remaining, maker_remaining)
+   c. Generate Fill struct, update both sides' remaining
+   d. If maker exhausted, remove from level
+4. After matching:
+   - IOC: discard remainder, never rest
+   - Reduce-only: discard remainder, never rest
+   - GTC/ALO: rest remainder on book at limit price
+5. Post-match: fees → clearinghouse → znfn++ → state hash → events
+```
+
+### Key Guarantees
+- **Price-time priority**: BTreeMap (price) × VecDeque (time)
+- **Self-trade prevention**: cancel resting maker, not taker
+- **ALO enforcement**: checked BEFORE matching, not after
+- **Fill price**: always the maker's resting price (passive side sets price)
+- **Trigger orders**: stored separately, reduce-only required, activated by oracle
+
+### Performance
+- 93 blocks/sec with 500K+ resting orders (benchmark)
+- O(log n) insert, O(1) cancel by OID, O(1) best price
 
 ## Links
 - [[Exchange State]] -- perp_dexs, spot_books fields

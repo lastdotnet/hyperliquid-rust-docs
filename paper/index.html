@@ -838,6 +838,83 @@ ModifyWire      { oid: u64, order: OrderWireSerde }
 TwapWireSerde   { a: u32, b: bool, s: String, r: bool, m: u64, t: bool }
 // Tif: Alo | Ioc | Gtc    Tpsl: Na | NormalTpsl | PositionTpsl
 // Grouping: Na | Default | DexAbstraction | UnifiedAccount | PortfolioMargin</code></pre>
+<h3 id="match-algo">6.5 Matching Algorithm <span class="badge badge-confirmed">CONFIRMED</span></h3>
+<p>Price-time priority CLOB with self-trade prevention and post-only enforcement. Each asset has an independent order book backed by <code>BTreeMap&lt;PriceKey, VecDeque&lt;Order&gt;&gt;</code>.</p>
+
+<div class="mermaid">
+flowchart TD
+    A["Incoming Order\n(price, size, side, tif)"] --> B{ALO\npost-only?}
+    B -->|Yes| C{Would cross\nbest opposite?}
+    C -->|Yes| D["REJECT\nbadAloPxRejected"]
+    C -->|No| E[Skip to Rest]
+    B -->|No| F{Side?}
+    F -->|Buy| G["Walk ask levels\n(ascending price)"]
+    F -->|Sell| H["Walk bid levels\n(descending price)"]
+    G --> I{Order price\n>= ask level?}
+    H --> J{Order price\n<= bid level?}
+    I -->|No| K[Stop matching]
+    J -->|No| K
+    I -->|Yes| L[Match at level]
+    J -->|Yes| L
+    L --> M{Same user?\nself-trade}
+    M -->|Yes| N["Cancel resting maker\nselfTradeCanceled"]
+    M -->|No| O["Generate Fill\nmin(remaining, maker_sz)"]
+    O --> P[Update positions]
+    P --> Q{Order\nfilled?}
+    Q -->|No| L
+    Q -->|Yes| K
+    N --> L
+    K --> R{TIF type?}
+    R -->|IOC| S["Discard remainder\n(no rest)"]
+    R -->|GTC| T{Remaining > 0?}
+    R -->|ALO| E
+    T -->|Yes| U["Rest on book\nstatus=resting"]
+    T -->|No| V["Fully filled"]
+    E --> U
+    S --> W["Done\n(fills emitted)"]
+    U --> W
+    V --> W
+    D --> X["Done\n(no fills)"]
+</div>
+
+<h4>Data Structure Layout</h4>
+<pre><code>OrderBook {
+  bid_levels: BTreeMap&lt;-price, PriceLevel&gt;   // negative key = descending sort (best bid first)
+  ask_levels: BTreeMap&lt;+price, PriceLevel&gt;   // positive key = ascending sort (best ask first)
+  oid_index:  HashMap&lt;u64, (Side, PriceKey)&gt; // O(1) cancel by OID
+}
+
+PriceLevel {
+  orders: VecDeque&lt;Order&gt;   // FIFO: front = oldest (first priority)
+  total_size: f64           // aggregate size at this price
+}
+
+// BTreeMap guarantees: O(log n) insert/lookup, ordered iteration
+// VecDeque guarantees: O(1) push_back (new orders), O(1) pop_front (best time priority)
+// HashMap guarantees: O(1) cancel by OID</code></pre>
+
+<h4>Key Properties</h4>
+<table>
+<tr><th>Property</th><th>Behavior</th><th>Evidence</th></tr>
+<tr><td>Price priority</td><td>Best price matched first (highest bid, lowest ask)</td><td>BTreeMap iteration order</td></tr>
+<tr><td>Time priority</td><td>At same price, earliest order fills first</td><td>VecDeque FIFO (front = oldest)</td></tr>
+<tr><td>Self-trade prevention</td><td>Cancel resting maker order, continue matching</td><td><span class="badge badge-confirmed">CONFIRMED</span>: "selfTradeCanceled"</td></tr>
+<tr><td>Post-only (ALO)</td><td>Reject BEFORE matching if would cross book</td><td><span class="badge badge-confirmed">CONFIRMED</span>: "badAloPxRejected"</td></tr>
+<tr><td>IOC behavior</td><td>Fill what's available, discard remainder (no rest)</td><td><span class="badge badge-confirmed">CONFIRMED</span>: "iocCancelRejected"</td></tr>
+<tr><td>Reduce-only</td><td>Never rests on book, cancels if would increase position</td><td><span class="badge badge-confirmed">CONFIRMED</span>: "reduceOnlyCanceled"</td></tr>
+<tr><td>Fill price</td><td>Maker's resting price (not taker's limit price)</td><td>Standard CLOB: passive side sets execution price</td></tr>
+<tr><td>Trigger orders</td><td>Stored separately, activated when oracle crosses trigger_px</td><td><span class="badge badge-confirmed">CONFIRMED</span>: must be reduce-only</td></tr>
+</table>
+
+<h4>Post-Match Pipeline</h4>
+<pre><code>For each fill in block:
+  1. Compute fees via full fee pipeline (VIP tier, MM, staking, referral, builder)
+  2. Debit fees from maker and taker balances
+  3. Update positions via clearinghouse.process_fill()
+  4. Increment fill nonce counter (znfn)
+  5. Record fill in state hash (OrderStatusHash::Filled → Na accumulator)
+  6. Track volume for VIP tier advancement
+  7. Emit fill event for WebSocket subscribers</code></pre>
 </section>
 
 <section class="section" id="funding">
